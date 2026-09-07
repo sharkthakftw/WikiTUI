@@ -1,6 +1,6 @@
 use crate::app::App;
 use crate::theme;
-use crate::ui::modals::utils::{centered_rect, render_modal_frame_at};
+use crate::ui::modals::utils::render_modal_frame_at;
 use ratatui::{
     layout::{Alignment, Rect},
     style::{Style, Stylize},
@@ -10,7 +10,16 @@ use ratatui::{
 };
 
 pub fn compute_confirm_modal_area(size: Rect) -> Rect {
-    centered_rect(50, 30, size)
+    let width = 50.min(size.width.saturating_sub(2));
+    let height = 9.min(size.height.saturating_sub(2));
+    let x = (size.width.saturating_sub(width)) / 2;
+    let y = (size.height.saturating_sub(height)) / 2;
+    Rect {
+        x,
+        y,
+        width,
+        height,
+    }
 }
 
 pub fn get_confirm_button_at(app: &App, area: Rect, col: u16, row: u16) -> Option<char> {
@@ -21,13 +30,13 @@ pub fn get_confirm_button_at(app: &App, area: Rect, col: u16, row: u16) -> Optio
     let action_str = match &app.confirm_action {
         Some(crate::app::ConfirmAction::DeleteList { .. }) => "delete",
         Some(crate::app::ConfirmAction::DeleteArticle { .. }) => "delete",
-        Some(crate::app::ConfirmAction::ResetFeed) => "delete",
+        Some(crate::app::ConfirmAction::ResetFeed) => "reset",
         Some(crate::app::ConfirmAction::Quit) => "quit",
         None => return None,
     };
-    let yes_str = format!("[y/enter] {}", action_str);
-    let no_str = "[n/esc] cancel";
-    let gap = "   ";
+    let yes_str = format!("[y] {}", action_str);
+    let no_str = "[esc] cancel";
+    let gap = "          ";
     let total_len = yes_str.len() + gap.len() + no_str.len();
     let inner_width = (area.width.saturating_sub(2)) as usize;
     let start_x = area.x + 1 + (inner_width.saturating_sub(total_len) / 2) as u16;
@@ -50,17 +59,20 @@ fn build_confirm_lines(
     action_verb: &str,
 ) -> Vec<Line<'static>> {
     vec![
-        Line::from(prompt.to_string()),
         Line::from(""),
+        Line::from(vec![Span::styled(
+            prompt.to_string(),
+            Style::default().fg(theme::FG).bold(),
+        )]),
         Line::from(detail_spans),
         Line::from(""),
         Line::from(vec![
-            Span::styled("[y/enter] ", Style::default().fg(theme::LIME).bold()),
+            Span::styled("[y] ", Style::default().fg(theme::RED).bold()),
             Span::styled(
-                format!("{}   ", action_verb),
+                format!("{}          ", action_verb),
                 Style::default().fg(theme::FG),
             ),
-            Span::styled("[n/esc] ", Style::default().fg(theme::GREY).bold()),
+            Span::styled("[esc] ", Style::default().fg(theme::GREY).bold()),
             Span::styled("cancel", Style::default().fg(theme::FG)),
         ]),
     ]
@@ -84,12 +96,23 @@ pub fn render_confirm_modal(f: &mut Frame, app: &App, size: Rect) {
         app.config.ui.rounded_borders,
     );
 
+    let inner_width = (area.width.saturating_sub(2)) as usize;
+    let truncate_title = |title: &str| -> String {
+        let max_len = inner_width.saturating_sub(15).max(10);
+        if title.chars().count() > max_len {
+            let truncated: String = title.chars().take(max_len).collect();
+            format!("{}…", truncated)
+        } else {
+            title.to_string()
+        }
+    };
+
     let lines = match &app.confirm_action {
         Some(crate::app::ConfirmAction::DeleteList { title, .. }) => build_confirm_lines(
             "are you sure you want to delete:",
             vec![
                 Span::styled("custom list: ", Style::default().fg(theme::GREY)),
-                Span::styled(title.clone(), Style::default().fg(theme::YELLOW).bold()),
+                Span::styled(truncate_title(title), Style::default().fg(theme::YELLOW).bold()),
             ],
             "delete",
         ),
@@ -97,7 +120,7 @@ pub fn render_confirm_modal(f: &mut Frame, app: &App, size: Rect) {
             "are you sure you want to delete:",
             vec![
                 Span::styled("article: ", Style::default().fg(theme::GREY)),
-                Span::styled(title.clone(), Style::default().fg(theme::YELLOW).bold()),
+                Span::styled(truncate_title(title), Style::default().fg(theme::YELLOW).bold()),
             ],
             "delete",
         ),
@@ -105,7 +128,7 @@ pub fn render_confirm_modal(f: &mut Frame, app: &App, size: Rect) {
             "are you sure you want to reset your feed?",
             vec![Span::styled(
                 "all category scores and preferences will be cleared",
-                Style::default().fg(theme::YELLOW),
+                Style::default().fg(theme::GREY),
             )],
             "reset",
         ),
@@ -118,7 +141,7 @@ pub fn render_confirm_modal(f: &mut Frame, app: &App, size: Rect) {
             };
             build_confirm_lines(
                 "are you sure you want to quit wikid?",
-                vec![Span::styled(subtext, Style::default().fg(theme::YELLOW))],
+                vec![Span::styled(subtext, Style::default().fg(theme::GREY))],
                 "quit",
             )
         }
