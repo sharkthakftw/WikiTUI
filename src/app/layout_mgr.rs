@@ -67,6 +67,36 @@ impl App {
         }
     }
 
+    fn record_closed_panes(&mut self, panes: impl IntoIterator<Item = Pane>) {
+        for pane in panes {
+            if let Some(title) = pane.title() {
+                self.closed_tabs_stack.push(crate::app::ClosedTabState {
+                    title,
+                    scroll_offset: pane.scroll_offset,
+                    history_back: pane.history_back,
+                    history_forward: pane.history_forward,
+                });
+            }
+        }
+    }
+
+    fn remove_tab_internal(&mut self, idx: usize) {
+        let removed_tab = self.tabs.remove(idx);
+        if let Some(prev) = self.prev_tab_idx {
+            if prev == idx {
+                self.prev_tab_idx = None;
+            } else if prev > idx {
+                self.prev_tab_idx = Some(prev - 1);
+            }
+        }
+        self.record_closed_panes(removed_tab.panes);
+        if self.active_tab_idx > idx {
+            self.active_tab_idx -= 1;
+        } else if self.active_tab_idx >= self.tabs.len() {
+            self.active_tab_idx = self.tabs.len().saturating_sub(1);
+        }
+    }
+
     pub fn close_tab(&mut self, idx: usize) {
         if idx >= self.tabs.len() {
             return;
@@ -74,27 +104,7 @@ impl App {
         if idx == self.active_tab_idx {
             self.close_current_tab();
         } else if self.tabs.len() > 1 {
-            let removed_tab = self.tabs.remove(idx);
-            if let Some(prev) = self.prev_tab_idx {
-                if prev == idx {
-                    self.prev_tab_idx = None;
-                } else if prev > idx {
-                    self.prev_tab_idx = Some(prev - 1);
-                }
-            }
-            for pane in removed_tab.panes {
-                if let Some(title) = pane.title() {
-                    self.closed_tabs_stack.push(crate::app::ClosedTabState {
-                        title,
-                        scroll_offset: pane.scroll_offset,
-                        history_back: pane.history_back,
-                        history_forward: pane.history_forward,
-                    });
-                }
-            }
-            if self.active_tab_idx > idx {
-                self.active_tab_idx -= 1;
-            }
+            self.remove_tab_internal(idx);
         }
     }
 
@@ -102,43 +112,15 @@ impl App {
         self.maybe_mark_article_read();
         let closed_idx = self.active_tab_idx;
         if self.tabs.len() > 1 {
-            let removed_tab = self.tabs.remove(closed_idx);
-            if let Some(prev) = self.prev_tab_idx {
-                if prev == closed_idx {
-                    self.prev_tab_idx = None;
-                } else if prev > closed_idx {
-                    self.prev_tab_idx = Some(prev - 1);
-                }
-            }
-            for pane in removed_tab.panes {
-                if let Some(title) = pane.title() {
-                    self.closed_tabs_stack.push(crate::app::ClosedTabState {
-                        title,
-                        scroll_offset: pane.scroll_offset,
-                        history_back: pane.history_back,
-                        history_forward: pane.history_forward,
-                    });
-                }
-            }
-            if self.active_tab_idx >= self.tabs.len() {
-                self.active_tab_idx = self.tabs.len().saturating_sub(1);
-            }
+            self.remove_tab_internal(closed_idx);
         } else {
-            let old_tab = &self.tabs[0];
-            for pane in &old_tab.panes {
-                if let Some(title) = pane.title() {
-                    self.closed_tabs_stack.push(crate::app::ClosedTabState {
-                        title,
-                        scroll_offset: pane.scroll_offset,
-                        history_back: pane.history_back.clone(),
-                        history_forward: pane.history_forward.clone(),
-                    });
-                }
-            }
             let new_pane_id = self.next_pane_id;
             self.next_pane_id += 1;
-            self.tabs[0] = Tab::new("home".to_string(), new_pane_id);
+            let old_tab =
+                std::mem::replace(&mut self.tabs[0], Tab::new("home".to_string(), new_pane_id));
+            self.record_closed_panes(old_tab.panes);
             self.active_tab_idx = 0;
+            self.prev_tab_idx = None;
         }
     }
 
