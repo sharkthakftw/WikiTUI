@@ -24,6 +24,8 @@ fn get_decoded_attr(tag: &tl::HTMLTag, key: &str) -> Option<String> {
     })
 }
 
+const MAX_DOM_DEPTH: usize = 128;
+
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn process_node<'a>(
     node: &'a tl::Node<'a>,
@@ -35,7 +37,11 @@ pub(crate) fn process_node<'a>(
     list_item_idx: Option<usize>,
     is_sup: bool,
     is_sub: bool,
+    depth: usize,
 ) {
+    if depth > MAX_DOM_DEPTH {
+        return;
+    }
     match node {
         tl::Node::Raw(bytes) => {
             if ctx.skipping_external_section || ctx.skipping_references_section {
@@ -440,6 +446,7 @@ pub(crate) fn process_node<'a>(
                         child_list_idx,
                         current_is_sup,
                         current_is_sub,
+                        depth + 1,
                     );
                 }
             }

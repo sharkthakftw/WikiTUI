@@ -66,6 +66,7 @@ pub fn parse_wikipedia_html(
                 None,
                 false,
                 false,
+                0,
             );
         }
     }
