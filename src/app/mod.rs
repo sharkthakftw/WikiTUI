@@ -304,6 +304,16 @@ impl App {
         anchor_x: u16,
         anchor_y: u16,
     ) {
+        if raw_target.starts_with("#cite_note")
+            || raw_target.starts_with("#cite_ref")
+            || raw_target.starts_with("cite_note")
+            || raw_target.starts_with("cite_ref")
+            || title.starts_with("#cite_note")
+            || title.starts_with("cite_note")
+        {
+            return;
+        }
+
         if raw_target.starts_with("http://")
             || raw_target.starts_with("https://")
             || raw_target.starts_with("//")

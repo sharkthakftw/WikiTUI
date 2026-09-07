@@ -818,7 +818,9 @@ pub fn handle_mouse_move(
                 ) {
                     pane.selected_link_idx = Some(link_idx);
                     if let Some(link) = parsed_doc.links.get(link_idx) {
-                        hovered_link = Some((link.title.clone(), link.text.clone()));
+                        if !link.is_citation() {
+                            hovered_link = Some((link.title.clone(), link.text.clone()));
+                        }
                     }
                 }
             }
@@ -845,7 +847,9 @@ pub fn handle_mouse_move(
                     ) {
                         pane.selected_link_idx = Some(link_idx);
                         if let Some(link) = parsed_doc.links.get(link_idx) {
-                            hovered_link = Some((link.title.clone(), link.text.clone()));
+                            if !link.is_citation() {
+                                hovered_link = Some((link.title.clone(), link.text.clone()));
+                            }
                         }
                     }
                 }

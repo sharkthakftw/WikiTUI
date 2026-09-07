@@ -154,13 +154,20 @@ pub fn handle_normal_mode(app: &mut App, key: KeyEvent, term_width: u16, term_he
                     &app.active_pane().content
                 {
                     let scroll = app.active_pane().scroll_offset;
-                    let target_link_idx = app.active_pane().selected_link_idx.or_else(|| {
-                        parsed_doc.links.iter().position(|l| {
-                            l.span_indices
-                                .first()
-                                .is_some_and(|&(line, _)| line >= scroll && line < scroll + 20)
+                    let target_link_idx = app
+                        .active_pane()
+                        .selected_link_idx
+                        .filter(|&idx| {
+                            parsed_doc.links.get(idx).is_some_and(|l| !l.is_citation())
                         })
-                    });
+                        .or_else(|| {
+                            parsed_doc.links.iter().position(|l| {
+                                !l.is_citation()
+                                    && l.span_indices
+                                        .first()
+                                        .is_some_and(|&(line, _)| line >= scroll && line < scroll + 20)
+                            })
+                        });
 
                     if let Some(idx) = target_link_idx {
                         if let Some(link) = parsed_doc.links.get(idx) {
