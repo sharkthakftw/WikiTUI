@@ -544,11 +544,28 @@ pub fn get_link_at_coord(
     }
 
     let span_idx = target_span_idx?;
+    let target = (line_idx, span_idx);
 
-    parsed_doc
-        .links
-        .iter()
-        .position(|link| link.span_indices.contains(&(line_idx, span_idx)))
+    let upper = parsed_doc.links.partition_point(|link| {
+        link.span_indices
+            .first()
+            .is_some_and(|&first| first <= target)
+    });
+
+    for (rev_offset, link) in parsed_doc.links[..upper].iter().rev().enumerate() {
+        if link.span_indices.contains(&target) {
+            return Some(upper - 1 - rev_offset);
+        }
+        if link
+            .span_indices
+            .first()
+            .is_some_and(|&(l, _)| l.saturating_add(30) < line_idx)
+        {
+            break;
+        }
+    }
+
+    None
 }
 
 pub fn get_image_at_coord(
