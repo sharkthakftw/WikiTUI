@@ -26,6 +26,7 @@ pub fn get_mode_badge(app: &App) -> (&'static str, Color) {
             InputMode::DailyFeedModal => (" DAILY ", theme::TEAL),
             InputMode::CommandPalette => (" COMMAND ", theme::YELLOW),
             InputMode::QrModal => (" QR CODE ", theme::PINK),
+            InputMode::ImageModal => (" IMAGE ", theme::PINK),
         }
     }
 }
@@ -149,6 +150,12 @@ pub fn get_center_spans(
         )],
         InputMode::QrModal => vec![Span::styled(
             "esc/q close · y copy link",
+            Style::default()
+                .fg(theme::PINK)
+                .add_modifier(Modifier::BOLD),
+        )],
+        InputMode::ImageModal => vec![Span::styled(
+            "esc/q close · y copy url",
             Style::default()
                 .fg(theme::PINK)
                 .add_modifier(Modifier::BOLD),

@@ -54,6 +54,7 @@ fn handle_modal_scroll(app: &mut App, delta: i32, col: u16, row: u16, size: Rect
             }
             true
         }
+        InputMode::ImageModal => true,
         InputMode::SaveToList => {
             let count = app
                 .saved_lists

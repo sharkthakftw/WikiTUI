@@ -551,6 +551,35 @@ pub fn get_link_at_coord(
         .position(|link| link.span_indices.contains(&(line_idx, span_idx)))
 }
 
+pub fn get_image_at_coord(
+    parsed_doc: &crate::parser::ParsedDocument,
+    scroll_offset: usize,
+    pane_rect: Rect,
+    col: u16,
+    row: u16,
+) -> Option<crate::parser::ImageBlock> {
+    if pane_rect.width < 3 || pane_rect.height < 3 {
+        return None;
+    }
+    let inner_x = pane_rect.x + 1;
+    let inner_y = pane_rect.y + 1;
+    let inner_w = pane_rect.width.saturating_sub(2);
+    let inner_h = pane_rect.height.saturating_sub(2);
+
+    if col < inner_x || col >= inner_x + inner_w || row < inner_y || row >= inner_y + inner_h {
+        return None;
+    }
+
+    let row_in_pane = (row - inner_y) as usize;
+    let line_idx = scroll_offset + row_in_pane;
+
+    parsed_doc
+        .images
+        .iter()
+        .find(|img| line_idx >= img.line_idx && line_idx < img.line_idx + img.height_lines)
+        .cloned()
+}
+
 pub struct VisibleImageBounds {
     pub screen_x: u16,
     pub screen_y: u16,

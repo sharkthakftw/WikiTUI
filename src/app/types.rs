@@ -35,6 +35,15 @@ pub enum InputMode {
     DailyFeedModal,
     CommandPalette,
     QrModal,
+    ImageModal,
+}
+
+#[derive(Clone, Debug)]
+pub struct ImageModalState {
+    pub url: String,
+    pub alt: Option<String>,
+    pub caption: Option<String>,
+    pub path: Option<std::path::PathBuf>,
 }
 
 #[derive(Clone, Debug)]

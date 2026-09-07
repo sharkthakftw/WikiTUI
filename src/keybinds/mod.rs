@@ -2,6 +2,7 @@ pub mod categories;
 pub mod confirm;
 pub mod daily_feed;
 pub mod help;
+pub mod image;
 pub mod lists;
 pub mod normal;
 pub mod onboarding;
@@ -26,6 +27,7 @@ pub fn handle_key_event(app: &mut App, key: KeyEvent, term_width: u16, term_heig
         InputMode::DailyFeedModal => daily_feed::handle_daily_feed_mode(app, key),
         InputMode::CommandPalette => palette::handle_palette_mode(app, key),
         InputMode::QrModal => qr::handle_qr_mode(app, key),
+        InputMode::ImageModal => image::handle_image_modal_mode(app, key),
         InputMode::Help => help::handle_help_mode(app, key),
         InputMode::LocalSearch => search::handle_local_search_mode(app, key, term_height),
         InputMode::Search => search::handle_search_mode(app, key),

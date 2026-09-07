@@ -1,6 +1,7 @@
 pub mod categories;
 pub mod daily_feed;
 pub mod help;
+pub mod image;
 pub mod lists;
 pub mod onboarding;
 pub mod palette;
@@ -20,6 +21,7 @@ pub use daily_feed::{
     DailyFeedCache, DailyFeedKind, DailyFeedModalState, FeedEntry, OnThisDayTab,
 };
 pub use help::{compute_help_modal_area, render_help_modal};
+pub use image::{compute_image_modal_area, render_image_modal};
 pub use lists::{
     compute_confirm_modal_area, compute_save_to_list_modal_area, compute_saved_lists_viewer_areas,
     render_confirm_modal, render_save_to_list_modal, render_saved_lists_viewer_modal,

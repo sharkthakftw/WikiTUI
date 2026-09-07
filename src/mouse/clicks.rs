@@ -274,6 +274,18 @@ fn handle_modal_left_click(
         return true;
     }
 
+    if app.input_mode == InputMode::ImageModal {
+        let image_area = crate::ui::modals::compute_image_modal_area(size);
+        if col < image_area.x
+            || col >= image_area.x + image_area.width
+            || row < image_area.y
+            || row >= image_area.y + image_area.height
+        {
+            app.close_image_modal();
+        }
+        return true;
+    }
+
     if app.input_mode == InputMode::Search {
         let search_area = crate::ui::modals::search::compute_search_modal_area(size);
         if col < search_area.x
@@ -633,6 +645,19 @@ fn handle_workspace_left_click(
                     } else {
                         app.activate_selected(term_height);
                     }
+                } else if let Some(img) = crate::ui::pane_view::get_image_at_coord(
+                    parsed_doc,
+                    pane.scroll_offset,
+                    zen_rect,
+                    col,
+                    row,
+                ) {
+                    let path = pane
+                        .loaded_images
+                        .get(&img.url)
+                        .cloned()
+                        .or_else(|| crate::graphics::cache::get_cached_image_path(&img.url));
+                    app.open_image_modal(img.url, img.alt, img.caption, path);
                 }
             }
         }
@@ -725,6 +750,19 @@ fn handle_workspace_left_click(
                             } else {
                                 app.activate_selected(term_height);
                             }
+                        } else if let Some(img) = crate::ui::pane_view::get_image_at_coord(
+                            parsed_doc,
+                            pane.scroll_offset,
+                            rect,
+                            col,
+                            row,
+                        ) {
+                            let path = pane
+                                .loaded_images
+                                .get(&img.url)
+                                .cloned()
+                                .or_else(|| crate::graphics::cache::get_cached_image_path(&img.url));
+                            app.open_image_modal(img.url, img.alt, img.caption, path);
                         }
                     }
                     _ => {}

@@ -56,6 +56,7 @@ pub struct App {
     pub audio_player: crate::audio::AudioPlayer,
     pub command_palette: crate::app::types::CommandPaletteState,
     pub qr_modal: Option<crate::app::types::QrModalState>,
+    pub image_modal: Option<crate::app::types::ImageModalState>,
     pub graphics: GraphicsState,
 
     pub(crate) next_pane_id: usize,
@@ -116,6 +117,7 @@ impl App {
             audio_player: crate::audio::AudioPlayer::new(),
             command_palette: crate::app::types::CommandPaletteState::default(),
             qr_modal: None,
+            image_modal: None,
             graphics: GraphicsState::default(),
 
             next_pane_id: 1,
@@ -267,6 +269,27 @@ impl App {
 
     pub fn close_qr_modal(&mut self) {
         self.qr_modal = None;
+        self.input_mode = InputMode::Normal;
+    }
+
+    pub fn open_image_modal(
+        &mut self,
+        url: String,
+        alt: Option<String>,
+        caption: Option<String>,
+        path: Option<std::path::PathBuf>,
+    ) {
+        self.image_modal = Some(crate::app::types::ImageModalState {
+            url,
+            alt,
+            caption,
+            path,
+        });
+        self.input_mode = InputMode::ImageModal;
+    }
+
+    pub fn close_image_modal(&mut self) {
+        self.image_modal = None;
         self.input_mode = InputMode::Normal;
     }
 }
