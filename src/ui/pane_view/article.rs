@@ -268,7 +268,8 @@ pub fn render_article_pane(
     }
 
     let should_dim =
-        app.config.ui.dim_inactive_panes && !is_active && app.tabs[tab_idx].panes.len() > 1;
+        (app.config.ui.dim_inactive_panes && !is_active && app.tabs[tab_idx].panes.len() > 1)
+            || app.input_mode == crate::app::InputMode::ImageModal;
     if should_dim {
         for line in &mut rendered_lines {
             for span in &mut line.spans {

@@ -60,8 +60,10 @@ fn render_pane_at(
         show_images: app.config.reader.show_images,
         max_image_height: app.config.reader.max_image_height,
     };
+    let is_image_modal = app.input_mode == crate::app::InputMode::ImageModal;
     let has_multiple_panes = app.tabs[tab_idx].panes.len() > 1;
-    let should_dim = app.config.ui.dim_inactive_panes && !is_active && has_multiple_panes;
+    let should_dim =
+        (app.config.ui.dim_inactive_panes && !is_active && has_multiple_panes) || is_image_modal;
 
     let pane = &mut app.tabs[tab_idx].panes[pane_idx];
     pane.viewport_width = content_width;
@@ -72,19 +74,23 @@ fn render_pane_at(
         rect.height.saturating_sub(2) as usize
     };
 
-    let border_color = match &pane.content {
-        PaneContent::SearchResults { .. } => {
-            if is_active {
-                theme::YELLOW
-            } else {
-                theme::DARK_GREY
+    let border_color = if is_image_modal {
+        theme::DARK_GREY
+    } else {
+        match &pane.content {
+            PaneContent::SearchResults { .. } => {
+                if is_active {
+                    theme::YELLOW
+                } else {
+                    theme::DARK_GREY
+                }
             }
-        }
-        _ => {
-            if is_active {
-                theme::PINK
-            } else {
-                theme::DARK_GREY
+            _ => {
+                if is_active {
+                    theme::PINK
+                } else {
+                    theme::DARK_GREY
+                }
             }
         }
     };
@@ -108,12 +114,18 @@ fn render_pane_at(
         Style::default().fg(border_color)
     };
 
+    let border_style = if should_dim {
+        Style::default().fg(theme::DARK_GREY).dim()
+    } else {
+        Style::default().fg(border_color)
+    };
+
     let block = if app.zen_mode {
         Block::default().padding(Padding::horizontal(1))
     } else {
         Block::bordered()
             .border_type(border_type)
-            .border_style(Style::default().fg(border_color))
+            .border_style(border_style)
             .title(Line::from(Span::styled(title, title_style)))
             .padding(Padding::horizontal(1))
     };
@@ -166,7 +178,7 @@ fn render_pane_at(
                 pane,
                 items,
                 border_color,
-                is_active,
+                if is_image_modal { false } else { is_active },
                 app.zen_mode,
                 app.config.ui.scroll_indicator,
                 app.config.ui.icons,
@@ -204,7 +216,7 @@ fn render_pane_at(
             rect,
             block,
             border_color,
-            is_active,
+            if is_image_modal { false } else { is_active },
         );
     }
 }

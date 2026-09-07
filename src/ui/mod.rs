@@ -113,8 +113,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     }
 
     let is_modal_open = (app.input_mode != InputMode::Normal
-        && app.input_mode != InputMode::LocalSearch
-        && app.input_mode != InputMode::ImageModal)
+        && app.input_mode != InputMode::LocalSearch)
         || app.tabs.iter().any(|t| t.panes.iter().any(|p| p.show_toc))
         || app.daily_feed_modal.is_some();
 
