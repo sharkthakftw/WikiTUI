@@ -264,10 +264,7 @@ pub fn render_on_this_day_modal(
         if is_active {
             tab_spans.push(Span::styled(
                 format!("[{}] {} ({})", num, label, count),
-                Style::default()
-                    .fg(theme::BLUE)
-                    .bold()
-                    .add_modifier(Modifier::UNDERLINED),
+                Style::default().fg(theme::BLUE).bold(),
             ));
         } else {
             tab_spans.push(Span::styled(
