@@ -106,10 +106,10 @@ impl App {
                                 crate::graphics::cache::get_cached_image_path(&img_url)
                             {
                                 if resolved_proto.is_halfblocks() {
-                                    let key = (img_url.clone(), cols, rows);
-                                    if !pane.halfblock_cache.contains_key(&key)
-                                        && pane.pending_image_decodes.insert(key)
+                                    if !pane.contains_halfblock(&img_url, cols, rows)
+                                        && !pane.is_pending_decode(&img_url, cols, rows)
                                     {
+                                        pane.pending_image_decodes.insert((img_url.clone(), cols, rows));
                                         to_decode.push((img_url, path, cols, rows));
                                     }
                                 } else if resolved_proto.is_kitty() {
@@ -145,18 +145,17 @@ impl App {
                         if resolved_proto.is_halfblocks() {
                             if let PaneContent::ArticleText { parsed_doc, .. } = &pane.content {
                                 for img in &parsed_doc.images {
-                                    if img.url == url {
-                                        let key = (url.clone(), img.width_cols, img.height_lines);
-                                        if !pane.halfblock_cache.contains_key(&key)
-                                            && pane.pending_image_decodes.insert(key)
-                                        {
-                                            to_decode.push((
-                                                url.clone(),
-                                                path.clone(),
-                                                img.width_cols,
-                                                img.height_lines,
-                                            ));
-                                        }
+                                    if img.url == url
+                                        && !pane.contains_halfblock(&url, img.width_cols, img.height_lines)
+                                        && !pane.is_pending_decode(&url, img.width_cols, img.height_lines)
+                                    {
+                                        pane.pending_image_decodes.insert((url.clone(), img.width_cols, img.height_lines));
+                                        to_decode.push((
+                                            url.clone(),
+                                            path.clone(),
+                                            img.width_cols,
+                                            img.height_lines,
+                                        ));
                                     }
                                 }
                             }
@@ -180,8 +179,7 @@ impl App {
                         if pane.halfblock_cache.len() >= 50 {
                             pane.halfblock_cache.clear();
                         }
-                        pane.halfblock_cache
-                            .insert((url.clone(), cols, rows), lines.clone());
+                        pane.insert_halfblock(url.clone(), cols, rows, lines.clone());
                     }
                 }
             }

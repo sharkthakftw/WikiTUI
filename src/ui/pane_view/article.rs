@@ -40,10 +40,10 @@ pub fn render_article_pane(
                 if img.line_idx + img.height_lines > view_start && img.line_idx < view_end {
                     let cols = img.width_cols;
                     let rows = img.height_lines;
-                    let key = (img.url.clone(), cols, rows);
-                    if !pane.halfblock_cache.contains_key(&key)
-                        && pane.pending_image_decodes.insert(key)
+                    if !pane.contains_halfblock(&img.url, cols, rows)
+                        && !pane.is_pending_decode(&img.url, cols, rows)
                     {
+                        pane.pending_image_decodes.insert((img.url.clone(), cols, rows));
                         if let Some(path) = pane
                             .loaded_images
                             .get(&img.url)
@@ -131,8 +131,7 @@ pub fn render_article_pane(
                         let rel_row = line_idx - img.line_idx;
                         let cols = img.width_cols;
                         let rows = img.height_lines;
-                        let key = (img.url.clone(), cols, rows);
-                        if let Some(hb_lines) = pane.halfblock_cache.get(&key) {
+                        if let Some(hb_lines) = pane.get_halfblock(&img.url, cols, rows) {
                             if let Some(hb_line) = hb_lines.get(rel_row) {
                                 image_override = Some(hb_line.clone());
                             }
