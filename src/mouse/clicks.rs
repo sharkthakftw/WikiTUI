@@ -31,13 +31,7 @@ pub fn handle_middle_click(app: &mut App, col: u16, row: u16, term_width: u16, t
 
     if app.feed.active {
         if let Some(item) = app.feed.current_item().cloned() {
-            let cur_tab = app.active_tab_idx;
-            app.new_tab();
-            let pane_id = app.active_pane().id;
-            app.active_pane_mut().is_loading = true;
-            app.send_fetch_article(pane_id, item.title.clone());
-            app.active_tab_idx = cur_tab;
-            app.set_status_message(format!("opened '{}' in background tab", item.title));
+            app.open_article_in_background_tab(&item.title);
         }
         return;
     }
@@ -45,13 +39,7 @@ pub fn handle_middle_click(app: &mut App, col: u16, row: u16, term_width: u16, t
     if app.input_mode == InputMode::DailyFeedModal {
         if let Some((_, _, target)) = crate::ui::modals::get_daily_feed_item_at(app, col, row, size)
         {
-            let cur_tab = app.active_tab_idx;
-            app.new_tab();
-            let pane_id = app.active_pane().id;
-            app.active_pane_mut().is_loading = true;
-            app.send_fetch_article(pane_id, target.clone());
-            app.active_tab_idx = cur_tab;
-            app.set_status_message(format!("opened '{}' in background tab", target));
+            app.open_article_in_background_tab(&target);
         }
         return;
     }
@@ -112,16 +100,7 @@ pub fn handle_middle_click(app: &mut App, col: u16, row: u16, term_width: u16, t
                             ) {
                                 pane.selected_idx = item_idx;
                                 let title = items[item_idx].title.clone();
-                                let cur_tab = app.active_tab_idx;
-                                app.new_tab();
-                                let pane_id = app.active_pane().id;
-                                app.active_pane_mut().is_loading = true;
-                                app.send_fetch_article(pane_id, title.clone());
-                                app.active_tab_idx = cur_tab;
-                                app.set_status_message(format!(
-                                    "opened '{}' in background tab",
-                                    title
-                                ));
+                                app.open_article_in_background_tab(&title);
                             }
                         }
                     }
@@ -146,16 +125,7 @@ pub fn handle_middle_click(app: &mut App, col: u16, row: u16, term_width: u16, t
                                 let idx = (row - start_row) as usize;
                                 if idx < recent_articles.len() {
                                     let title = recent_articles[idx].clone();
-                                    let cur_tab = app.active_tab_idx;
-                                    app.new_tab();
-                                    let pane_id = app.active_pane().id;
-                                    app.active_pane_mut().is_loading = true;
-                                    app.send_fetch_article(pane_id, title.clone());
-                                    app.active_tab_idx = cur_tab;
-                                    app.set_status_message(format!(
-                                        "opened '{}' in background tab",
-                                        title
-                                    ));
+                                    app.open_article_in_background_tab(&title);
                                 }
                             }
                         }

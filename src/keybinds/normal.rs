@@ -24,13 +24,7 @@ pub fn handle_normal_mode(app: &mut App, key: KeyEvent, term_width: u16, term_he
             }
             KeyCode::Enter if key.modifiers.contains(KeyModifiers::ALT) => {
                 if let Some(item) = app.feed.current_item().cloned() {
-                    let cur_tab = app.active_tab_idx;
-                    app.new_tab();
-                    let pane_id = app.active_pane().id;
-                    app.active_pane_mut().is_loading = true;
-                    app.send_fetch_article(pane_id, item.title.clone());
-                    app.active_tab_idx = cur_tab;
-                    app.set_status_message(format!("opened '{}' in background tab", item.title));
+                    app.open_article_in_background_tab(&item.title);
                 }
             }
             KeyCode::Enter => {
