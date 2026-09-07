@@ -59,6 +59,7 @@ pub struct App {
     pub image_modal: Option<crate::app::types::ImageModalState>,
     pub link_peek: Option<crate::app::types::LinkPeekState>,
     pub summary_cache: std::collections::HashMap<String, (Option<String>, Option<String>)>,
+    pub tab_bar_cache: Option<crate::ui::tab_bar::TabBarCache>,
     pub graphics: GraphicsState,
 
     pub(crate) next_pane_id: usize,
@@ -122,6 +123,7 @@ impl App {
             image_modal: None,
             link_peek: None,
             summary_cache: std::collections::HashMap::new(),
+            tab_bar_cache: None,
             graphics: GraphicsState::default(),
 
             next_pane_id: 1,
