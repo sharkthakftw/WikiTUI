@@ -13,8 +13,55 @@ pub fn render_link_peek(f: &mut Frame, app: &App, size: Rect) {
         return;
     };
 
-    let width = 52u16.min(size.width.saturating_sub(4)).max(30);
-    let height = 6u16.min(size.height.saturating_sub(2)).max(4);
+    let max_w = size.width.saturating_sub(4).clamp(34, 68);
+    let title_chars = peek.title.chars().count();
+    let desc_chars = peek
+        .description
+        .as_ref()
+        .map(|d| d.chars().count())
+        .unwrap_or(0);
+
+    let (width, height) = if peek.is_loading {
+        let w = ((title_chars + 6) as u16).max(34).min(max_w);
+        (w, 4u16)
+    } else {
+        let has_desc = peek
+            .description
+            .as_ref()
+            .is_some_and(|d| !d.trim().is_empty());
+        let desc_lines = if has_desc { 1usize } else { 0usize };
+
+        let candidate_w = if let Some(extract) = &peek.extract {
+            let total_chars = extract.chars().count();
+            if total_chars < 70 {
+                ((total_chars as u16 + 4)
+                    .max(title_chars as u16 + 6)
+                    .max(desc_chars as u16 + 4))
+                .max(34)
+                .min(max_w)
+            } else {
+                max_w
+            }
+        } else {
+            ((title_chars as u16 + 6).max(desc_chars as u16 + 4))
+                .max(34)
+                .min(max_w)
+        };
+
+        let inner_w = candidate_w.saturating_sub(2) as usize;
+        let extract_lines = if let Some(extract) = &peek.extract {
+            let wrapped = wrap_text(extract, inner_w);
+            wrapped.len().clamp(1, 7)
+        } else if !has_desc {
+            1usize
+        } else {
+            0usize
+        };
+
+        let inner_h = (desc_lines + extract_lines).clamp(1, 8);
+        let h = ((inner_h as u16) + 2).min(size.height.saturating_sub(2));
+        (candidate_w, h)
+    };
 
     let x = peek
         .anchor_x
