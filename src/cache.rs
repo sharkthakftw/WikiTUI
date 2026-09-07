@@ -27,6 +27,24 @@ pub fn evict_expired_cache(lifetime_hours: u64) {
         }
     });
 
+    let daily_feed_dir = cache_dir.join("daily_feed");
+    if let Ok(entries) = fs::read_dir(&daily_feed_dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                if let Ok(metadata) = entry.metadata() {
+                    if let Ok(modified) = metadata.modified() {
+                        if let Ok(elapsed) = modified.elapsed() {
+                            if elapsed > max_age {
+                                let _ = fs::remove_dir_all(&path);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     clean_directory(&audio_dir, max_age, |path| {
         if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
             name != "durations.json" && name != "positions.json"

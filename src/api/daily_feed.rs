@@ -257,37 +257,126 @@ fn utc_date_from_timestamp(now: u64) -> (u32, u32, u32) {
     (y as u32, m, d)
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct NewsPayload {
+    #[serde(default)]
+    pub news: Vec<NewsItem>,
+    #[serde(default)]
+    pub ongoing: Vec<OngoingItem>,
+    #[serde(default)]
+    pub recent_deaths: Vec<RecentDeathItem>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct OnThisDayPayload {
+    #[serde(default)]
+    pub onthisday: Vec<OnThisDayEvent>,
+    #[serde(default)]
+    pub onthisday_all: Option<OnThisDayArchive>,
+}
+
+pub fn daily_feed_cache_dir(year: u32, month: u32, day: u32) -> PathBuf {
+    crate::paths::cache_dir()
+        .join("daily_feed")
+        .join(format!("{}_{:02}_{:02}", year, month, day))
+}
+
 pub fn feed_cache_path(year: u32, month: u32, day: u32) -> PathBuf {
-    crate::paths::cache_dir().join(format!("feed_{}_{:02}_{:02}.json", year, month, day))
+    daily_feed_cache_dir(year, month, day)
 }
 
 pub fn get_cached_daily_feed(year: u32, month: u32, day: u32) -> Option<DailyFeed> {
-    let path = feed_cache_path(year, month, day);
-    let content = fs::read_to_string(path).ok()?;
-    let mut feed: DailyFeed = serde_json::from_str(&content).ok()?;
-    if feed.mostread.as_ref().is_none_or(|m| m.articles.is_empty()) {
+    let dir = daily_feed_cache_dir(year, month, day);
+    if !dir.exists() {
+        return None;
+    }
+
+    let tfa: Option<PageSummary> = fs::read_to_string(dir.join("tfa.json"))
+        .ok()
+        .and_then(|s| serde_json::from_str(&s).ok());
+
+    let news_payload: Option<NewsPayload> = fs::read_to_string(dir.join("news.json"))
+        .ok()
+        .and_then(|s| serde_json::from_str(&s).ok());
+
+    let mut mostread: Option<MostReadPayload> = fs::read_to_string(dir.join("most_read.json"))
+        .ok()
+        .and_then(|s| serde_json::from_str(&s).ok());
+
+    let otd_payload: Option<OnThisDayPayload> = fs::read_to_string(dir.join("on_this_day.json"))
+        .ok()
+        .and_then(|s| serde_json::from_str(&s).ok());
+
+    if mostread.as_ref().is_none_or(|m| m.articles.is_empty()) {
         let (py, pm, pd) = utc_yesterday();
-        let prev_path = feed_cache_path(py, pm, pd);
-        if let Ok(prev_content) = fs::read_to_string(prev_path) {
-            if let Ok(prev_feed) = serde_json::from_str::<DailyFeed>(&prev_content) {
-                if let Some(mr) = prev_feed.mostread {
-                    if !mr.articles.is_empty() {
-                        feed.mostread = Some(mr);
-                    }
+        let prev_dir = daily_feed_cache_dir(py, pm, pd);
+        if let Ok(prev_content) = fs::read_to_string(prev_dir.join("most_read.json")) {
+            if let Ok(prev_mr) = serde_json::from_str::<MostReadPayload>(&prev_content) {
+                if !prev_mr.articles.is_empty() {
+                    mostread = Some(prev_mr);
                 }
             }
         }
     }
-    Some(feed)
+
+    let (news, ongoing, recent_deaths) = if let Some(np) = news_payload {
+        (np.news, np.ongoing, np.recent_deaths)
+    } else {
+        (Vec::new(), Vec::new(), Vec::new())
+    };
+
+    let (onthisday, onthisday_all) = if let Some(op) = otd_payload {
+        (op.onthisday, op.onthisday_all)
+    } else {
+        (Vec::new(), None)
+    };
+
+    if tfa.is_none() && news.is_empty() && mostread.is_none() && onthisday.is_empty() {
+        return None;
+    }
+
+    Some(DailyFeed {
+        tfa,
+        news,
+        onthisday,
+        mostread,
+        ongoing,
+        recent_deaths,
+        onthisday_all,
+    })
 }
 
 pub fn save_cached_daily_feed(year: u32, month: u32, day: u32, feed: &DailyFeed) {
-    let path = feed_cache_path(year, month, day);
-    if let Some(parent) = path.parent() {
-        let _ = fs::create_dir_all(parent);
+    let dir = daily_feed_cache_dir(year, month, day);
+    let _ = fs::create_dir_all(&dir);
+
+    if let Some(tfa) = &feed.tfa {
+        if let Ok(json) = serde_json::to_string(tfa) {
+            let _ = fs::write(dir.join("tfa.json"), json);
+        }
     }
-    if let Ok(json) = serde_json::to_string(feed) {
-        let _ = fs::write(path, json);
+
+    let news_payload = NewsPayload {
+        news: feed.news.clone(),
+        ongoing: feed.ongoing.clone(),
+        recent_deaths: feed.recent_deaths.clone(),
+    };
+    if let Ok(json) = serde_json::to_string(&news_payload) {
+        let _ = fs::write(dir.join("news.json"), json);
+    }
+
+    if let Some(mostread) = &feed.mostread {
+        if let Ok(json) = serde_json::to_string(mostread) {
+            let _ = fs::write(dir.join("most_read.json"), json);
+        }
+    }
+
+    let otd_payload = OnThisDayPayload {
+        onthisday: feed.onthisday.clone(),
+        onthisday_all: feed.onthisday_all.clone(),
+    };
+    if let Ok(json) = serde_json::to_string(&otd_payload) {
+        let _ = fs::write(dir.join("on_this_day.json"), json);
     }
 }
 
