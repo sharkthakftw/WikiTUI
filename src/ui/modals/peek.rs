@@ -1,7 +1,7 @@
 use crate::app::App;
 use crate::theme;
 use ratatui::{
-    layout::Rect,
+    layout::{Alignment, Rect},
     style::{Style, Stylize},
     text::{Line, Span},
     widgets::{Block, Clear, Paragraph},
@@ -59,11 +59,18 @@ pub fn render_link_peek(f: &mut Frame, app: &App, size: Rect) {
     let mut lines = Vec::new();
 
     if peek.is_loading {
+        let pad_top = (inner.height.saturating_sub(1)) / 2;
+        for _ in 0..pad_top {
+            lines.push(Line::from(""));
+        }
         let spinner = crate::ui::current_spinner_frame();
-        lines.push(Line::from(vec![
-            Span::styled(format!("{} ", spinner), Style::default().fg(theme::LIME).bold()),
-            Span::styled("loading summary...", Style::default().fg(theme::GREY).italic()),
-        ]));
+        lines.push(
+            Line::from(vec![
+                Span::styled(format!("{} ", spinner), Style::default().fg(theme::LIME).bold()),
+                Span::styled("loading summary...", Style::default().fg(theme::GREY).italic()),
+            ])
+            .alignment(Alignment::Center),
+        );
     } else {
         if let Some(desc) = &peek.description {
             if !desc.trim().is_empty() {
