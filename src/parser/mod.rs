@@ -74,15 +74,6 @@ pub fn parse_wikipedia_html(
         wrap_and_append_block(&current_block_tokens, &mut doc, effective_width);
     }
 
-    doc.plain_text_lower = doc
-        .lines
-        .iter()
-        .map(|line| {
-            let full_text: String = line.spans.iter().map(|s| s.content.as_ref()).collect();
-            full_text.to_lowercase()
-        })
-        .collect();
-
     doc.links
         .sort_by_key(|l| l.span_indices.first().copied().unwrap_or((0, 0)));
     doc.validate_invariants();

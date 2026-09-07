@@ -239,6 +239,10 @@ impl Pane {
             return;
         }
 
+        if let PaneContent::ArticleText { parsed_doc, .. } = &mut self.content {
+            parsed_doc.ensure_plain_text_lower();
+        }
+
         if let PaneContent::ArticleText { parsed_doc, .. } = &self.content {
             for (line_idx, line) in parsed_doc.lines.iter().enumerate() {
                 if let Some(full_lower) = parsed_doc.plain_text_lower.get(line_idx) {

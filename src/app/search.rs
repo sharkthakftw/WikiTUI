@@ -276,6 +276,9 @@ impl App {
     pub fn enter_local_search_mode(&mut self) {
         self.input_mode = crate::app::InputMode::LocalSearch;
         let pane = self.active_pane_mut();
+        if let crate::app::PaneContent::ArticleText { parsed_doc, .. } = &mut pane.content {
+            parsed_doc.ensure_plain_text_lower();
+        }
         pane.search.query.clear();
         pane.search.matches.clear();
         pane.search.selected_match_idx = None;

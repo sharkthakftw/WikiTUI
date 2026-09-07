@@ -110,6 +110,23 @@ impl ParsedDocument {
             }
         }
     }
+
+    pub fn ensure_plain_text_lower(&mut self) {
+        if self.plain_text_lower.is_empty() && !self.lines.is_empty() {
+            self.plain_text_lower = self
+                .lines
+                .iter()
+                .map(|line| {
+                    let cap = line.spans.iter().map(|s| s.content.len()).sum();
+                    let mut full_text = String::with_capacity(cap);
+                    for s in &line.spans {
+                        full_text.push_str(s.content.as_ref());
+                    }
+                    full_text.to_lowercase()
+                })
+                .collect();
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
