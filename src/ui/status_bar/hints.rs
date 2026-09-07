@@ -28,6 +28,7 @@ pub fn get_mode_badge(app: &App) -> (&'static str, Color) {
             InputMode::QrModal => (" QR CODE ", theme::PINK),
             InputMode::ImageModal => (" IMAGE ", theme::PINK),
             InputMode::LinkPeek => (" PEEK ", theme::PINK),
+            InputMode::SleepTimerPrompt => (" SLEEP ", theme::VIOLET),
         }
     }
 }
@@ -82,7 +83,7 @@ pub fn get_center_spans(
                 .fg(theme::VIOLET)
                 .add_modifier(Modifier::BOLD),
         )],
-        InputMode::CreateNewList | InputMode::RenameList => vec![Span::styled(
+        InputMode::CreateNewList | InputMode::RenameList | InputMode::SleepTimerPrompt => vec![Span::styled(
             "enter confirm · esc cancel",
             Style::default()
                 .fg(theme::VIOLET)

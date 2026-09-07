@@ -62,6 +62,7 @@ impl App {
             crate::app::InputMode::Search
                 | crate::app::InputMode::RenameList
                 | crate::app::InputMode::CreateNewList
+                | crate::app::InputMode::SleepTimerPrompt
         ) {
             if let Some((byte_idx, _)) = self
                 .search_modal
@@ -83,6 +84,7 @@ impl App {
             crate::app::InputMode::Search
                 | crate::app::InputMode::RenameList
                 | crate::app::InputMode::CreateNewList
+                | crate::app::InputMode::SleepTimerPrompt
         ) && self.search_modal.cursor_pos > 0
         {
             let target_char = self.search_modal.cursor_pos - 1;
@@ -101,6 +103,7 @@ impl App {
             crate::app::InputMode::Search
                 | crate::app::InputMode::RenameList
                 | crate::app::InputMode::CreateNewList
+                | crate::app::InputMode::SleepTimerPrompt
         ) && self.search_modal.cursor_pos > 0
         {
             let char_indices: Vec<(usize, char)> = self.search_modal.input.char_indices().collect();
@@ -131,6 +134,7 @@ impl App {
             crate::app::InputMode::Search
                 | crate::app::InputMode::RenameList
                 | crate::app::InputMode::CreateNewList
+                | crate::app::InputMode::SleepTimerPrompt
         ) {
             if let Some((byte_idx, _)) = self
                 .search_modal
@@ -149,6 +153,7 @@ impl App {
             crate::app::InputMode::Search
                 | crate::app::InputMode::RenameList
                 | crate::app::InputMode::CreateNewList
+                | crate::app::InputMode::SleepTimerPrompt
         ) {
             self.search_modal.cursor_pos = self.search_modal.cursor_pos.saturating_sub(1);
         }
@@ -160,6 +165,7 @@ impl App {
             crate::app::InputMode::Search
                 | crate::app::InputMode::RenameList
                 | crate::app::InputMode::CreateNewList
+                | crate::app::InputMode::SleepTimerPrompt
         ) {
             let char_count = self.search_modal.input.chars().count();
             if self.search_modal.cursor_pos < char_count {
@@ -174,6 +180,7 @@ impl App {
             crate::app::InputMode::Search
                 | crate::app::InputMode::RenameList
                 | crate::app::InputMode::CreateNewList
+                | crate::app::InputMode::SleepTimerPrompt
         ) {
             self.search_modal.cursor_pos = 0;
         }
@@ -185,6 +192,7 @@ impl App {
             crate::app::InputMode::Search
                 | crate::app::InputMode::RenameList
                 | crate::app::InputMode::CreateNewList
+                | crate::app::InputMode::SleepTimerPrompt
         ) {
             self.search_modal.cursor_pos = self.search_modal.input.chars().count();
         }

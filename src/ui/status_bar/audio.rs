@@ -95,12 +95,34 @@ pub fn build_audio_progress_bar(app: &App, available_width: usize) -> Vec<Span<'
 
     let title_len = display_title.as_ref().map_or(0, |t| t.chars().count() + 2);
 
-    let show_hint =
-        available_width > icon.chars().count() + title_len + min_bar_width + hint.len() + 4;
+    let sleep_badge = if let Some(rem) = app.audio_player.remaining_sleep_timer_secs() {
+        let time_str = if rem >= 3600 {
+            format!("{}h{}m", rem / 3600, (rem % 3600).div_ceil(60))
+        } else if rem >= 60 {
+            format!("{}m", rem.div_ceil(60))
+        } else {
+            format!("{}s", rem)
+        };
+        if is_icons {
+            Some(format!(" [󰔛 {}]", time_str))
+        } else {
+            Some(format!(" [zZ {}]", time_str))
+        }
+    } else {
+        None
+    };
+
+    let raw_sleep_len = sleep_badge.as_ref().map_or(0, |s| s.chars().count());
+    let show_sleep = sleep_badge.is_some()
+        && available_width >= icon.chars().count() + min_bar_width + raw_sleep_len;
+    let sleep_len = if show_sleep { raw_sleep_len } else { 0 };
+
+    let show_hint = available_width
+        > icon.chars().count() + title_len + min_bar_width + sleep_len + hint.len() + 4;
     let hint_len = if show_hint { hint.len() + 2 } else { 0 };
 
     let bar_width = available_width
-        .saturating_sub(icon.chars().count() + title_len + hint_len + 2)
+        .saturating_sub(icon.chars().count() + title_len + sleep_len + hint_len + 2)
         .clamp(min_bar_width, 36);
 
     let pad_total = bar_width.saturating_sub(label.chars().count());
@@ -155,6 +177,17 @@ pub fn build_audio_progress_bar(app: &App, available_width: usize) -> Vec<Span<'
                 .bg(theme::LIGHT_BG)
                 .add_modifier(Modifier::BOLD),
         ));
+    }
+
+    if show_sleep {
+        if let Some(sb) = sleep_badge {
+            spans.push(Span::styled(
+                sb,
+                Style::default()
+                    .fg(theme::VIOLET)
+                    .add_modifier(Modifier::BOLD),
+            ));
+        }
     }
 
     if show_hint {

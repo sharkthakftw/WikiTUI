@@ -37,6 +37,7 @@ pub enum InputMode {
     QrModal,
     ImageModal,
     LinkPeek,
+    SleepTimerPrompt,
 }
 
 #[derive(Clone, Debug)]

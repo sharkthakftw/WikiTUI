@@ -72,6 +72,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     if app.input_mode == InputMode::Search
         || app.input_mode == InputMode::RenameList
         || app.input_mode == InputMode::CreateNewList
+        || app.input_mode == InputMode::SleepTimerPrompt
     {
         modals::render_search_modal(f, app, size);
     }

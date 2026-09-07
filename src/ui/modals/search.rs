@@ -24,6 +24,9 @@ pub fn render_search_modal(f: &mut Frame, app: &App, size: Rect) {
     } else if app.input_mode == crate::app::InputMode::CreateNewList {
         let ic = if app.config.ui.icons { "★" } else { "" };
         (ic, "create new list", theme::VIOLET)
+    } else if app.input_mode == crate::app::InputMode::SleepTimerPrompt {
+        let ic = if app.config.ui.icons { "󰔛" } else { "" };
+        (ic, "sleep timer (minutes, or 'off')", theme::VIOLET)
     } else {
         let ic = if app.config.ui.icons { "󰍉" } else { "" };
         (ic, "search wikipedia", theme::BEIGE)

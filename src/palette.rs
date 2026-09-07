@@ -59,6 +59,12 @@ pub const COMMANDS: &[CommandDef] = &[
         execute: |app| app.stop_spoken_audio(),
     },
     CommandDef {
+        id: "sleep_timer",
+        label: "sleep timer",
+        shortcut: None,
+        execute: |app| app.open_sleep_timer_prompt(),
+    },
+    CommandDef {
         id: "save_to_list",
         label: "save to list",
         shortcut: Some("m"),
@@ -157,7 +163,9 @@ pub const COMMANDS: &[CommandDef] = &[
 ];
 
 pub fn filter_commands(query: &str) -> Vec<(&'static CommandDef, Vec<usize>)> {
-    let q = query.trim().to_lowercase();
+    let trimmed = query.trim();
+    let stripped = trimmed.strip_prefix(':').unwrap_or(trimmed);
+    let q = stripped.trim().to_lowercase();
     if q.is_empty() {
         return COMMANDS.iter().map(|cmd| (cmd, Vec::new())).collect();
     }

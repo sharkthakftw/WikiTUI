@@ -37,6 +37,27 @@ pub fn handle_palette_mode(app: &mut App, key: KeyEvent) {
                 let action = cmd.execute;
                 app.input_mode = InputMode::Normal;
                 action(app);
+            } else {
+                let trimmed = app
+                    .command_palette
+                    .query
+                    .trim()
+                    .strip_prefix(':')
+                    .unwrap_or(app.command_palette.query.trim())
+                    .trim();
+                if let Some(arg) = trimmed.strip_prefix("sleep ") {
+                    app.input_mode = InputMode::Normal;
+                    let arg = arg.trim();
+                    if arg == "off" {
+                        app.cancel_audio_sleep_timer();
+                    } else if let Some(secs) = crate::audio::parse_duration_to_secs(arg) {
+                        app.set_audio_sleep_timer_secs(secs);
+                    } else if let Ok(mins) = arg.parse::<u64>() {
+                        app.set_audio_sleep_timer_secs(mins * 60);
+                    } else {
+                        app.set_status_message(format!("invalid sleep duration: {}", arg));
+                    }
+                }
             }
         }
         KeyCode::Backspace => {

@@ -312,6 +312,20 @@ fn handle_modal_left_click(
         return true;
     }
 
+    if app.input_mode == InputMode::SleepTimerPrompt {
+        let prompt_area = crate::ui::modals::compute_search_modal_area(size);
+        if col < prompt_area.x
+            || col >= prompt_area.x + prompt_area.width
+            || row < prompt_area.y
+            || row >= prompt_area.y + prompt_area.height
+        {
+            app.search_modal.input.clear();
+            app.search_modal.cursor_pos = 0;
+            app.input_mode = InputMode::Normal;
+        }
+        return true;
+    }
+
     if app.input_mode == InputMode::Settings {
         let area = crate::ui::modals::compute_settings_modal_area(size);
         let inner = Rect::new(

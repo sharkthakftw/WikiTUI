@@ -27,6 +27,8 @@ pub struct AudioPlayer {
     pub probe_rx: Option<Receiver<u64>>,
     pub playhead_rx: Option<Receiver<PlayheadUpdate>>,
     pub is_buffering: bool,
+    pub sleep_timer_deadline: Option<Instant>,
+    pub sleep_timer_expired: bool,
 }
 
 impl Default for AudioPlayer {
@@ -50,6 +52,8 @@ impl AudioPlayer {
             probe_rx: None,
             playhead_rx: None,
             is_buffering: false,
+            sleep_timer_deadline: None,
+            sleep_timer_expired: false,
         }
     }
 
@@ -59,6 +63,28 @@ impl AudioPlayer {
 
     pub fn is_active(&self) -> bool {
         self.state != PlaybackState::Stopped
+    }
+
+    pub fn set_sleep_timer(&mut self, duration_secs: u64) {
+        self.sleep_timer_deadline =
+            Some(Instant::now() + std::time::Duration::from_secs(duration_secs));
+        self.sleep_timer_expired = false;
+    }
+
+    pub fn clear_sleep_timer(&mut self) {
+        self.sleep_timer_deadline = None;
+        self.sleep_timer_expired = false;
+    }
+
+    pub fn remaining_sleep_timer_secs(&self) -> Option<u64> {
+        self.sleep_timer_deadline.map(|deadline| {
+            let now = Instant::now();
+            if now < deadline {
+                (deadline - now).as_secs()
+            } else {
+                0
+            }
+        })
     }
 
     pub fn play(&mut self, title: &str, url: &str, duration_str: Option<&str>) -> bool {
@@ -249,9 +275,19 @@ impl AudioPlayer {
         self.probe_rx = None;
         self.playhead_rx = None;
         self.is_buffering = false;
+        self.sleep_timer_deadline = None;
+        self.sleep_timer_expired = false;
     }
 
     pub fn poll_status(&mut self) {
+        if let Some(deadline) = self.sleep_timer_deadline {
+            if Instant::now() >= deadline {
+                self.sleep_timer_deadline = None;
+                self.sleep_timer_expired = true;
+                self.pause();
+            }
+        }
+
         if let Some(rx) = &self.probe_rx {
             if let Ok(exact_secs) = rx.try_recv() {
                 self.total_duration_secs = Some(exact_secs);
@@ -304,6 +340,8 @@ impl AudioPlayer {
                 self.probe_rx = None;
                 self.playhead_rx = None;
                 self.is_buffering = false;
+                self.sleep_timer_deadline = None;
+                self.sleep_timer_expired = false;
             }
         }
     }

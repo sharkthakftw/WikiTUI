@@ -83,6 +83,10 @@ fn run_app(
     while app.running {
         app.check_config_sync();
         app.audio_player.poll_status();
+        if app.audio_player.sleep_timer_expired {
+            app.audio_player.sleep_timer_expired = false;
+            app.set_status_message("sleep timer paused playback");
+        }
 
         if app.config.input.mouse_support != mouse_capture_enabled {
             mouse_capture_enabled = app.config.input.mouse_support;
