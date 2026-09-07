@@ -10,8 +10,12 @@ use ratatui::{
 };
 
 pub fn compute_image_modal_area(size: Rect) -> Rect {
-    let width = (size.width * 90 / 100).max(40).min(size.width.saturating_sub(2));
-    let height = (size.height * 90 / 100).max(15).min(size.height.saturating_sub(2));
+    let width = (size.width * 90 / 100)
+        .max(40)
+        .min(size.width.saturating_sub(2));
+    let height = (size.height * 90 / 100)
+        .max(15)
+        .min(size.height.saturating_sub(2));
     let x = (size.width.saturating_sub(width)) / 2;
     let y = (size.height.saturating_sub(height)) / 2;
     Rect {
@@ -87,8 +91,12 @@ pub fn render_image_modal(f: &mut Frame, app: &mut App, size: Rect) {
 
         let scale = (canvas_px_w / (orig_w as f32)).min(canvas_px_h / (orig_h as f32));
 
-        let display_cols = ((orig_w as f32 * scale).round() as u16).max(2).min(canvas_w);
-        let display_rows = ((orig_h as f32 * scale / 2.0).round() as u16).max(2).min(canvas_h);
+        let display_cols = ((orig_w as f32 * scale).round() as u16)
+            .max(2)
+            .min(canvas_w);
+        let display_rows = ((orig_h as f32 * scale / 2.0).round() as u16)
+            .max(2)
+            .min(canvas_h);
 
         let pad_top = (canvas_h.saturating_sub(display_rows)) / 2;
 

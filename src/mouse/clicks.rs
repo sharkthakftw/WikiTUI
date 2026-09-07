@@ -19,13 +19,7 @@ pub fn handle_left_click(
     handle_workspace_left_click(app, col, row, term_width, term_height, alt);
 }
 
-pub fn handle_middle_click(
-    app: &mut App,
-    col: u16,
-    row: u16,
-    term_width: u16,
-    term_height: u16,
-) {
+pub fn handle_middle_click(app: &mut App, col: u16, row: u16, term_width: u16, term_height: u16) {
     let size = Rect::new(0, 0, term_width, term_height);
 
     if row == 0 {
@@ -49,7 +43,8 @@ pub fn handle_middle_click(
     }
 
     if app.input_mode == InputMode::DailyFeedModal {
-        if let Some((_, _, target)) = crate::ui::modals::get_daily_feed_item_at(app, col, row, size) {
+        if let Some((_, _, target)) = crate::ui::modals::get_daily_feed_item_at(app, col, row, size)
+        {
             let cur_tab = app.active_tab_idx;
             app.new_tab();
             let pane_id = app.active_pane().id;
@@ -123,7 +118,10 @@ pub fn handle_middle_click(
                                 app.active_pane_mut().is_loading = true;
                                 app.send_fetch_article(pane_id, title.clone());
                                 app.active_tab_idx = cur_tab;
-                                app.set_status_message(format!("opened '{}' in background tab", title));
+                                app.set_status_message(format!(
+                                    "opened '{}' in background tab",
+                                    title
+                                ));
                             }
                         }
                     }
@@ -154,7 +152,10 @@ pub fn handle_middle_click(
                                     app.active_pane_mut().is_loading = true;
                                     app.send_fetch_article(pane_id, title.clone());
                                     app.active_tab_idx = cur_tab;
-                                    app.set_status_message(format!("opened '{}' in background tab", title));
+                                    app.set_status_message(format!(
+                                        "opened '{}' in background tab",
+                                        title
+                                    ));
                                 }
                             }
                         }
@@ -771,11 +772,9 @@ fn handle_workspace_left_click(
                             col,
                             row,
                         ) {
-                            let path = pane
-                                .loaded_images
-                                .get(&img.url)
-                                .cloned()
-                                .or_else(|| crate::graphics::cache::get_cached_image_path(&img.url));
+                            let path = pane.loaded_images.get(&img.url).cloned().or_else(|| {
+                                crate::graphics::cache::get_cached_image_path(&img.url)
+                            });
                             app.open_image_modal(img.url, img.alt, img.caption, path);
                         }
                     }

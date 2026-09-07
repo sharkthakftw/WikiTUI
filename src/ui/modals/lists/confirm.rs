@@ -112,7 +112,10 @@ pub fn render_confirm_modal(f: &mut Frame, app: &App, size: Rect) {
             "are you sure you want to delete:",
             vec![
                 Span::styled("custom list: ", Style::default().fg(theme::GREY)),
-                Span::styled(truncate_title(title), Style::default().fg(theme::YELLOW).bold()),
+                Span::styled(
+                    truncate_title(title),
+                    Style::default().fg(theme::YELLOW).bold(),
+                ),
             ],
             "delete",
         ),
@@ -120,7 +123,10 @@ pub fn render_confirm_modal(f: &mut Frame, app: &App, size: Rect) {
             "are you sure you want to delete:",
             vec![
                 Span::styled("article: ", Style::default().fg(theme::GREY)),
-                Span::styled(truncate_title(title), Style::default().fg(theme::YELLOW).bold()),
+                Span::styled(
+                    truncate_title(title),
+                    Style::default().fg(theme::YELLOW).bold(),
+                ),
             ],
             "delete",
         ),

@@ -157,15 +157,13 @@ pub fn handle_normal_mode(app: &mut App, key: KeyEvent, term_width: u16, term_he
                     let target_link_idx = app
                         .active_pane()
                         .selected_link_idx
-                        .filter(|&idx| {
-                            parsed_doc.links.get(idx).is_some_and(|l| !l.is_citation())
-                        })
+                        .filter(|&idx| parsed_doc.links.get(idx).is_some_and(|l| !l.is_citation()))
                         .or_else(|| {
                             parsed_doc.links.iter().position(|l| {
                                 !l.is_citation()
-                                    && l.span_indices
-                                        .first()
-                                        .is_some_and(|&(line, _)| line >= scroll && line < scroll + 20)
+                                    && l.span_indices.first().is_some_and(|&(line, _)| {
+                                        line >= scroll && line < scroll + 20
+                                    })
                             })
                         });
 
@@ -181,7 +179,9 @@ pub fn handle_normal_mode(app: &mut App, key: KeyEvent, term_width: u16, term_he
                                         .iter()
                                         .take(span_idx)
                                         .map(|s| {
-                                            unicode_width::UnicodeWidthStr::width(s.content.as_ref())
+                                            unicode_width::UnicodeWidthStr::width(
+                                                s.content.as_ref(),
+                                            )
                                         })
                                         .sum()
                                 })

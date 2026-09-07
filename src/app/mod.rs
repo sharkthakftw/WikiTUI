@@ -234,7 +234,10 @@ impl App {
                     if let Some(item) = self.feed.current_item() {
                         (
                             item.title.clone(),
-                            format!("https://en.wikipedia.org/wiki/{}", item.title.replace(' ', "_")),
+                            format!(
+                                "https://en.wikipedia.org/wiki/{}",
+                                item.title.replace(' ', "_")
+                            ),
                         )
                     } else {
                         self.set_status_message("no article to share");

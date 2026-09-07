@@ -113,8 +113,14 @@ pub fn render_link_peek(f: &mut Frame, app: &App, size: Rect) {
         let spinner = crate::ui::current_spinner_frame();
         lines.push(
             Line::from(vec![
-                Span::styled(format!("{} ", spinner), Style::default().fg(theme::LIME).bold()),
-                Span::styled("loading summary...", Style::default().fg(theme::GREY).italic()),
+                Span::styled(
+                    format!("{} ", spinner),
+                    Style::default().fg(theme::LIME).bold(),
+                ),
+                Span::styled(
+                    "loading summary...",
+                    Style::default().fg(theme::GREY).italic(),
+                ),
             ])
             .alignment(Alignment::Center),
         );
@@ -140,7 +146,9 @@ pub fn render_link_peek(f: &mut Frame, app: &App, size: Rect) {
             if let Some(extract) = &peek.extract {
                 let wrapped = wrap_text(extract, inner.width as usize);
                 for (idx, w_line) in wrapped.into_iter().take(max_extract_rows).enumerate() {
-                    let text = if idx == max_extract_rows - 1 && extract.len() > w_line.len() * max_extract_rows {
+                    let text = if idx == max_extract_rows - 1
+                        && extract.len() > w_line.len() * max_extract_rows
+                    {
                         if w_line.ends_with('.') || w_line.ends_with('…') {
                             w_line
                         } else {
@@ -149,7 +157,10 @@ pub fn render_link_peek(f: &mut Frame, app: &App, size: Rect) {
                     } else {
                         w_line
                     };
-                    lines.push(Line::from(Span::styled(text, Style::default().fg(theme::FG))));
+                    lines.push(Line::from(Span::styled(
+                        text,
+                        Style::default().fg(theme::FG),
+                    )));
                 }
             } else if lines.is_empty() {
                 lines.push(Line::from(Span::styled(

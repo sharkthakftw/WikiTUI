@@ -257,10 +257,15 @@ impl App {
                     .cached_members
                     .insert(category, members);
             }
-            NetworkEvent::UrlShortened { original_url, short_url } => {
+            NetworkEvent::UrlShortened {
+                original_url,
+                short_url,
+            } => {
                 if let Some(qr_modal) = &mut self.qr_modal {
                     if qr_modal.full_url == original_url {
-                        if let Ok(qrcode) = fast_qr::qr::QRBuilder::new(short_url.as_bytes()).build() {
+                        if let Ok(qrcode) =
+                            fast_qr::qr::QRBuilder::new(short_url.as_bytes()).build()
+                        {
                             let size = qrcode.size;
                             let mut matrix = vec![vec![false; size]; size];
                             for y in 0..size {
@@ -283,10 +288,8 @@ impl App {
                     .replace('_', " ")
                     .trim()
                     .to_string();
-                self.summary_cache.insert(
-                    clean_title.clone(),
-                    (description.clone(), extract.clone()),
-                );
+                self.summary_cache
+                    .insert(clean_title.clone(), (description.clone(), extract.clone()));
                 if let Some(peek) = &mut self.link_peek {
                     let peek_clean = crate::parser::url_decode(&peek.title)
                         .replace('_', " ")

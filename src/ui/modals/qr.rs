@@ -121,9 +121,7 @@ pub fn render_qr_modal(f: &mut Frame, app: &App, size: Rect) {
     } else {
         let modal_center = h.saturating_sub(1) / 2;
         let ideal_qr_start = modal_center.saturating_sub((qr_rows.saturating_sub(1)) / 2);
-        let qr_start = ideal_qr_start
-            .max(1)
-            .min(h.saturating_sub(qr_rows + 2));
+        let qr_start = ideal_qr_start.max(1).min(h.saturating_sub(qr_rows + 2));
         let qr_end = qr_start + qr_rows;
 
         let top_blanks = qr_start.saturating_sub(2);

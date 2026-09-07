@@ -19,11 +19,7 @@ pub fn shorten_url(
     let resp = agent
         .post(endpoint)
         .timeout(std::time::Duration::from_secs(timeout_secs.max(1)))
-        .send_form(&[
-            ("action", "shortenurl"),
-            ("url", url),
-            ("format", "json"),
-        ])
+        .send_form(&[("action", "shortenurl"), ("url", url), ("format", "json")])
         .map_err(|e| super::ApiError::Network(e.to_string()))?;
     let data: ShortenResponse = resp
         .into_json()

@@ -83,12 +83,14 @@ pub fn get_center_spans(
                 .fg(theme::VIOLET)
                 .add_modifier(Modifier::BOLD),
         )],
-        InputMode::CreateNewList | InputMode::RenameList | InputMode::SleepTimerPrompt => vec![Span::styled(
-            "enter confirm · esc cancel",
-            Style::default()
-                .fg(theme::VIOLET)
-                .add_modifier(Modifier::BOLD),
-        )],
+        InputMode::CreateNewList | InputMode::RenameList | InputMode::SleepTimerPrompt => {
+            vec![Span::styled(
+                "enter confirm · esc cancel",
+                Style::default()
+                    .fg(theme::VIOLET)
+                    .add_modifier(Modifier::BOLD),
+            )]
+        }
         InputMode::SavedListsViewer => vec![Span::styled(
             "h/l pane · j/k navigate · enter open · r rename · d delete · esc close",
             Style::default()

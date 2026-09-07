@@ -106,7 +106,10 @@ pub fn render_search_pane(
             lines.push(Line::from(""));
         }
         let no_res_style = if should_dim {
-            Style::default().fg(theme::RED).bold().add_modifier(Modifier::DIM)
+            Style::default()
+                .fg(theme::RED)
+                .bold()
+                .add_modifier(Modifier::DIM)
         } else {
             Style::default().fg(theme::RED).bold()
         };
