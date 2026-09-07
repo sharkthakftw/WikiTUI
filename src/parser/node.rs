@@ -13,6 +13,17 @@ use super::utils::{
 use crate::theme;
 use ratatui::style::{Modifier, Style};
 
+fn get_decoded_attr(tag: &tl::HTMLTag, key: &str) -> Option<String> {
+    tag.attributes().get(key).flatten().map(|b| {
+        let s = b.as_utf8_str();
+        if s.contains('&') {
+            decode_html_entities(&s).into_owned()
+        } else {
+            s.into_owned()
+        }
+    })
+}
+
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn process_node<'a>(
     node: &'a tl::Node<'a>,
@@ -66,17 +77,6 @@ pub(crate) fn process_node<'a>(
                 return;
             }
 
-            let class_attr = tag
-                .attributes()
-                .get("class")
-                .flatten()
-                .map(|b| decode_html_entities(&b.as_utf8_str()).into_owned());
-            let id_attr = tag
-                .attributes()
-                .get("id")
-                .flatten()
-                .map(|b| decode_html_entities(&b.as_utf8_str()).into_owned());
-
             if spoken::is_spoken_wikipedia_tag(tag, ctx.parser) {
                 if let Some(spoken_audio) = spoken::extract_spoken_audio(tag, ctx.parser) {
                     if doc.spoken_audio.is_none() {
@@ -126,12 +126,14 @@ pub(crate) fn process_node<'a>(
                 return;
             }
 
+            let class_attr = get_decoded_attr(tag, "class");
+            let id_attr = get_decoded_attr(tag, "id");
+
             if !ctx.show_external_links {
                 if let Some(ref id_str) = id_attr {
-                    let lower = id_str.to_lowercase();
-                    if lower == "external_links"
-                        || lower == "external-links"
-                        || lower == "externallinks"
+                    if id_str.eq_ignore_ascii_case("external_links")
+                        || id_str.eq_ignore_ascii_case("external-links")
+                        || id_str.eq_ignore_ascii_case("externallinks")
                     {
                         ctx.skipping_external_section = true;
                         return;
