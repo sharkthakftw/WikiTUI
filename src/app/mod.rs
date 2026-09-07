@@ -57,6 +57,8 @@ pub struct App {
     pub command_palette: crate::app::types::CommandPaletteState,
     pub qr_modal: Option<crate::app::types::QrModalState>,
     pub image_modal: Option<crate::app::types::ImageModalState>,
+    pub link_peek: Option<crate::app::types::LinkPeekState>,
+    pub summary_cache: std::collections::HashMap<String, (Option<String>, Option<String>)>,
     pub graphics: GraphicsState,
 
     pub(crate) next_pane_id: usize,
@@ -118,6 +120,8 @@ impl App {
             command_palette: crate::app::types::CommandPaletteState::default(),
             qr_modal: None,
             image_modal: None,
+            link_peek: None,
+            summary_cache: std::collections::HashMap::new(),
             graphics: GraphicsState::default(),
 
             next_pane_id: 1,
@@ -291,5 +295,79 @@ impl App {
     pub fn close_image_modal(&mut self) {
         self.image_modal = None;
         self.input_mode = InputMode::Normal;
+    }
+
+    pub fn open_link_peek(
+        &mut self,
+        title: String,
+        raw_target: String,
+        anchor_x: u16,
+        anchor_y: u16,
+    ) {
+        if raw_target.starts_with("http://")
+            || raw_target.starts_with("https://")
+            || raw_target.starts_with("//")
+        {
+            let desc = raw_target
+                .split("://")
+                .nth(1)
+                .unwrap_or(&raw_target)
+                .split('/')
+                .next()
+                .map(|s| s.to_string());
+            self.link_peek = Some(crate::app::types::LinkPeekState {
+                title: "External Link".to_string(),
+                raw_target: raw_target.clone(),
+                description: desc,
+                extract: Some(raw_target),
+                is_loading: false,
+                anchor_x,
+                anchor_y,
+            });
+            self.input_mode = InputMode::LinkPeek;
+            return;
+        }
+
+        let clean_title = crate::parser::url_decode(&title)
+            .replace('_', " ")
+            .trim()
+            .to_string();
+        if let Some((desc, extract)) = self.summary_cache.get(&clean_title) {
+            self.link_peek = Some(crate::app::types::LinkPeekState {
+                title: clean_title,
+                raw_target,
+                description: desc.clone(),
+                extract: extract.clone(),
+                is_loading: false,
+                anchor_x,
+                anchor_y,
+            });
+        } else {
+            self.link_peek = Some(crate::app::types::LinkPeekState {
+                title: clean_title.clone(),
+                raw_target,
+                description: None,
+                extract: None,
+                is_loading: true,
+                anchor_x,
+                anchor_y,
+            });
+            self.send_fetch_summary(clean_title);
+        }
+        self.input_mode = InputMode::LinkPeek;
+    }
+
+    pub fn close_link_peek(&mut self) {
+        self.link_peek = None;
+        if self.input_mode == InputMode::LinkPeek {
+            self.input_mode = InputMode::Normal;
+        }
+    }
+
+    pub fn send_fetch_summary(&self, title: String) {
+        self.network.send(crate::api::NetworkCommand::FetchSummary {
+            title,
+            timeout: self.config.network.timeout,
+        });
     }
 }

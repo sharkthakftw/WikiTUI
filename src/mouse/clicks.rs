@@ -773,7 +773,14 @@ fn handle_workspace_left_click(
     }
 }
 
-pub fn handle_mouse_move(app: &mut App, col: u16, row: u16, term_width: u16, term_height: u16) {
+pub fn handle_mouse_move(
+    app: &mut App,
+    col: u16,
+    row: u16,
+    term_width: u16,
+    term_height: u16,
+    ctrl: bool,
+) {
     if app.input_mode == InputMode::DailyFeedModal {
         let size = Rect::new(0, 0, term_width, term_height);
         if let Some((item_idx, l_idx, _)) =
@@ -787,9 +794,11 @@ pub fn handle_mouse_move(app: &mut App, col: u16, row: u16, term_width: u16, ter
         return;
     }
 
-    if app.input_mode != InputMode::Normal {
+    if app.input_mode != InputMode::Normal && app.input_mode != InputMode::LinkPeek {
         return;
     }
+
+    let mut hovered_link = None;
 
     if app.zen_mode {
         let zen_rect = crate::ui::compute_zen_area(Rect::new(0, 0, term_width, term_height));
@@ -808,13 +817,13 @@ pub fn handle_mouse_move(app: &mut App, col: u16, row: u16, term_width: u16, ter
                     row,
                 ) {
                     pane.selected_link_idx = Some(link_idx);
+                    if let Some(link) = parsed_doc.links.get(link_idx) {
+                        hovered_link = Some((link.title.clone(), link.text.clone()));
+                    }
                 }
             }
         }
-        return;
-    }
-
-    if row >= 1 && row < term_height.saturating_sub(1) {
+    } else if row >= 1 && row < term_height.saturating_sub(1) {
         let main_rect = Rect::new(0, 1, term_width, term_height.saturating_sub(2));
         let tab = app.active_tab_mut();
         let rects = tab.layout_root.compute_rects(main_rect);
@@ -835,10 +844,25 @@ pub fn handle_mouse_move(app: &mut App, col: u16, row: u16, term_width: u16, ter
                         row,
                     ) {
                         pane.selected_link_idx = Some(link_idx);
+                        if let Some(link) = parsed_doc.links.get(link_idx) {
+                            hovered_link = Some((link.title.clone(), link.text.clone()));
+                        }
                     }
                 }
                 break;
             }
         }
+    }
+
+    if ctrl {
+        if let Some((title, raw_target)) = hovered_link {
+            if app.link_peek.as_ref().map(|p| &p.raw_target) != Some(&raw_target) {
+                app.open_link_peek(title, raw_target, col, row);
+            }
+        } else if app.input_mode == InputMode::LinkPeek {
+            app.close_link_peek();
+        }
+    } else if app.input_mode == InputMode::LinkPeek {
+        app.close_link_peek();
     }
 }

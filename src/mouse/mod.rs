@@ -46,7 +46,10 @@ pub fn handle_mouse_event(app: &mut App, mouse: MouseEvent, term_width: u16, ter
             handle_selection_up(app);
         }
         MouseEventKind::Moved => {
-            handle_mouse_move(app, mouse.column, mouse.row, term_width, term_height);
+            let ctrl = mouse
+                .modifiers
+                .contains(crossterm::event::KeyModifiers::CONTROL);
+            handle_mouse_move(app, mouse.column, mouse.row, term_width, term_height, ctrl);
         }
         _ => {}
     }

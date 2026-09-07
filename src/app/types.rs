@@ -36,6 +36,18 @@ pub enum InputMode {
     CommandPalette,
     QrModal,
     ImageModal,
+    LinkPeek,
+}
+
+#[derive(Clone, Debug)]
+pub struct LinkPeekState {
+    pub title: String,
+    pub raw_target: String,
+    pub description: Option<String>,
+    pub extract: Option<String>,
+    pub is_loading: bool,
+    pub anchor_x: u16,
+    pub anchor_y: u16,
 }
 
 #[derive(Clone, Debug)]

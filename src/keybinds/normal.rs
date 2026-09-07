@@ -147,6 +147,64 @@ pub fn handle_normal_mode(app: &mut App, key: KeyEvent, term_width: u16, term_he
             KeyCode::Char('p') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                 app.open_command_palette();
             }
+            KeyCode::Char('p') => {
+                let pane_rect =
+                    crate::mouse::scrollbar::active_pane_rect(app, term_width, term_height);
+                let link_info = if let crate::app::PaneContent::ArticleText { parsed_doc, .. } =
+                    &app.active_pane().content
+                {
+                    let scroll = app.active_pane().scroll_offset;
+                    let target_link_idx = app.active_pane().selected_link_idx.or_else(|| {
+                        parsed_doc.links.iter().position(|l| {
+                            l.span_indices
+                                .first()
+                                .is_some_and(|&(line, _)| line >= scroll && line < scroll + 20)
+                        })
+                    });
+
+                    if let Some(idx) = target_link_idx {
+                        if let Some(link) = parsed_doc.links.get(idx) {
+                            let (line_idx, span_idx) =
+                                link.span_indices.first().copied().unwrap_or((scroll, 0));
+                            let col_offset: usize = parsed_doc
+                                .lines
+                                .get(line_idx)
+                                .map(|l| {
+                                    l.spans
+                                        .iter()
+                                        .take(span_idx)
+                                        .map(|s| {
+                                            unicode_width::UnicodeWidthStr::width(s.content.as_ref())
+                                        })
+                                        .sum()
+                                })
+                                .unwrap_or(0);
+
+                            let row_offset = line_idx.saturating_sub(scroll);
+                            Some((
+                                idx,
+                                link.title.clone(),
+                                link.text.clone(),
+                                col_offset,
+                                row_offset,
+                            ))
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                };
+
+                if let Some((idx, title, raw_target, col_offset, row_offset)) = link_info {
+                    app.active_pane_mut().selected_link_idx = Some(idx);
+                    let anchor_x = pane_rect.x + 1 + (col_offset as u16);
+                    let anchor_y = pane_rect.y + 1 + (row_offset as u16);
+                    app.open_link_peek(title, raw_target, anchor_x, anchor_y);
+                }
+            }
             KeyCode::Char('z') => {
                 app.toggle_zen_mode();
             }

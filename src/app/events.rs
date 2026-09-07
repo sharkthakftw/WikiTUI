@@ -274,6 +274,33 @@ impl App {
                     }
                 }
             }
+            NetworkEvent::SummaryLoaded {
+                title,
+                description,
+                extract,
+            } => {
+                let clean_title = crate::parser::url_decode(&title)
+                    .replace('_', " ")
+                    .trim()
+                    .to_string();
+                self.summary_cache.insert(
+                    clean_title.clone(),
+                    (description.clone(), extract.clone()),
+                );
+                if let Some(peek) = &mut self.link_peek {
+                    let peek_clean = crate::parser::url_decode(&peek.title)
+                        .replace('_', " ")
+                        .trim()
+                        .to_string();
+                    if peek_clean.eq_ignore_ascii_case(&clean_title)
+                        || peek.title.eq_ignore_ascii_case(&title)
+                    {
+                        peek.description = description;
+                        peek.extract = extract;
+                        peek.is_loading = false;
+                    }
+                }
+            }
         }
     }
 

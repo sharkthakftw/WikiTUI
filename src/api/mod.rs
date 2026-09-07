@@ -7,6 +7,7 @@ pub mod random;
 pub mod search;
 pub mod shorten;
 pub mod stats;
+pub mod summary;
 pub mod updates;
 
 pub use daily_feed::DailyFeed;
@@ -119,6 +120,10 @@ pub enum NetworkCommand {
         url: String,
         timeout: u64,
     },
+    FetchSummary {
+        title: String,
+        timeout: u64,
+    },
 }
 
 #[derive(Debug)]
@@ -160,6 +165,11 @@ pub enum NetworkEvent {
     UrlShortened {
         original_url: String,
         short_url: String,
+    },
+    SummaryLoaded {
+        title: String,
+        description: Option<String>,
+        extract: Option<String>,
     },
     Error {
         request_id: u64,
@@ -332,6 +342,17 @@ pub fn run_worker(cmd_rx: Receiver<NetworkCommand>, ev_tx: Sender<NetworkEvent>)
                     let _ = ev_tx.send(NetworkEvent::UrlShortened {
                         original_url: url,
                         short_url,
+                    });
+                }
+            }
+            NetworkCommand::FetchSummary { title, timeout } => {
+                if let Ok((res_title, description, extract)) =
+                    summary::fetch_summary(&agent, &title, timeout)
+                {
+                    let _ = ev_tx.send(NetworkEvent::SummaryLoaded {
+                        title: res_title,
+                        description,
+                        extract,
                     });
                 }
             }
