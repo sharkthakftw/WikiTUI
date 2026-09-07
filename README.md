@@ -18,6 +18,8 @@ a feature-rich terminal wikipedia client.
 - **in-page search (`/`)**: exact substring search with live match highlighting and cycling (`n` / `N`).
 - **inline article images (`I`)**: rich terminal graphics via Kitty graphics protocol with fallback to Unicode halfblocks.
 - **custom saved lists (`m` / `M`)**: save articles into custom lists stored in `~/.config/wikid/saved_articles.json`.
+- **link preview cards (`p` / `ctrl-hover`)**: peek at Wikipedia article summary cards.
+- **spoken audio player & sleep timer (`a` / `:sleep`)**: stream [spoken](https://en.wikipedia.org/wiki/Wikipedia:WikiProject_Spoken_Wikipedia) Wikipedia articles with background caching, live progress bar, and configurable sleep timer.
 - **live settings (`,`)**: in-app settings modal with instant hot-reloading.
 - **instant qr code (`:qr`)**: scan terminal qr code to hand off reading to mobile.
 
@@ -87,6 +89,7 @@ make install
 | **heading jump** | `]` / `[` | jump to next / previous section heading |
 | **toggle feed** | `F` | toggle recommendation feed mode |
 | **link navigation** | `tab` / `shift-tab` | focus next / previous article link |
+| **preview link** | `p`, `ctrl-hover` | peek article summary card without navigating |
 | **open link** | `enter` | open link in active pane |
 | **open in new tab** | `t`, `alt-click` | open link in a new focused tab |
 | **open in background tab** | `alt-enter`, `middle-click` | open link in a background tab |
