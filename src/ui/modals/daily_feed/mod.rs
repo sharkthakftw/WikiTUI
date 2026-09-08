@@ -159,15 +159,27 @@ pub fn render_daily_feed_modal(f: &mut Frame, app: &App, size: Rect) {
 
     let (icon, title_text) = match state.kind {
         DailyFeedKind::News => (
-            if app.user_data.config.ui.icons { "󰋫" } else { "" },
+            if app.user_data.config.ui.icons {
+                "󰋫"
+            } else {
+                ""
+            },
             "in the news".to_string(),
         ),
         DailyFeedKind::OnThisDay => (
-            if app.user_data.config.ui.icons { "󰃭" } else { "" },
+            if app.user_data.config.ui.icons {
+                "󰃭"
+            } else {
+                ""
+            },
             format!("on this day · {}", today_date_str()),
         ),
         DailyFeedKind::MostRead => (
-            if app.user_data.config.ui.icons { "󰄬" } else { "" },
+            if app.user_data.config.ui.icons {
+                "󰄬"
+            } else {
+                ""
+            },
             "most read".to_string(),
         ),
     };

@@ -42,7 +42,11 @@ pub fn get_save_to_list_item_at(app: &App, area: Rect, target_y: u16) -> Option<
 }
 
 pub fn render_save_to_list_modal(f: &mut Frame, app: &App, size: Rect) {
-    let icon = if app.user_data.config.ui.icons { "★" } else { "" };
+    let icon = if app.user_data.config.ui.icons {
+        "★"
+    } else {
+        ""
+    };
     let area = compute_save_to_list_modal_area(size);
     let block = render_modal_frame_at(
         f,

@@ -14,7 +14,8 @@ pub fn handle_save_to_list_mode(app: &mut App, key: KeyEvent) {
 
     match key.code {
         KeyCode::Down | KeyCode::Char('j') | KeyCode::Tab => {
-            app.modals.lists_modal.save_cursor_idx = (app.modals.lists_modal.save_cursor_idx + 1) % total;
+            app.modals.lists_modal.save_cursor_idx =
+                (app.modals.lists_modal.save_cursor_idx + 1) % total;
         }
         KeyCode::Up | KeyCode::Char('k') | KeyCode::BackTab => {
             if app.modals.lists_modal.save_cursor_idx == 0 {
@@ -25,7 +26,9 @@ pub fn handle_save_to_list_mode(app: &mut App, key: KeyEvent) {
         }
         KeyCode::Char(' ') | KeyCode::Enter => {
             if app.modals.lists_modal.save_cursor_idx < custom_lists.len() {
-                let list_id = custom_lists[app.modals.lists_modal.save_cursor_idx].id.clone();
+                let list_id = custom_lists[app.modals.lists_modal.save_cursor_idx]
+                    .id
+                    .clone();
                 let target_title = app.modals.lists_modal.target_title.clone();
                 let added = app
                     .user_data
@@ -186,18 +189,31 @@ pub fn handle_saved_lists_viewer_mode(app: &mut App, key: KeyEvent) {
         }
         KeyCode::Char('d') | KeyCode::Delete => {
             if app.modals.lists_modal.viewer_focus_right {
-                if let Some(list) = app.user_data.saved_lists.lists.get(app.modals.lists_modal.viewer_list_idx) {
+                if let Some(list) = app
+                    .user_data
+                    .saved_lists
+                    .lists
+                    .get(app.modals.lists_modal.viewer_list_idx)
+                {
                     if !app.user_data.config.general.liked_readonly || list.id != "liked" {
-                        if let Some(art) = list.articles.get(app.modals.lists_modal.viewer_article_idx) {
-                            app.modals.confirm_action = Some(crate::app::ConfirmAction::DeleteArticle {
-                                list_id: list.id.clone(),
-                                title: art.clone(),
-                            });
+                        if let Some(art) =
+                            list.articles.get(app.modals.lists_modal.viewer_article_idx)
+                        {
+                            app.modals.confirm_action =
+                                Some(crate::app::ConfirmAction::DeleteArticle {
+                                    list_id: list.id.clone(),
+                                    title: art.clone(),
+                                });
                             app.input_mode = InputMode::Confirm;
                         }
                     }
                 }
-            } else if let Some(list) = app.user_data.saved_lists.lists.get(app.modals.lists_modal.viewer_list_idx) {
+            } else if let Some(list) = app
+                .user_data
+                .saved_lists
+                .lists
+                .get(app.modals.lists_modal.viewer_list_idx)
+            {
                 if list.id != "liked" {
                     app.modals.confirm_action = Some(crate::app::ConfirmAction::DeleteList {
                         list_id: list.id.clone(),
@@ -209,7 +225,12 @@ pub fn handle_saved_lists_viewer_mode(app: &mut App, key: KeyEvent) {
         }
         KeyCode::Char('r') => {
             if !app.modals.lists_modal.viewer_focus_right {
-                if let Some(list) = app.user_data.saved_lists.lists.get(app.modals.lists_modal.viewer_list_idx) {
+                if let Some(list) = app
+                    .user_data
+                    .saved_lists
+                    .lists
+                    .get(app.modals.lists_modal.viewer_list_idx)
+                {
                     if list.id != "liked" {
                         app.modals.lists_modal.rename_list_id = list.id.clone();
                         app.modals.search_modal.input = list.name.clone();

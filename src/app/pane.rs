@@ -102,7 +102,12 @@ pub struct Pane {
 }
 
 impl Pane {
-    pub fn get_halfblock(&self, url: &str, cols: usize, rows: usize) -> Option<&[ratatui::text::Line<'static>]> {
+    pub fn get_halfblock(
+        &self,
+        url: &str,
+        cols: usize,
+        rows: usize,
+    ) -> Option<&[ratatui::text::Line<'static>]> {
         self.halfblock_cache
             .get(url)?
             .iter()
@@ -124,7 +129,10 @@ impl Pane {
         lines: Vec<ratatui::text::Line<'static>>,
     ) {
         let entries = self.halfblock_cache.entry(url).or_default();
-        if let Some(existing) = entries.iter_mut().find(|(c, r, _)| *c == cols && *r == rows) {
+        if let Some(existing) = entries
+            .iter_mut()
+            .find(|(c, r, _)| *c == cols && *r == rows)
+        {
             existing.2 = lines;
         } else {
             entries.push((cols, rows, lines));

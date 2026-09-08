@@ -515,7 +515,12 @@ fn handle_modal_left_click(
                         app, true, right_area, row,
                     )
                 {
-                    if let Some(list) = app.user_data.saved_lists.lists.get(app.modals.lists_modal.viewer_list_idx) {
+                    if let Some(list) = app
+                        .user_data
+                        .saved_lists
+                        .lists
+                        .get(app.modals.lists_modal.viewer_list_idx)
+                    {
                         if clicked_art_idx < list.articles.len() {
                             app.modals.lists_modal.viewer_article_idx = clicked_art_idx;
                             let title = list.articles[clicked_art_idx].clone();

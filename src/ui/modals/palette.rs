@@ -22,7 +22,11 @@ pub fn compute_palette_modal_area(size: Rect) -> Rect {
 
 pub fn render_palette_modal(f: &mut Frame, app: &App, size: Rect) {
     let area = compute_palette_modal_area(size);
-    let icon = if app.user_data.config.ui.icons { ">" } else { "" };
+    let icon = if app.user_data.config.ui.icons {
+        ">"
+    } else {
+        ""
+    };
     let inner = render_modal_container_at(
         f,
         area,
@@ -39,8 +43,12 @@ pub fn render_palette_modal(f: &mut Frame, app: &App, size: Rect) {
     let inner_width = inner.width as usize;
     let mut lines = Vec::new();
 
-    let (input_line, divider_line) =
-        create_search_input_lines(">", &app.modals.command_palette.query, theme::YELLOW, inner_width);
+    let (input_line, divider_line) = create_search_input_lines(
+        ">",
+        &app.modals.command_palette.query,
+        theme::YELLOW,
+        inner_width,
+    );
     lines.push(input_line);
     lines.push(divider_line);
 

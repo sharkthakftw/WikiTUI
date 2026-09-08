@@ -212,44 +212,42 @@ pub fn run_worker(cmd_rx: Receiver<NetworkCommand>, ev_tx: Sender<NetworkEvent>)
     for _ in 0..pool_size {
         let img_rx = img_rx.clone();
         let ev_tx = ev_tx.clone();
-        std::thread::spawn(move || {
-            loop {
-                let task = {
-                    let rx = match img_rx.lock() {
-                        Ok(guard) => guard,
-                        Err(_) => break,
-                    };
-                    match rx.recv() {
-                        Ok(task) => task,
-                        Err(_) => break,
-                    }
+        std::thread::spawn(move || loop {
+            let task = {
+                let rx = match img_rx.lock() {
+                    Ok(guard) => guard,
+                    Err(_) => break,
                 };
-                match task {
-                    ImageTask::DecodeHalfblock {
-                        url,
-                        path,
-                        cols,
-                        rows,
-                        filter,
-                    } => {
-                        if let Ok(bytes) = std::fs::read(&path) {
-                            if let Some(lines) =
-                                crate::graphics::halfblocks::render_halfblock_image_from_bytes(
-                                    &bytes, cols, rows, filter,
-                                )
-                            {
-                                let _ = ev_tx.send(NetworkEvent::HalfblockImageDecoded {
-                                    url,
-                                    cols,
-                                    rows,
-                                    lines,
-                                });
-                            }
+                match rx.recv() {
+                    Ok(task) => task,
+                    Err(_) => break,
+                }
+            };
+            match task {
+                ImageTask::DecodeHalfblock {
+                    url,
+                    path,
+                    cols,
+                    rows,
+                    filter,
+                } => {
+                    if let Ok(bytes) = std::fs::read(&path) {
+                        if let Some(lines) =
+                            crate::graphics::halfblocks::render_halfblock_image_from_bytes(
+                                &bytes, cols, rows, filter,
+                            )
+                        {
+                            let _ = ev_tx.send(NetworkEvent::HalfblockImageDecoded {
+                                url,
+                                cols,
+                                rows,
+                                lines,
+                            });
                         }
                     }
-                    ImageTask::PredecodeKitty { path } => {
-                        crate::graphics::kitty::predecode_kitty_image(&path);
-                    }
+                }
+                ImageTask::PredecodeKitty { path } => {
+                    crate::graphics::kitty::predecode_kitty_image(&path);
                 }
             }
         });
@@ -280,143 +278,152 @@ pub fn run_worker(cmd_rx: Receiver<NetworkCommand>, ev_tx: Sender<NetworkEvent>)
                 let ev_tx = ev_tx.clone();
 
                 std::thread::spawn(move || match cmd {
-            NetworkCommand::Search {
-                request_id,
-                pane_id,
-                query,
-                limit,
-                timeout,
-            } => match search::search_wikipedia(&agent, &query, limit, timeout) {
-                Ok(results) => {
-                    let _ = ev_tx.send(NetworkEvent::SearchResult {
+                    NetworkCommand::Search {
                         request_id,
                         pane_id,
                         query,
-                        results,
-                    });
-                }
-                Err(err) => {
-                    let _ = ev_tx.send(NetworkEvent::Error {
+                        limit,
+                        timeout,
+                    } => match search::search_wikipedia(&agent, &query, limit, timeout) {
+                        Ok(results) => {
+                            let _ = ev_tx.send(NetworkEvent::SearchResult {
+                                request_id,
+                                pane_id,
+                                query,
+                                results,
+                            });
+                        }
+                        Err(err) => {
+                            let _ = ev_tx.send(NetworkEvent::Error {
+                                request_id,
+                                pane_id,
+                                error: err,
+                            });
+                        }
+                    },
+                    NetworkCommand::FetchArticle {
                         request_id,
                         pane_id,
-                        error: err,
-                    });
-                }
-            },
-            NetworkCommand::FetchArticle {
-                request_id,
-                pane_id,
-                title,
-                timeout,
-                offline_cache,
-                cache_lifetime,
-            } => {
-                match article::fetch_article_wikipedia(
-                    &agent,
-                    &title,
-                    timeout,
-                    offline_cache,
-                    cache_lifetime,
-                ) {
-                    Ok(content) => {
-                        let _ = ev_tx.send(NetworkEvent::ArticleResult {
-                            request_id,
-                            pane_id,
-                            title,
-                            content,
-                        });
+                        title,
+                        timeout,
+                        offline_cache,
+                        cache_lifetime,
+                    } => {
+                        match article::fetch_article_wikipedia(
+                            &agent,
+                            &title,
+                            timeout,
+                            offline_cache,
+                            cache_lifetime,
+                        ) {
+                            Ok(content) => {
+                                let _ = ev_tx.send(NetworkEvent::ArticleResult {
+                                    request_id,
+                                    pane_id,
+                                    title,
+                                    content,
+                                });
+                            }
+                            Err(err) => {
+                                let _ = ev_tx.send(NetworkEvent::Error {
+                                    request_id,
+                                    pane_id,
+                                    error: err,
+                                });
+                            }
+                        }
                     }
-                    Err(err) => {
-                        let _ = ev_tx.send(NetworkEvent::Error {
-                            request_id,
-                            pane_id,
-                            error: err,
-                        });
+                    NetworkCommand::FetchRandomArticle {
+                        request_id,
+                        pane_id,
+                        timeout,
+                        offline_cache,
+                        cache_lifetime,
+                    } => {
+                        match random::fetch_random_article(
+                            &agent,
+                            timeout,
+                            offline_cache,
+                            cache_lifetime,
+                        ) {
+                            Ok((title, content)) => {
+                                let _ = ev_tx.send(NetworkEvent::ArticleResult {
+                                    request_id,
+                                    pane_id,
+                                    title,
+                                    content,
+                                });
+                            }
+                            Err(err) => {
+                                let _ = ev_tx.send(NetworkEvent::Error {
+                                    request_id,
+                                    pane_id,
+                                    error: err,
+                                });
+                            }
+                        }
                     }
-                }
-            }
-            NetworkCommand::FetchRandomArticle {
-                request_id,
-                pane_id,
-                timeout,
-                offline_cache,
-                cache_lifetime,
-            } => {
-                match random::fetch_random_article(&agent, timeout, offline_cache, cache_lifetime) {
-                    Ok((title, content)) => {
-                        let _ = ev_tx.send(NetworkEvent::ArticleResult {
-                            request_id,
-                            pane_id,
-                            title,
-                            content,
-                        });
+                    NetworkCommand::FetchFeedBatch { timeout } => {
+                        if let Ok(items) = feed::fetch_feed_batch(&agent, timeout) {
+                            let _ = ev_tx.send(NetworkEvent::FeedBatchLoaded { items });
+                        }
                     }
-                    Err(err) => {
-                        let _ = ev_tx.send(NetworkEvent::Error {
-                            request_id,
-                            pane_id,
-                            error: err,
-                        });
+                    NetworkCommand::FetchDailyFeed {
+                        timeout,
+                        offline_cache,
+                    } => {
+                        if let Ok(feed) =
+                            daily_feed::fetch_daily_feed(&agent, timeout, offline_cache)
+                        {
+                            let _ = ev_tx.send(NetworkEvent::DailyFeedLoaded(Box::new(feed)));
+                        }
                     }
-                }
-            }
-            NetworkCommand::FetchFeedBatch { timeout } => {
-                if let Ok(items) = feed::fetch_feed_batch(&agent, timeout) {
-                    let _ = ev_tx.send(NetworkEvent::FeedBatchLoaded { items });
-                }
-            }
-            NetworkCommand::FetchDailyFeed {
-                timeout,
-                offline_cache,
-            } => {
-                if let Ok(feed) = daily_feed::fetch_daily_feed(&agent, timeout, offline_cache) {
-                    let _ = ev_tx.send(NetworkEvent::DailyFeedLoaded(Box::new(feed)));
-                }
-            }
-            NetworkCommand::FetchStats { timeout } => {
-                if let Ok(statistics) = stats::fetch_wiki_statistics(&agent, timeout) {
-                    let _ = ev_tx.send(NetworkEvent::StatsLoaded(statistics));
-                }
-            }
-            NetworkCommand::CheckForUpdates { timeout } => {
-                let res = updates::check_latest_release(&agent, timeout).map_err(|e| e.to_string());
-                let _ = ev_tx.send(NetworkEvent::UpdateCheckResult { latest_tag: res });
-            }
-            NetworkCommand::FetchImage { url, timeout } => {
-                if let Ok(path) = images::fetch_and_cache_image(&agent, &url, timeout) {
-                    let _ = ev_tx.send(NetworkEvent::ImageLoaded { url, path });
-                }
-            }
-            NetworkCommand::FetchCategoryMembers {
-                category,
-                limit,
-                timeout,
-            } => {
-                if let Ok(members) =
-                    category::fetch_category_members(&agent, &category, limit, timeout)
-                {
-                    let _ = ev_tx.send(NetworkEvent::CategoryMembersLoaded { category, members });
-                }
-            }
-            NetworkCommand::ShortenUrl { url, timeout } => {
-                if let Ok(short_url) = shorten::shorten_url(&agent, &url, timeout) {
-                    let _ = ev_tx.send(NetworkEvent::UrlShortened {
-                        original_url: url,
-                        short_url,
-                    });
-                }
-            }
-            NetworkCommand::FetchSummary { title, timeout } => {
-                if let Ok((res_title, description, extract)) =
-                    summary::fetch_summary(&agent, &title, timeout)
-                {
-                    let _ = ev_tx.send(NetworkEvent::SummaryLoaded {
-                        title: res_title,
-                        description,
-                        extract,
-                    });
-                }
-            }
+                    NetworkCommand::FetchStats { timeout } => {
+                        if let Ok(statistics) = stats::fetch_wiki_statistics(&agent, timeout) {
+                            let _ = ev_tx.send(NetworkEvent::StatsLoaded(statistics));
+                        }
+                    }
+                    NetworkCommand::CheckForUpdates { timeout } => {
+                        let res = updates::check_latest_release(&agent, timeout)
+                            .map_err(|e| e.to_string());
+                        let _ = ev_tx.send(NetworkEvent::UpdateCheckResult { latest_tag: res });
+                    }
+                    NetworkCommand::FetchImage { url, timeout } => {
+                        if let Ok(path) = images::fetch_and_cache_image(&agent, &url, timeout) {
+                            let _ = ev_tx.send(NetworkEvent::ImageLoaded { url, path });
+                        }
+                    }
+                    NetworkCommand::FetchCategoryMembers {
+                        category,
+                        limit,
+                        timeout,
+                    } => {
+                        if let Ok(members) =
+                            category::fetch_category_members(&agent, &category, limit, timeout)
+                        {
+                            let _ = ev_tx
+                                .send(NetworkEvent::CategoryMembersLoaded { category, members });
+                        }
+                    }
+                    NetworkCommand::ShortenUrl { url, timeout } => {
+                        if let Ok(short_url) = shorten::shorten_url(&agent, &url, timeout) {
+                            let _ = ev_tx.send(NetworkEvent::UrlShortened {
+                                original_url: url,
+                                short_url,
+                            });
+                        }
+                    }
+                    NetworkCommand::FetchSummary { title, timeout } => {
+                        if let Ok((res_title, description, extract)) =
+                            summary::fetch_summary(&agent, &title, timeout)
+                        {
+                            let _ = ev_tx.send(NetworkEvent::SummaryLoaded {
+                                title: res_title,
+                                description,
+                                extract,
+                            });
+                        }
+                    }
                     _ => {}
                 });
             }

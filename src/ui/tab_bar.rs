@@ -113,7 +113,8 @@ fn build_tab_bar_line(
 }
 
 pub fn compute_tab_titles(app: &App) -> Vec<String> {
-    app.workspace.tabs
+    app.workspace
+        .tabs
         .iter()
         .enumerate()
         .map(|(i, tab)| {
@@ -251,7 +252,10 @@ fn ensure_tab_bar_cache(app: &mut App, area_width: u16) -> &TabBarCache {
         .unwrap_or(true);
     if needs_update {
         let tab_titles = compute_tab_titles(app);
-        let active_idx = app.workspace.active_tab_idx.min(tab_titles.len().saturating_sub(1));
+        let active_idx = app
+            .workspace
+            .active_tab_idx
+            .min(tab_titles.len().saturating_sub(1));
         let (new_line, visible_range) = build_tab_bar_line(&tab_titles, active_idx, area_width);
         app.workspace.tab_bar_cache = Some(TabBarCache {
             key,

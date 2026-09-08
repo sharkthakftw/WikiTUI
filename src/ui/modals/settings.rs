@@ -14,7 +14,11 @@ pub fn compute_settings_modal_area(size: Rect) -> Rect {
 }
 
 pub fn render_settings_modal(f: &mut Frame, app: &App, size: Rect) {
-    let icon = if app.user_data.config.ui.icons { "󰒓" } else { "" };
+    let icon = if app.user_data.config.ui.icons {
+        "󰒓"
+    } else {
+        ""
+    };
     let area = compute_settings_modal_area(size);
     let inner = render_modal_container_at(
         f,
@@ -214,7 +218,9 @@ pub fn render_settings_modal(f: &mut Frame, app: &App, size: Rect) {
     }
 
     lines.push(Line::from(""));
-    let focused_item = SettingItem::ALL.get(app.modals.settings_modal.cursor_idx).copied();
+    let focused_item = SettingItem::ALL
+        .get(app.modals.settings_modal.cursor_idx)
+        .copied();
     if let Some(item) = focused_item {
         lines.push(Line::from(vec![
             Span::styled("   ", Style::default()),
@@ -234,7 +240,8 @@ pub fn render_settings_modal(f: &mut Frame, app: &App, size: Rect) {
         ),
     ]));
 
-    let scroll = compute_settings_scroll(app.modals.settings_modal.cursor_idx, inner.height as usize);
+    let scroll =
+        compute_settings_scroll(app.modals.settings_modal.cursor_idx, inner.height as usize);
     let paragraph = Paragraph::new(lines).scroll((scroll as u16, 0));
     f.render_widget(paragraph, inner);
 }

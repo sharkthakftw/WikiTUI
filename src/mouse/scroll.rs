@@ -43,13 +43,15 @@ fn handle_modal_scroll(app: &mut App, delta: i32, col: u16, row: u16, size: Rect
             let total = SettingItem::ALL.len();
             if total > 0 {
                 if delta < 0 {
-                    app.modals.settings_modal.cursor_idx = if app.modals.settings_modal.cursor_idx == 0 {
-                        total - 1
-                    } else {
-                        app.modals.settings_modal.cursor_idx - 1
-                    };
+                    app.modals.settings_modal.cursor_idx =
+                        if app.modals.settings_modal.cursor_idx == 0 {
+                            total - 1
+                        } else {
+                            app.modals.settings_modal.cursor_idx - 1
+                        };
                 } else {
-                    app.modals.settings_modal.cursor_idx = (app.modals.settings_modal.cursor_idx + 1) % total;
+                    app.modals.settings_modal.cursor_idx =
+                        (app.modals.settings_modal.cursor_idx + 1) % total;
                 }
             }
             true
@@ -66,13 +68,15 @@ fn handle_modal_scroll(app: &mut App, delta: i32, col: u16, row: u16, size: Rect
                 + 1;
             if count > 0 {
                 if delta < 0 {
-                    app.modals.lists_modal.save_cursor_idx = if app.modals.lists_modal.save_cursor_idx == 0 {
-                        count - 1
-                    } else {
-                        app.modals.lists_modal.save_cursor_idx - 1
-                    };
+                    app.modals.lists_modal.save_cursor_idx =
+                        if app.modals.lists_modal.save_cursor_idx == 0 {
+                            count - 1
+                        } else {
+                            app.modals.lists_modal.save_cursor_idx - 1
+                        };
                 } else {
-                    app.modals.lists_modal.save_cursor_idx = (app.modals.lists_modal.save_cursor_idx + 1) % count;
+                    app.modals.lists_modal.save_cursor_idx =
+                        (app.modals.lists_modal.save_cursor_idx + 1) % count;
                 }
             }
             true
@@ -110,9 +114,9 @@ fn handle_modal_scroll(app: &mut App, delta: i32, col: u16, row: u16, size: Rect
                         app.modals.lists_modal.viewer_article_idx =
                             app.modals.lists_modal.viewer_article_idx.saturating_sub(1);
                     } else {
-                        app.modals.lists_modal.viewer_article_idx = (app.modals.lists_modal.viewer_article_idx
-                            + 1)
-                        .min(current_articles_count - 1);
+                        app.modals.lists_modal.viewer_article_idx =
+                            (app.modals.lists_modal.viewer_article_idx + 1)
+                                .min(current_articles_count - 1);
                     }
                 }
             } else if lists_count > 0 {
@@ -137,7 +141,8 @@ fn handle_modal_scroll(app: &mut App, delta: i32, col: u16, row: u16, size: Rect
                         app.modals.onboarding.cursor_idx - 1
                     };
                 } else {
-                    app.modals.onboarding.cursor_idx = (app.modals.onboarding.cursor_idx + 1) % total;
+                    app.modals.onboarding.cursor_idx =
+                        (app.modals.onboarding.cursor_idx + 1) % total;
                 }
             }
             true
@@ -149,13 +154,15 @@ fn handle_modal_scroll(app: &mut App, delta: i32, col: u16, row: u16, size: Rect
             };
             if total > 0 {
                 if delta < 0 {
-                    app.modals.categories_modal.cursor_idx = if app.modals.categories_modal.cursor_idx == 0 {
-                        total - 1
-                    } else {
-                        app.modals.categories_modal.cursor_idx - 1
-                    };
+                    app.modals.categories_modal.cursor_idx =
+                        if app.modals.categories_modal.cursor_idx == 0 {
+                            total - 1
+                        } else {
+                            app.modals.categories_modal.cursor_idx - 1
+                        };
                 } else {
-                    app.modals.categories_modal.cursor_idx = (app.modals.categories_modal.cursor_idx + 1) % total;
+                    app.modals.categories_modal.cursor_idx =
+                        (app.modals.categories_modal.cursor_idx + 1) % total;
                 }
             }
             true

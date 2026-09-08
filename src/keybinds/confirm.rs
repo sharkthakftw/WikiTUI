@@ -16,7 +16,9 @@ pub fn handle_confirm_mode(app: &mut App, key: KeyEvent) {
                 app.input_mode = InputMode::SavedListsViewer;
             }
             Some(crate::app::ConfirmAction::DeleteArticle { list_id, title }) => {
-                app.user_data.saved_lists.remove_article_from_list(&list_id, &title);
+                app.user_data
+                    .saved_lists
+                    .remove_article_from_list(&list_id, &title);
                 if list_id == "liked" {
                     app.user_data.feed.profile.liked_articles.remove(&title);
                     if app.user_data.feed.profile.total_likes > 0 {

@@ -35,10 +35,17 @@ pub fn get_saved_lists_viewer_item_at(
     let row_offset = (target_y - (area.y + 1)) as usize;
     let visible_rows = (area.height.saturating_sub(2)) as usize;
     if is_right {
-        let selected_list = app.user_data.saved_lists.lists.get(app.modals.lists_modal.viewer_list_idx)?;
+        let selected_list = app
+            .user_data
+            .saved_lists
+            .lists
+            .get(app.modals.lists_modal.viewer_list_idx)?;
         let total = selected_list.articles.len();
-        let scroll =
-            compute_list_viewer_scroll(app.modals.lists_modal.viewer_article_idx, visible_rows, total);
+        let scroll = compute_list_viewer_scroll(
+            app.modals.lists_modal.viewer_article_idx,
+            visible_rows,
+            total,
+        );
         let idx = scroll + row_offset;
         if idx < total {
             Some(idx)
@@ -59,7 +66,11 @@ pub fn get_saved_lists_viewer_item_at(
 }
 
 pub fn render_saved_lists_viewer_modal(f: &mut Frame, app: &App, size: Rect) {
-    let icon = if app.user_data.config.ui.icons { "★" } else { "" };
+    let icon = if app.user_data.config.ui.icons {
+        "★"
+    } else {
+        ""
+    };
     let (container_area, left_area, right_area) = compute_saved_lists_viewer_areas(size);
     f.render_widget(ratatui::widgets::Clear, container_area);
     let block = create_modal_block(
@@ -119,7 +130,11 @@ pub fn render_saved_lists_viewer_modal(f: &mut Frame, app: &App, size: Rect) {
         theme::GREY
     };
 
-    let selected_list = app.user_data.saved_lists.lists.get(app.modals.lists_modal.viewer_list_idx);
+    let selected_list = app
+        .user_data
+        .saved_lists
+        .lists
+        .get(app.modals.lists_modal.viewer_list_idx);
     let right_title = selected_list
         .map(|l| format!("articles in '{}'", l.name))
         .unwrap_or_else(|| "articles".to_string());

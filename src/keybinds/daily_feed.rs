@@ -97,7 +97,8 @@ pub fn handle_daily_feed_mode(app: &mut App, key: KeyEvent) {
                 let target_line = crate::ui::modals::get_modal_item_line_offset(
                     app,
                     kind,
-                    app.modals.daily_feed_modal
+                    app.modals
+                        .daily_feed_modal
                         .as_ref()
                         .map(|m| m.cursor_idx)
                         .unwrap_or(0),
@@ -121,7 +122,8 @@ pub fn handle_daily_feed_mode(app: &mut App, key: KeyEvent) {
                 let target_line = crate::ui::modals::get_modal_item_line_offset(
                     app,
                     kind,
-                    app.modals.daily_feed_modal
+                    app.modals
+                        .daily_feed_modal
                         .as_ref()
                         .map(|m| m.cursor_idx)
                         .unwrap_or(0),
@@ -150,7 +152,8 @@ pub fn handle_daily_feed_mode(app: &mut App, key: KeyEvent) {
                 let target_line = crate::ui::modals::get_modal_item_line_offset(
                     app,
                     kind,
-                    app.modals.daily_feed_modal
+                    app.modals
+                        .daily_feed_modal
                         .as_ref()
                         .map(|m| m.cursor_idx)
                         .unwrap_or(0),

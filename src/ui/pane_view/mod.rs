@@ -63,7 +63,8 @@ fn render_pane_at(
     let is_image_modal = app.input_mode == crate::app::InputMode::ImageModal;
     let has_multiple_panes = app.workspace.tabs[tab_idx].panes.len() > 1;
     let should_dim =
-        (app.user_data.config.ui.dim_inactive_panes && !is_active && has_multiple_panes) || is_image_modal;
+        (app.user_data.config.ui.dim_inactive_panes && !is_active && has_multiple_panes)
+            || is_image_modal;
 
     let pane = &mut app.workspace.tabs[tab_idx].panes[pane_idx];
     pane.viewport_width = content_width;

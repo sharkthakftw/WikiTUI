@@ -29,14 +29,7 @@ const MAX_DOM_DEPTH: usize = 128;
 fn is_ignored_tag(tag_name: &str) -> bool {
     matches!(
         tag_name,
-        "style"
-            | "script"
-            | "noscript"
-            | "head"
-            | "template"
-            | "link"
-            | "meta"
-            | "annotation"
+        "style" | "script" | "noscript" | "head" | "template" | "link" | "meta" | "annotation"
     )
 }
 
@@ -104,8 +97,8 @@ fn handle_section_and_skip_tag<'a>(
                 || lower_id == "external-links"
                 || lower_id == "externallinks");
 
-        let is_refs = !ctx.show_footnotes
-            && (is_references_heading(&title) || is_references_id(&lower_id));
+        let is_refs =
+            !ctx.show_footnotes && (is_references_heading(&title) || is_references_id(&lower_id));
 
         if is_ext {
             ctx.skipping_external_section = true;
@@ -180,10 +173,7 @@ fn handle_section_and_skip_tag<'a>(
                 || (!ctx.show_images
                     && matches!(
                         cls,
-                        "thumbcaption"
-                            | "gallerytext"
-                            | "caption"
-                            | "thumbcaption-inline"
+                        "thumbcaption" | "gallerytext" | "caption" | "thumbcaption-inline"
                     ))
         }) {
             return true;
@@ -408,8 +398,7 @@ fn handle_text_and_style_tag<'a>(
                 .map(|b| b.as_utf8_str())
             {
                 if let Some(title) = extract_title_from_href(href.as_ref()) {
-                    let is_external =
-                        title.starts_with("http://") || title.starts_with("https://");
+                    let is_external = title.starts_with("http://") || title.starts_with("https://");
                     if is_external {
                         current_style = current_style.fg(theme::TEAL);
                     }
@@ -478,11 +467,25 @@ fn process_tag_node<'a>(
         return;
     }
 
-    if handle_media_tag(tag, tag_name, class_attr.as_deref(), current_tokens, doc, ctx) {
+    if handle_media_tag(
+        tag,
+        tag_name,
+        class_attr.as_deref(),
+        current_tokens,
+        doc,
+        ctx,
+    ) {
         return;
     }
 
-    if handle_table_or_code_tag(tag, tag_name, class_attr.as_deref(), current_tokens, doc, ctx) {
+    if handle_table_or_code_tag(
+        tag,
+        tag_name,
+        class_attr.as_deref(),
+        current_tokens,
+        doc,
+        ctx,
+    ) {
         return;
     }
 

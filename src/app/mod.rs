@@ -193,7 +193,10 @@ impl App {
     }
 
     pub fn active_tab(&self) -> &Tab {
-        let idx = self.workspace.active_tab_idx.min(self.workspace.tabs.len().saturating_sub(1));
+        let idx = self
+            .workspace
+            .active_tab_idx
+            .min(self.workspace.tabs.len().saturating_sub(1));
         &self.workspace.tabs[idx]
     }
 

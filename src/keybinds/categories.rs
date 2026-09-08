@@ -9,7 +9,8 @@ pub fn handle_categories_mode(app: &mut App, key: KeyEvent) {
             let selected_cat = parsed_doc
                 .categories
                 .get(
-                    app.modals.categories_modal
+                    app.modals
+                        .categories_modal
                         .cursor_idx
                         .min(total_cats.saturating_sub(1)),
                 )
@@ -19,7 +20,8 @@ pub fn handle_categories_mode(app: &mut App, key: KeyEvent) {
                 .and_then(|c| app.modals.categories_modal.cached_members.get(c))
                 .and_then(|m| {
                     m.get(
-                        app.modals.categories_modal
+                        app.modals
+                            .categories_modal
                             .article_cursor_idx
                             .min(m.len().saturating_sub(1)),
                     )
@@ -47,7 +49,8 @@ pub fn handle_categories_mode(app: &mut App, key: KeyEvent) {
                     if let Some(members) = app.modals.categories_modal.cached_members.get(cat) {
                         if !members.is_empty() {
                             app.modals.categories_modal.article_cursor_idx =
-                                (app.modals.categories_modal.article_cursor_idx + 1) % members.len();
+                                (app.modals.categories_modal.article_cursor_idx + 1)
+                                    % members.len();
                         }
                     }
                 }
@@ -57,7 +60,10 @@ pub fn handle_categories_mode(app: &mut App, key: KeyEvent) {
                 app.modals.categories_modal.article_cursor_idx = 0;
                 let pane = app.active_pane();
                 if let PaneContent::ArticleText { parsed_doc, .. } = &pane.content {
-                    if let Some(cat) = parsed_doc.categories.get(app.modals.categories_modal.cursor_idx) {
+                    if let Some(cat) = parsed_doc
+                        .categories
+                        .get(app.modals.categories_modal.cursor_idx)
+                    {
                         let cat = cat.clone();
                         app.fetch_category_members_if_needed(&cat);
                     }
@@ -87,7 +93,10 @@ pub fn handle_categories_mode(app: &mut App, key: KeyEvent) {
                 app.modals.categories_modal.article_cursor_idx = 0;
                 let pane = app.active_pane();
                 if let PaneContent::ArticleText { parsed_doc, .. } = &pane.content {
-                    if let Some(cat) = parsed_doc.categories.get(app.modals.categories_modal.cursor_idx) {
+                    if let Some(cat) = parsed_doc
+                        .categories
+                        .get(app.modals.categories_modal.cursor_idx)
+                    {
                         let cat = cat.clone();
                         app.fetch_category_members_if_needed(&cat);
                     }

@@ -10,25 +10,31 @@ pub fn handle_palette_mode(app: &mut App, key: KeyEvent) {
             app.input_mode = InputMode::Normal;
         }
         KeyCode::Up | KeyCode::BackTab => {
-            app.modals.command_palette.selected_idx = app.modals.command_palette.selected_idx.saturating_sub(1);
+            app.modals.command_palette.selected_idx =
+                app.modals.command_palette.selected_idx.saturating_sub(1);
         }
         KeyCode::Char('p') | KeyCode::Char('k')
             if key.modifiers.contains(KeyModifiers::CONTROL) =>
         {
-            app.modals.command_palette.selected_idx = app.modals.command_palette.selected_idx.saturating_sub(1);
+            app.modals.command_palette.selected_idx =
+                app.modals.command_palette.selected_idx.saturating_sub(1);
         }
         KeyCode::Down | KeyCode::Tab => {
-            let filtered_len = crate::palette::filter_commands(&app.modals.command_palette.query).len();
+            let filtered_len =
+                crate::palette::filter_commands(&app.modals.command_palette.query).len();
             if filtered_len > 0 {
-                app.modals.command_palette.selected_idx =
-                    (app.modals.command_palette.selected_idx + 1).min(filtered_len.saturating_sub(1));
+                app.modals.command_palette.selected_idx = (app.modals.command_palette.selected_idx
+                    + 1)
+                .min(filtered_len.saturating_sub(1));
             }
         }
         KeyCode::Char('n' | 'j') if key.modifiers.contains(KeyModifiers::CONTROL) => {
-            let filtered_len = crate::palette::filter_commands(&app.modals.command_palette.query).len();
+            let filtered_len =
+                crate::palette::filter_commands(&app.modals.command_palette.query).len();
             if filtered_len > 0 {
-                app.modals.command_palette.selected_idx =
-                    (app.modals.command_palette.selected_idx + 1).min(filtered_len.saturating_sub(1));
+                app.modals.command_palette.selected_idx = (app.modals.command_palette.selected_idx
+                    + 1)
+                .min(filtered_len.saturating_sub(1));
             }
         }
         KeyCode::Enter => {

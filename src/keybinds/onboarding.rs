@@ -16,7 +16,12 @@ pub fn handle_category_onboarding_mode(app: &mut App, key: KeyEvent) {
             }
         }
         KeyCode::Char(' ') => {
-            if let Some(val) = app.modals.onboarding.selected.get_mut(app.modals.onboarding.cursor_idx) {
+            if let Some(val) = app
+                .modals
+                .onboarding
+                .selected
+                .get_mut(app.modals.onboarding.cursor_idx)
+            {
                 *val = !*val;
             }
         }

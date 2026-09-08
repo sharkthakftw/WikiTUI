@@ -50,7 +50,8 @@ impl App {
 
             #[cfg(debug_assertions)]
             if candidate_idx < parsed_doc.links.len() {
-                if let Some(&(first_line, _)) = parsed_doc.links[candidate_idx].span_indices.first() {
+                if let Some(&(first_line, _)) = parsed_doc.links[candidate_idx].span_indices.first()
+                {
                     debug_assert!(
                         first_line >= view_start
                             || parsed_doc.links[candidate_idx]

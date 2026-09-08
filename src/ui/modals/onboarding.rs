@@ -14,7 +14,11 @@ pub fn compute_onboarding_modal_area(size: Rect) -> Rect {
 }
 
 pub fn render_category_onboarding_modal(f: &mut Frame, app: &App, size: Rect) {
-    let icon = if app.user_data.config.ui.icons { "󰠱" } else { "" };
+    let icon = if app.user_data.config.ui.icons {
+        "󰠱"
+    } else {
+        ""
+    };
     let area = compute_onboarding_modal_area(size);
     let block = render_modal_frame_at(
         f,
@@ -35,7 +39,13 @@ pub fn render_category_onboarding_modal(f: &mut Frame, app: &App, size: Rect) {
 
     for (idx, (display_name, _, _)) in crate::feed::profile::POPULAR_CATEGORIES.iter().enumerate() {
         let is_focused = idx == app.modals.onboarding.cursor_idx;
-        let is_checked = app.modals.onboarding.selected.get(idx).copied().unwrap_or(false);
+        let is_checked = app
+            .modals
+            .onboarding
+            .selected
+            .get(idx)
+            .copied()
+            .unwrap_or(false);
 
         lines.push(create_checkbox_line(
             display_name,

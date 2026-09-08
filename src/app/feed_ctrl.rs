@@ -22,7 +22,9 @@ impl App {
     }
 
     pub fn maybe_fetch_feed_batch(&mut self) {
-        if !self.user_data.feed.is_fetching && self.user_data.feed.active_idx + 3 >= self.user_data.feed.items.len() {
+        if !self.user_data.feed.is_fetching
+            && self.user_data.feed.active_idx + 3 >= self.user_data.feed.items.len()
+        {
             self.user_data.feed.is_fetching = true;
             self.send_fetch_feed_batch();
         }
@@ -49,7 +51,10 @@ impl App {
             .filter_map(|(idx, &sel)| if sel { Some(idx) } else { None })
             .collect();
 
-        self.user_data.feed.profile.complete_onboarding(&chosen_indices);
+        self.user_data
+            .feed
+            .profile
+            .complete_onboarding(&chosen_indices);
         self.input_mode = InputMode::Normal;
         if self.user_data.feed.items.is_empty() {
             self.maybe_fetch_feed_batch();
@@ -100,7 +105,10 @@ impl App {
         };
         if should_mark {
             self.user_data.feed.profile.seen_articles.insert(title);
-            self.user_data.feed.profile.record_engagement(&categories, 15);
+            self.user_data
+                .feed
+                .profile
+                .record_engagement(&categories, 15);
             self.user_data.feed.profile.save();
         }
     }
@@ -122,7 +130,10 @@ impl App {
         };
         if should_mark {
             self.user_data.feed.profile.seen_articles.insert(title);
-            self.user_data.feed.profile.record_engagement(&categories, 15);
+            self.user_data
+                .feed
+                .profile
+                .record_engagement(&categories, 15);
             self.user_data.feed.profile.save();
         }
     }
@@ -151,10 +162,16 @@ impl App {
                 .seen_articles
                 .insert(target_title.to_string());
             if !categories.is_empty() {
-                self.user_data.feed.profile.record_engagement(&categories, 50);
+                self.user_data
+                    .feed
+                    .profile
+                    .record_engagement(&categories, 50);
             }
         } else if !categories.is_empty() {
-            self.user_data.feed.profile.record_engagement(&categories, -50);
+            self.user_data
+                .feed
+                .profile
+                .record_engagement(&categories, -50);
         }
         self.user_data.feed.profile.save();
     }

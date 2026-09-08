@@ -87,7 +87,12 @@ pub fn handle_scrollbar_down(
             && row > right_area.y
             && row < right_area.y + right_area.height.saturating_sub(1)
         {
-            if let Some(list) = app.user_data.saved_lists.lists.get(app.modals.lists_modal.viewer_list_idx) {
+            if let Some(list) = app
+                .user_data
+                .saved_lists
+                .lists
+                .get(app.modals.lists_modal.viewer_list_idx)
+            {
                 let total = list.articles.len();
                 let visible_rows = (right_area.height.saturating_sub(2)) as usize;
                 if total > visible_rows && visible_rows > 0 {
@@ -107,7 +112,10 @@ pub fn handle_scrollbar_down(
         return false;
     }
 
-    if app.input_mode != InputMode::Normal || app.workspace.zen_mode || !app.user_data.config.ui.scroll_indicator {
+    if app.input_mode != InputMode::Normal
+        || app.workspace.zen_mode
+        || !app.user_data.config.ui.scroll_indicator
+    {
         return false;
     }
 
@@ -200,7 +208,12 @@ pub fn handle_scrollbar_drag(app: &mut App, row: u16, term_width: u16, term_heig
                 let (_container_area, left_area, right_area) =
                     crate::ui::modals::lists::compute_saved_lists_viewer_areas(size);
                 if is_right {
-                    if let Some(list) = app.user_data.saved_lists.lists.get(app.modals.lists_modal.viewer_list_idx) {
+                    if let Some(list) = app
+                        .user_data
+                        .saved_lists
+                        .lists
+                        .get(app.modals.lists_modal.viewer_list_idx)
+                    {
                         let total = list.articles.len();
                         let visible_rows = (right_area.height.saturating_sub(2)) as usize;
                         if total > visible_rows && visible_rows > 1 {

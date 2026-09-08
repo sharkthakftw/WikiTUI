@@ -41,7 +41,12 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         let feed_area = chunks[0];
         let status_area = chunks[1];
 
-        feed::render_feed_view(f, &app.user_data.feed, feed_area, app.user_data.config.ui.rounded_borders);
+        feed::render_feed_view(
+            f,
+            &app.user_data.feed,
+            feed_area,
+            app.user_data.config.ui.rounded_borders,
+        );
         status_bar::render(f, app, status_area);
     } else if app.workspace.zen_mode {
         let zen_area = compute_zen_area(size);
@@ -116,7 +121,11 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     let is_modal_open = (app.input_mode != InputMode::Normal
         && app.input_mode != InputMode::LocalSearch
         && app.input_mode != InputMode::LinkPeek)
-        || app.workspace.tabs.iter().any(|t| t.panes.iter().any(|p| p.show_toc))
+        || app
+            .workspace
+            .tabs
+            .iter()
+            .any(|t| t.panes.iter().any(|p| p.show_toc))
         || app.modals.daily_feed_modal.is_some();
 
     if is_modal_open {

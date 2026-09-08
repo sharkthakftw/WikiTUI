@@ -19,16 +19,32 @@ pub fn compute_search_modal_area(size: Rect) -> Rect {
 pub fn render_search_modal(f: &mut Frame, app: &App, size: Rect) {
     let area = compute_search_modal_area(size);
     let (icon, title, border_color) = if app.input_mode == crate::app::InputMode::RenameList {
-        let ic = if app.user_data.config.ui.icons { "★" } else { "" };
+        let ic = if app.user_data.config.ui.icons {
+            "★"
+        } else {
+            ""
+        };
         (ic, "rename list", theme::VIOLET)
     } else if app.input_mode == crate::app::InputMode::CreateNewList {
-        let ic = if app.user_data.config.ui.icons { "★" } else { "" };
+        let ic = if app.user_data.config.ui.icons {
+            "★"
+        } else {
+            ""
+        };
         (ic, "create new list", theme::VIOLET)
     } else if app.input_mode == crate::app::InputMode::SleepTimerPrompt {
-        let ic = if app.user_data.config.ui.icons { "󰔛" } else { "" };
+        let ic = if app.user_data.config.ui.icons {
+            "󰔛"
+        } else {
+            ""
+        };
         (ic, "sleep timer (minutes, or 'off')", theme::VIOLET)
     } else {
-        let ic = if app.user_data.config.ui.icons { "󰍉" } else { "" };
+        let ic = if app.user_data.config.ui.icons {
+            "󰍉"
+        } else {
+            ""
+        };
         (ic, "search wikipedia", theme::BEIGE)
     };
     let search_block = render_modal_frame_at(

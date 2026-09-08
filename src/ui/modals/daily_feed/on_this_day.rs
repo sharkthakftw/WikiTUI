@@ -190,7 +190,11 @@ pub fn render_on_this_day_modal(
     let mut modal_block = modal_block;
     if let Some(page) = focused_page {
         if let Some(desc) = page.description.as_deref().filter(|d| !d.is_empty()) {
-            let icon = if app.user_data.config.ui.icons { "󰋼 " } else { "" };
+            let icon = if app.user_data.config.ui.icons {
+                "󰋼 "
+            } else {
+                ""
+            };
             let icon_w = unicode_width::UnicodeWidthStr::width(icon);
             let prefix_w = 1 + icon_w + 2;
 

@@ -28,7 +28,9 @@ impl App {
 
     pub fn new_tab(&mut self) {
         let name = "new tab".to_string();
-        self.workspace.tabs.push(Tab::new(name, self.workspace.next_pane_id));
+        self.workspace
+            .tabs
+            .push(Tab::new(name, self.workspace.next_pane_id));
         self.workspace.next_pane_id += 1;
         self.workspace.prev_tab_idx = Some(self.workspace.active_tab_idx);
         self.workspace.active_tab_idx = self.workspace.tabs.len() - 1;
@@ -70,12 +72,14 @@ impl App {
     fn record_closed_panes(&mut self, panes: impl IntoIterator<Item = Pane>) {
         for pane in panes {
             if let Some(title) = pane.title() {
-                self.workspace.closed_tabs_stack.push(crate::app::ClosedTabState {
-                    title,
-                    scroll_offset: pane.scroll_offset,
-                    history_back: pane.history_back,
-                    history_forward: pane.history_forward,
-                });
+                self.workspace
+                    .closed_tabs_stack
+                    .push(crate::app::ClosedTabState {
+                        title,
+                        scroll_offset: pane.scroll_offset,
+                        history_back: pane.history_back,
+                        history_forward: pane.history_forward,
+                    });
             }
         }
     }
@@ -116,8 +120,10 @@ impl App {
         } else {
             let new_pane_id = self.workspace.next_pane_id;
             self.workspace.next_pane_id += 1;
-            let old_tab =
-                std::mem::replace(&mut self.workspace.tabs[0], Tab::new("home".to_string(), new_pane_id));
+            let old_tab = std::mem::replace(
+                &mut self.workspace.tabs[0],
+                Tab::new("home".to_string(), new_pane_id),
+            );
             self.record_closed_panes(old_tab.panes);
             self.workspace.active_tab_idx = 0;
             self.workspace.prev_tab_idx = None;

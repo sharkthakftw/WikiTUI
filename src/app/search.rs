@@ -43,7 +43,9 @@ impl App {
             let next_id = self.workspace.next_pane_id;
             self.workspace.next_pane_id += 1;
             let tab_name = "loading...".to_string();
-            self.workspace.tabs.push(crate::app::tab::Tab::new(tab_name, next_id));
+            self.workspace
+                .tabs
+                .push(crate::app::tab::Tab::new(tab_name, next_id));
             self.workspace.active_tab_idx = self.workspace.tabs.len() - 1;
             next_id
         };
@@ -89,7 +91,13 @@ impl App {
         ) && self.modals.search_modal.cursor_pos > 0
         {
             let target_char = self.modals.search_modal.cursor_pos - 1;
-            if let Some((byte_idx, _)) = self.modals.search_modal.input.char_indices().nth(target_char) {
+            if let Some((byte_idx, _)) = self
+                .modals
+                .search_modal
+                .input
+                .char_indices()
+                .nth(target_char)
+            {
                 self.modals.search_modal.input.remove(byte_idx);
             } else {
                 self.modals.search_modal.input.pop();
@@ -107,7 +115,8 @@ impl App {
                 | crate::app::InputMode::SleepTimerPrompt
         ) && self.modals.search_modal.cursor_pos > 0
         {
-            let char_indices: Vec<(usize, char)> = self.modals.search_modal.input.char_indices().collect();
+            let char_indices: Vec<(usize, char)> =
+                self.modals.search_modal.input.char_indices().collect();
             let end_char = self.modals.search_modal.cursor_pos.min(char_indices.len());
             let mut start_char = end_char;
 
@@ -157,7 +166,8 @@ impl App {
                 | crate::app::InputMode::CreateNewList
                 | crate::app::InputMode::SleepTimerPrompt
         ) {
-            self.modals.search_modal.cursor_pos = self.modals.search_modal.cursor_pos.saturating_sub(1);
+            self.modals.search_modal.cursor_pos =
+                self.modals.search_modal.cursor_pos.saturating_sub(1);
         }
     }
 

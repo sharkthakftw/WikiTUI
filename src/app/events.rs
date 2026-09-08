@@ -58,8 +58,9 @@ impl App {
                         show_images: self.user_data.config.reader.show_images,
                         max_image_height: self.user_data.config.reader.max_image_height,
                     };
-                    let resolved_proto =
-                        crate::graphics::resolve_protocol(self.user_data.config.reader.image_protocol);
+                    let resolved_proto = crate::graphics::resolve_protocol(
+                        self.user_data.config.reader.image_protocol,
+                    );
                     let mut to_decode = Vec::new();
                     let mut to_predecode_kitty = Vec::new();
                     let mut to_fetch = Vec::new();
@@ -109,7 +110,11 @@ impl App {
                                     if !pane.contains_halfblock(&img_url, cols, rows)
                                         && !pane.is_pending_decode(&img_url, cols, rows)
                                     {
-                                        pane.pending_image_decodes.insert((img_url.clone(), cols, rows));
+                                        pane.pending_image_decodes.insert((
+                                            img_url.clone(),
+                                            cols,
+                                            rows,
+                                        ));
                                         to_decode.push((img_url, path, cols, rows));
                                     }
                                 } else if resolved_proto.is_kitty() {
@@ -146,15 +151,27 @@ impl App {
                             if let PaneContent::ArticleText { parsed_doc, .. } = &pane.content {
                                 for img in &parsed_doc.images {
                                     if img.url == url
-                                        && !pane.contains_halfblock(&url, img.width_cols, img.height_lines)
-                                        && !pane.is_pending_decode(&url, img.width_cols, img.height_lines)
+                                        && !pane.contains_halfblock(
+                                            &url,
+                                            img.width_cols,
+                                            img.height_lines,
+                                        )
+                                        && !pane.is_pending_decode(
+                                            &url,
+                                            img.width_cols,
+                                            img.height_lines,
+                                        )
                                     {
-                                        pane.pending_image_decodes.insert((url.clone(), img.width_cols, img.height_lines));
+                                        pane.pending_image_decodes.insert((
+                                            url.clone(),
+                                            img.width_cols,
+                                            img.height_lines,
+                                        ));
                                         to_decode.push((
-                                             url.clone(),
-                                             path.clone(),
-                                             img.width_cols,
-                                             img.height_lines,
+                                            url.clone(),
+                                            path.clone(),
+                                            img.width_cols,
+                                            img.height_lines,
                                         ));
                                     }
                                 }
@@ -204,11 +221,22 @@ impl App {
                     .iter()
                     .map(|e| e.title.to_lowercase())
                     .collect();
-                let ranked_items =
-                    crate::feed::algorithm::rank_batch(items, &self.user_data.feed.profile, &read_titles);
+                let ranked_items = crate::feed::algorithm::rank_batch(
+                    items,
+                    &self.user_data.feed.profile,
+                    &read_titles,
+                );
                 for mut item in ranked_items {
-                    item.is_liked = self.user_data.feed.profile.liked_articles.contains(&item.title)
-                        || self.user_data.saved_lists.is_article_in_list("liked", &item.title);
+                    item.is_liked = self
+                        .user_data
+                        .feed
+                        .profile
+                        .liked_articles
+                        .contains(&item.title)
+                        || self
+                            .user_data
+                            .saved_lists
+                            .is_article_in_list("liked", &item.title);
                     self.user_data.feed.add_item(item);
                 }
                 if self.user_data.feed.items.is_empty() {
@@ -251,7 +279,10 @@ impl App {
                 }
             },
             NetworkEvent::CategoryMembersLoaded { category, members } => {
-                self.modals.categories_modal.fetching_categories.remove(&category);
+                self.modals
+                    .categories_modal
+                    .fetching_categories
+                    .remove(&category);
                 self.modals
                     .categories_modal
                     .cached_members
@@ -309,8 +340,16 @@ impl App {
     }
 
     pub fn fetch_category_members_if_needed(&mut self, category: &str) {
-        if !self.modals.categories_modal.cached_members.contains_key(category)
-            && !self.modals.categories_modal.fetching_categories.contains(category)
+        if !self
+            .modals
+            .categories_modal
+            .cached_members
+            .contains_key(category)
+            && !self
+                .modals
+                .categories_modal
+                .fetching_categories
+                .contains(category)
         {
             self.modals
                 .categories_modal

@@ -27,7 +27,11 @@ pub fn render_qr_modal(f: &mut Frame, app: &App, size: Rect) {
         return;
     };
 
-    let icon = if app.user_data.config.ui.icons { "" } else { "" };
+    let icon = if app.user_data.config.ui.icons {
+        ""
+    } else {
+        ""
+    };
     let area = compute_qr_modal_area(size);
     let inner = render_modal_container_at(
         f,

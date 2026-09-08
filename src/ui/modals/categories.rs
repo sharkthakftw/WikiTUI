@@ -26,7 +26,11 @@ pub fn render_categories_modal(f: &mut Frame, app: &App, size: Rect) {
 
     let total = categories.len();
     let modal_title = format!("categories · {} ({})", title.to_lowercase(), total);
-    let icon = if app.user_data.config.ui.icons { "󰓹" } else { "" };
+    let icon = if app.user_data.config.ui.icons {
+        "󰓹"
+    } else {
+        ""
+    };
 
     let (container_area, left_area, right_area) = compute_categories_modal_areas(size);
     f.render_widget(ratatui::widgets::Clear, container_area);
@@ -50,7 +54,11 @@ pub fn render_categories_modal(f: &mut Frame, app: &App, size: Rect) {
         app.user_data.config.ui.rounded_borders,
     );
 
-    let selected_cat_idx = app.modals.categories_modal.cursor_idx.min(total.saturating_sub(1));
+    let selected_cat_idx = app
+        .modals
+        .categories_modal
+        .cursor_idx
+        .min(total.saturating_sub(1));
 
     let mut cat_lines = Vec::new();
     if categories.is_empty() {
@@ -113,7 +121,12 @@ pub fn render_categories_modal(f: &mut Frame, app: &App, size: Rect) {
             "  fetching articles in category...",
             Style::default().fg(theme::YELLOW).italic(),
         )]));
-    } else if let Some(members) = app.modals.categories_modal.cached_members.get(selected_category) {
+    } else if let Some(members) = app
+        .modals
+        .categories_modal
+        .cached_members
+        .get(selected_category)
+    {
         if members.is_empty() {
             article_lines.push(Line::from(vec![Span::styled(
                 "  no articles found in this category.",
@@ -173,7 +186,11 @@ pub fn get_category_item_at(app: &App, is_right: bool, area: Rect, target_y: u16
             .cursor_idx
             .min(categories.len().saturating_sub(1));
         let selected_category = categories.get(selected_cat_idx)?;
-        let members = app.modals.categories_modal.cached_members.get(selected_category)?;
+        let members = app
+            .modals
+            .categories_modal
+            .cached_members
+            .get(selected_category)?;
         let total = members.len();
         let scroll = crate::ui::modals::utils::compute_centered_scroll(
             app.modals.categories_modal.article_cursor_idx,

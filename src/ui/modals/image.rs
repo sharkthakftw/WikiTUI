@@ -32,7 +32,11 @@ pub fn render_image_modal(f: &mut Frame, app: &mut App, size: Rect) {
     };
 
     let area = compute_image_modal_area(size);
-    let icon = if app.user_data.config.ui.icons { "󰋩" } else { "" };
+    let icon = if app.user_data.config.ui.icons {
+        "󰋩"
+    } else {
+        ""
+    };
 
     let filename = modal
         .url
@@ -80,7 +84,8 @@ pub fn render_image_modal(f: &mut Frame, app: &mut App, size: Rect) {
         .clone()
         .or_else(|| crate::graphics::cache::get_cached_image_path(&modal.url));
 
-    let resolved_proto = crate::graphics::resolve_protocol(app.user_data.config.reader.image_protocol);
+    let resolved_proto =
+        crate::graphics::resolve_protocol(app.user_data.config.reader.image_protocol);
 
     if let Some(path) = img_path {
         let dimensions = image::image_dimensions(&path).ok();

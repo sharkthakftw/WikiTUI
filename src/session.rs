@@ -164,7 +164,8 @@ impl SessionState {
                 });
             }
             if !app.workspace.tabs.is_empty() {
-                app.workspace.active_tab_idx = self.active_tab_idx.min(app.workspace.tabs.len() - 1);
+                app.workspace.active_tab_idx =
+                    self.active_tab_idx.min(app.workspace.tabs.len() - 1);
             }
         }
 

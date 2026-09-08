@@ -31,7 +31,8 @@ pub fn render_article_pane(
         (pane.viewport_height + 2).min(parsed_doc.lines.len().saturating_sub(view_start));
     let view_end = view_start + view_len;
 
-    let resolved_proto = crate::graphics::resolve_protocol(app.user_data.config.reader.image_protocol);
+    let resolved_proto =
+        crate::graphics::resolve_protocol(app.user_data.config.reader.image_protocol);
     if resolved_proto.is_halfblocks() && app.user_data.config.reader.show_images {
         let pane = &mut app.workspace.tabs[tab_idx].panes[pane_idx];
         if let crate::app::PaneContent::ArticleText { parsed_doc, .. } = &pane.content {
@@ -43,7 +44,8 @@ pub fn render_article_pane(
                     if !pane.contains_halfblock(&img.url, cols, rows)
                         && !pane.is_pending_decode(&img.url, cols, rows)
                     {
-                        pane.pending_image_decodes.insert((img.url.clone(), cols, rows));
+                        pane.pending_image_decodes
+                            .insert((img.url.clone(), cols, rows));
                         if let Some(path) = pane
                             .loaded_images
                             .get(&img.url)
@@ -275,9 +277,10 @@ pub fn render_article_pane(
         rendered_lines.push(line);
     }
 
-    let should_dim =
-        (app.user_data.config.ui.dim_inactive_panes && !is_active && app.workspace.tabs[tab_idx].panes.len() > 1)
-            || app.input_mode == crate::app::InputMode::ImageModal;
+    let should_dim = (app.user_data.config.ui.dim_inactive_panes
+        && !is_active
+        && app.workspace.tabs[tab_idx].panes.len() > 1)
+        || app.input_mode == crate::app::InputMode::ImageModal;
     if should_dim {
         for line in &mut rendered_lines {
             for span in &mut line.spans {
@@ -311,16 +314,16 @@ pub fn render_article_pane(
                             inner_rect,
                         ) {
                             let overlaps_peek = app.modals.link_peek.as_ref().is_some_and(|peek| {
-                                let peek_area = crate::ui::modals::compute_link_peek_area(peek, f.size());
+                                let peek_area =
+                                    crate::ui::modals::compute_link_peek_area(peek, f.size());
                                 !(bounds.screen_x >= peek_area.x + peek_area.width
                                     || bounds.screen_x + bounds.visible_cols <= peek_area.x
                                     || bounds.screen_y >= peek_area.y + peek_area.height
                                     || bounds.screen_y + bounds.visible_rows <= peek_area.y)
                             });
                             if !overlaps_peek {
-                                app.graphics
-                                    .pending_image_renders
-                                    .push(crate::app::ImageRenderTask {
+                                app.graphics.pending_image_renders.push(
+                                    crate::app::ImageRenderTask {
                                         path,
                                         screen_x: bounds.screen_x,
                                         screen_y: bounds.screen_y,
@@ -328,7 +331,8 @@ pub fn render_article_pane(
                                         rows: bounds.visible_rows,
                                         crop_top_lines: bounds.top_clipped,
                                         crop_bot_lines: bounds.bot_clipped,
-                                    });
+                                    },
+                                );
                             }
                         }
                     }
