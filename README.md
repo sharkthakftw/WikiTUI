@@ -161,6 +161,26 @@ mouse_support = true # enable/disable mouse clicks, tab switching, and scroll wh
 scroll_speed = 3 # number of lines to scroll per mouse wheel tick (1-20)
 ```
 
+## cli usage
+
+wikid can also be run headlessly from the command line without opening the tui:
+
+### search
+
+```bash
+wikid search "quantum mechanics"
+wikid search rust --limit 5
+wikid search rust --json
+```
+
+### completions
+
+generate and install shell completions:
+
+```fish
+wikid completions fish > ~/.config/fish/completions/wikid.fish
+```
+
 ## acknowledgements
 
 - special thanks to [xikipedia](https://github.com/rebane2001/xikipedia) for inspiring the recommendation feed feature!
