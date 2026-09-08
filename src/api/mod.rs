@@ -178,6 +178,19 @@ pub enum NetworkEvent {
     },
 }
 
+enum ImageTask {
+    DecodeHalfblock {
+        url: String,
+        path: std::path::PathBuf,
+        cols: usize,
+        rows: usize,
+        filter: crate::config::HalfblockFilter,
+    },
+    PredecodeKitty {
+        path: std::path::PathBuf,
+    },
+}
+
 pub fn run_worker(cmd_rx: Receiver<NetworkCommand>, ev_tx: Sender<NetworkEvent>) {
     let agent: std::sync::Arc<ureq::Agent> = std::sync::Arc::new(
         ureq::builder()
@@ -189,11 +202,84 @@ pub fn run_worker(cmd_rx: Receiver<NetworkCommand>, ev_tx: Sender<NetworkEvent>)
             .build(),
     );
 
-    while let Ok(cmd) = cmd_rx.recv() {
-        let agent = agent.clone();
-        let ev_tx = ev_tx.clone();
+    let (img_tx, img_rx) = std::sync::mpsc::channel::<ImageTask>();
+    let img_rx = std::sync::Arc::new(std::sync::Mutex::new(img_rx));
+    let pool_size = std::thread::available_parallelism()
+        .map(|n| n.get())
+        .unwrap_or(2)
+        .clamp(1, 4);
 
-        std::thread::spawn(move || match cmd {
+    for _ in 0..pool_size {
+        let img_rx = img_rx.clone();
+        let ev_tx = ev_tx.clone();
+        std::thread::spawn(move || {
+            loop {
+                let task = {
+                    let rx = match img_rx.lock() {
+                        Ok(guard) => guard,
+                        Err(_) => break,
+                    };
+                    match rx.recv() {
+                        Ok(task) => task,
+                        Err(_) => break,
+                    }
+                };
+                match task {
+                    ImageTask::DecodeHalfblock {
+                        url,
+                        path,
+                        cols,
+                        rows,
+                        filter,
+                    } => {
+                        if let Ok(bytes) = std::fs::read(&path) {
+                            if let Some(lines) =
+                                crate::graphics::halfblocks::render_halfblock_image_from_bytes(
+                                    &bytes, cols, rows, filter,
+                                )
+                            {
+                                let _ = ev_tx.send(NetworkEvent::HalfblockImageDecoded {
+                                    url,
+                                    cols,
+                                    rows,
+                                    lines,
+                                });
+                            }
+                        }
+                    }
+                    ImageTask::PredecodeKitty { path } => {
+                        crate::graphics::kitty::predecode_kitty_image(&path);
+                    }
+                }
+            }
+        });
+    }
+
+    while let Ok(cmd) = cmd_rx.recv() {
+        match cmd {
+            NetworkCommand::DecodeHalfblockImage {
+                url,
+                path,
+                cols,
+                rows,
+                filter,
+            } => {
+                let _ = img_tx.send(ImageTask::DecodeHalfblock {
+                    url,
+                    path,
+                    cols,
+                    rows,
+                    filter,
+                });
+            }
+            NetworkCommand::PredecodeKittyImage { path } => {
+                let _ = img_tx.send(ImageTask::PredecodeKitty { path });
+            }
+            cmd => {
+                let agent = agent.clone();
+                let ev_tx = ev_tx.clone();
+
+                std::thread::spawn(move || match cmd {
             NetworkCommand::Search {
                 request_id,
                 pane_id,
@@ -312,31 +398,6 @@ pub fn run_worker(cmd_rx: Receiver<NetworkCommand>, ev_tx: Sender<NetworkEvent>)
                     let _ = ev_tx.send(NetworkEvent::CategoryMembersLoaded { category, members });
                 }
             }
-            NetworkCommand::DecodeHalfblockImage {
-                url,
-                path,
-                cols,
-                rows,
-                filter,
-            } => {
-                if let Ok(bytes) = std::fs::read(&path) {
-                    if let Some(lines) =
-                        crate::graphics::halfblocks::render_halfblock_image_from_bytes(
-                            &bytes, cols, rows, filter,
-                        )
-                    {
-                        let _ = ev_tx.send(NetworkEvent::HalfblockImageDecoded {
-                            url,
-                            cols,
-                            rows,
-                            lines,
-                        });
-                    }
-                }
-            }
-            NetworkCommand::PredecodeKittyImage { path } => {
-                crate::graphics::kitty::predecode_kitty_image(&path);
-            }
             NetworkCommand::ShortenUrl { url, timeout } => {
                 if let Ok(short_url) = shorten::shorten_url(&agent, &url, timeout) {
                     let _ = ev_tx.send(NetworkEvent::UrlShortened {
@@ -356,6 +417,9 @@ pub fn run_worker(cmd_rx: Receiver<NetworkCommand>, ev_tx: Sender<NetworkEvent>)
                     });
                 }
             }
-        });
+                    _ => {}
+                });
+            }
+        }
     }
 }
