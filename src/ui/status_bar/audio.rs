@@ -19,7 +19,7 @@ pub fn format_audio_time(secs: u64, include_hours: bool) -> String {
 pub fn build_audio_progress_bar(app: &App, available_width: usize) -> Vec<Span<'static>> {
     let is_buffering = app.audio_player.is_buffering;
     let is_playing = app.audio_player.is_playing();
-    let is_icons = app.config.ui.icons;
+    let is_icons = app.user_data.config.ui.icons;
 
     let icon = if is_buffering {
         if is_icons {

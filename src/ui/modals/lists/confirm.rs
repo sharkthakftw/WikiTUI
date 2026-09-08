@@ -27,7 +27,7 @@ pub fn get_confirm_button_at(app: &App, area: Rect, col: u16, row: u16) -> Optio
     if row != btn_row {
         return None;
     }
-    let action_str = match &app.confirm_action {
+    let action_str = match &app.modals.confirm_action {
         Some(crate::app::ConfirmAction::DeleteList { .. }) => "delete",
         Some(crate::app::ConfirmAction::DeleteArticle { .. }) => "delete",
         Some(crate::app::ConfirmAction::ResetFeed) => "reset",
@@ -79,13 +79,13 @@ fn build_confirm_lines(
 }
 
 pub fn render_confirm_modal(f: &mut Frame, app: &App, size: Rect) {
-    let modal_title = match &app.confirm_action {
+    let modal_title = match &app.modals.confirm_action {
         Some(crate::app::ConfirmAction::ResetFeed) => "confirm feed reset",
         Some(crate::app::ConfirmAction::Quit) => "confirm quit",
         _ => "confirm deletion",
     };
 
-    let icon = if app.config.ui.icons { "󰅚" } else { "" };
+    let icon = if app.user_data.config.ui.icons { "󰅚" } else { "" };
     let area = compute_confirm_modal_area(size);
     let block = render_modal_frame_at(
         f,
@@ -93,7 +93,7 @@ pub fn render_confirm_modal(f: &mut Frame, app: &App, size: Rect) {
         icon,
         modal_title,
         theme::RED,
-        app.config.ui.rounded_borders,
+        app.user_data.config.ui.rounded_borders,
     );
 
     let inner_width = (area.width.saturating_sub(2)) as usize;
@@ -107,7 +107,7 @@ pub fn render_confirm_modal(f: &mut Frame, app: &App, size: Rect) {
         }
     };
 
-    let lines = match &app.confirm_action {
+    let lines = match &app.modals.confirm_action {
         Some(crate::app::ConfirmAction::DeleteList { title, .. }) => build_confirm_lines(
             "are you sure you want to delete:",
             vec![
@@ -139,7 +139,7 @@ pub fn render_confirm_modal(f: &mut Frame, app: &App, size: Rect) {
             "reset",
         ),
         Some(crate::app::ConfirmAction::Quit) => {
-            let tab_count = app.tabs.len();
+            let tab_count = app.workspace.tabs.len();
             let subtext = if tab_count > 1 {
                 format!("you have {} open tabs", tab_count)
             } else {

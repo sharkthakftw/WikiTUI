@@ -21,7 +21,7 @@ pub fn render_article_pane(
     border_color: ratatui::style::Color,
     is_active: bool,
 ) {
-    let pane = &app.tabs[tab_idx].panes[pane_idx];
+    let pane = &app.workspace.tabs[tab_idx].panes[pane_idx];
     let crate::app::PaneContent::ArticleText { parsed_doc, .. } = &pane.content else {
         return;
     };
@@ -31,9 +31,9 @@ pub fn render_article_pane(
         (pane.viewport_height + 2).min(parsed_doc.lines.len().saturating_sub(view_start));
     let view_end = view_start + view_len;
 
-    let resolved_proto = crate::graphics::resolve_protocol(app.config.reader.image_protocol);
-    if resolved_proto.is_halfblocks() && app.config.reader.show_images {
-        let pane = &mut app.tabs[tab_idx].panes[pane_idx];
+    let resolved_proto = crate::graphics::resolve_protocol(app.user_data.config.reader.image_protocol);
+    if resolved_proto.is_halfblocks() && app.user_data.config.reader.show_images {
+        let pane = &mut app.workspace.tabs[tab_idx].panes[pane_idx];
         if let crate::app::PaneContent::ArticleText { parsed_doc, .. } = &pane.content {
             let mut to_request = Vec::new();
             for img in &parsed_doc.images {
@@ -61,12 +61,12 @@ pub fn render_article_pane(
         }
     }
 
-    let pane = &app.tabs[tab_idx].panes[pane_idx];
+    let pane = &app.workspace.tabs[tab_idx].panes[pane_idx];
     let crate::app::PaneContent::ArticleText { parsed_doc, .. } = &pane.content else {
         return;
     };
 
-    let (has_underline, first_link_idx) = if app.config.reader.underline_links {
+    let (has_underline, first_link_idx) = if app.user_data.config.reader.underline_links {
         let first_idx = parsed_doc.links.partition_point(|link| {
             link.span_indices
                 .last()
@@ -122,7 +122,7 @@ pub fn render_article_pane(
         let line_idx = view_start + local_idx;
 
         let mut image_override = None;
-        if app.config.reader.show_images {
+        if app.user_data.config.reader.show_images {
             for img in &parsed_doc.images {
                 if line_idx >= img.line_idx && line_idx < img.line_idx + img.height_lines {
                     let has_img = pane.loaded_images.contains_key(&img.url)
@@ -276,7 +276,7 @@ pub fn render_article_pane(
     }
 
     let should_dim =
-        (app.config.ui.dim_inactive_panes && !is_active && app.tabs[tab_idx].panes.len() > 1)
+        (app.user_data.config.ui.dim_inactive_panes && !is_active && app.workspace.tabs[tab_idx].panes.len() > 1)
             || app.input_mode == crate::app::InputMode::ImageModal;
     if should_dim {
         for line in &mut rendered_lines {
@@ -290,7 +290,7 @@ pub fn render_article_pane(
     let paragraph = Paragraph::new(rendered_lines).block(block);
     f.render_widget(paragraph, rect);
 
-    if app.config.reader.show_images {
+    if app.user_data.config.reader.show_images {
         for img in &parsed_doc.images {
             let img_top = img.line_idx;
             let img_bot = img.line_idx + img.height_lines;
@@ -338,8 +338,8 @@ pub fn render_article_pane(
         pane.scroll_offset,
         border_color,
         is_active,
-        app.zen_mode,
-        app.config.ui.scroll_indicator,
+        app.workspace.zen_mode,
+        app.user_data.config.ui.scroll_indicator,
     );
 
     if is_active && pane.show_toc && !parsed_doc.headings.is_empty() {
@@ -348,9 +348,9 @@ pub fn render_article_pane(
             pane,
             parsed_doc,
             rect,
-            app.config.reader.toc_section_numbers,
-            app.config.ui.rounded_borders,
-            app.config.ui.icons,
+            app.user_data.config.reader.toc_section_numbers,
+            app.user_data.config.ui.rounded_borders,
+            app.user_data.config.ui.icons,
         );
     }
 }

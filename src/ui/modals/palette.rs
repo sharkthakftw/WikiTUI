@@ -22,14 +22,14 @@ pub fn compute_palette_modal_area(size: Rect) -> Rect {
 
 pub fn render_palette_modal(f: &mut Frame, app: &App, size: Rect) {
     let area = compute_palette_modal_area(size);
-    let icon = if app.config.ui.icons { ">" } else { "" };
+    let icon = if app.user_data.config.ui.icons { ">" } else { "" };
     let inner = render_modal_container_at(
         f,
         area,
         icon,
         "command palette",
         theme::YELLOW,
-        app.config.ui.rounded_borders,
+        app.user_data.config.ui.rounded_borders,
     );
 
     if inner.height < 3 || inner.width < 10 {
@@ -40,14 +40,14 @@ pub fn render_palette_modal(f: &mut Frame, app: &App, size: Rect) {
     let mut lines = Vec::new();
 
     let (input_line, divider_line) =
-        create_search_input_lines(">", &app.command_palette.query, theme::YELLOW, inner_width);
+        create_search_input_lines(">", &app.modals.command_palette.query, theme::YELLOW, inner_width);
     lines.push(input_line);
     lines.push(divider_line);
 
-    let filtered = filter_commands(&app.command_palette.query);
+    let filtered = filter_commands(&app.modals.command_palette.query);
     let visible_rows = (inner.height as usize).saturating_sub(2);
     let scroll_offset = compute_centered_scroll(
-        app.command_palette.selected_idx,
+        app.modals.command_palette.selected_idx,
         visible_rows,
         filtered.len(),
     );
@@ -64,7 +64,7 @@ pub fn render_palette_modal(f: &mut Frame, app: &App, size: Rect) {
             .skip(scroll_offset)
             .take(visible_rows)
         {
-            let is_selected = idx == app.command_palette.selected_idx;
+            let is_selected = idx == app.modals.command_palette.selected_idx;
             let cursor_str = if is_selected { " ▶ " } else { "   " };
             let cursor_style = if is_selected {
                 Style::default()

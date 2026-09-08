@@ -5,30 +5,30 @@ use crate::app::App;
 impl App {
     pub fn enter_search_mode(&mut self) {
         self.input_mode = crate::app::InputMode::Search;
-        self.search_modal.opens_new_tab = true;
-        self.search_modal.input.clear();
-        self.search_modal.cursor_pos = 0;
+        self.modals.search_modal.opens_new_tab = true;
+        self.modals.search_modal.input.clear();
+        self.modals.search_modal.cursor_pos = 0;
     }
 
     pub fn edit_search_mode(&mut self) {
         self.input_mode = crate::app::InputMode::Search;
-        self.search_modal.opens_new_tab = false;
+        self.modals.search_modal.opens_new_tab = false;
         let existing_query = match &self.active_pane().content {
             PaneContent::SearchResults { query, .. } => Some(query.clone()),
             _ => None,
         };
         if let Some(query) = existing_query {
-            self.search_modal.input = query;
+            self.modals.search_modal.input = query;
         } else {
-            self.search_modal.input.clear();
+            self.modals.search_modal.input.clear();
         }
-        self.search_modal.cursor_pos = self.search_modal.input.chars().count();
+        self.modals.search_modal.cursor_pos = self.modals.search_modal.input.chars().count();
     }
 
     pub fn exit_search_mode(&mut self) {
         self.input_mode = crate::app::InputMode::Normal;
-        self.search_modal.input.clear();
-        self.search_modal.cursor_pos = 0;
+        self.modals.search_modal.input.clear();
+        self.modals.search_modal.cursor_pos = 0;
     }
 
     pub fn fetch_random_article(&mut self) {
@@ -40,11 +40,11 @@ impl App {
         let pane_id = if is_empty {
             self.active_pane().id
         } else {
-            let next_id = self.next_pane_id;
-            self.next_pane_id += 1;
+            let next_id = self.workspace.next_pane_id;
+            self.workspace.next_pane_id += 1;
             let tab_name = "loading...".to_string();
-            self.tabs.push(crate::app::tab::Tab::new(tab_name, next_id));
-            self.active_tab_idx = self.tabs.len() - 1;
+            self.workspace.tabs.push(crate::app::tab::Tab::new(tab_name, next_id));
+            self.workspace.active_tab_idx = self.workspace.tabs.len() - 1;
             next_id
         };
 
@@ -65,16 +65,17 @@ impl App {
                 | crate::app::InputMode::SleepTimerPrompt
         ) {
             if let Some((byte_idx, _)) = self
+                .modals
                 .search_modal
                 .input
                 .char_indices()
-                .nth(self.search_modal.cursor_pos)
+                .nth(self.modals.search_modal.cursor_pos)
             {
-                self.search_modal.input.insert(byte_idx, c);
+                self.modals.search_modal.input.insert(byte_idx, c);
             } else {
-                self.search_modal.input.push(c);
+                self.modals.search_modal.input.push(c);
             }
-            self.search_modal.cursor_pos += 1;
+            self.modals.search_modal.cursor_pos += 1;
         }
     }
 
@@ -85,15 +86,15 @@ impl App {
                 | crate::app::InputMode::RenameList
                 | crate::app::InputMode::CreateNewList
                 | crate::app::InputMode::SleepTimerPrompt
-        ) && self.search_modal.cursor_pos > 0
+        ) && self.modals.search_modal.cursor_pos > 0
         {
-            let target_char = self.search_modal.cursor_pos - 1;
-            if let Some((byte_idx, _)) = self.search_modal.input.char_indices().nth(target_char) {
-                self.search_modal.input.remove(byte_idx);
+            let target_char = self.modals.search_modal.cursor_pos - 1;
+            if let Some((byte_idx, _)) = self.modals.search_modal.input.char_indices().nth(target_char) {
+                self.modals.search_modal.input.remove(byte_idx);
             } else {
-                self.search_modal.input.pop();
+                self.modals.search_modal.input.pop();
             }
-            self.search_modal.cursor_pos -= 1;
+            self.modals.search_modal.cursor_pos -= 1;
         }
     }
 
@@ -104,10 +105,10 @@ impl App {
                 | crate::app::InputMode::RenameList
                 | crate::app::InputMode::CreateNewList
                 | crate::app::InputMode::SleepTimerPrompt
-        ) && self.search_modal.cursor_pos > 0
+        ) && self.modals.search_modal.cursor_pos > 0
         {
-            let char_indices: Vec<(usize, char)> = self.search_modal.input.char_indices().collect();
-            let end_char = self.search_modal.cursor_pos.min(char_indices.len());
+            let char_indices: Vec<(usize, char)> = self.modals.search_modal.input.char_indices().collect();
+            let end_char = self.modals.search_modal.cursor_pos.min(char_indices.len());
             let mut start_char = end_char;
 
             while start_char > 0 && char_indices[start_char - 1].1.is_whitespace() {
@@ -121,10 +122,10 @@ impl App {
             let end_byte = char_indices
                 .get(end_char)
                 .map(|(b, _)| *b)
-                .unwrap_or(self.search_modal.input.len());
+                .unwrap_or(self.modals.search_modal.input.len());
 
-            self.search_modal.input.drain(start_byte..end_byte);
-            self.search_modal.cursor_pos = start_char;
+            self.modals.search_modal.input.drain(start_byte..end_byte);
+            self.modals.search_modal.cursor_pos = start_char;
         }
     }
 
@@ -137,12 +138,13 @@ impl App {
                 | crate::app::InputMode::SleepTimerPrompt
         ) {
             if let Some((byte_idx, _)) = self
+                .modals
                 .search_modal
                 .input
                 .char_indices()
-                .nth(self.search_modal.cursor_pos)
+                .nth(self.modals.search_modal.cursor_pos)
             {
-                self.search_modal.input.remove(byte_idx);
+                self.modals.search_modal.input.remove(byte_idx);
             }
         }
     }
@@ -155,7 +157,7 @@ impl App {
                 | crate::app::InputMode::CreateNewList
                 | crate::app::InputMode::SleepTimerPrompt
         ) {
-            self.search_modal.cursor_pos = self.search_modal.cursor_pos.saturating_sub(1);
+            self.modals.search_modal.cursor_pos = self.modals.search_modal.cursor_pos.saturating_sub(1);
         }
     }
 
@@ -167,9 +169,9 @@ impl App {
                 | crate::app::InputMode::CreateNewList
                 | crate::app::InputMode::SleepTimerPrompt
         ) {
-            let char_count = self.search_modal.input.chars().count();
-            if self.search_modal.cursor_pos < char_count {
-                self.search_modal.cursor_pos += 1;
+            let char_count = self.modals.search_modal.input.chars().count();
+            if self.modals.search_modal.cursor_pos < char_count {
+                self.modals.search_modal.cursor_pos += 1;
             }
         }
     }
@@ -182,7 +184,7 @@ impl App {
                 | crate::app::InputMode::CreateNewList
                 | crate::app::InputMode::SleepTimerPrompt
         ) {
-            self.search_modal.cursor_pos = 0;
+            self.modals.search_modal.cursor_pos = 0;
         }
     }
 
@@ -194,13 +196,13 @@ impl App {
                 | crate::app::InputMode::CreateNewList
                 | crate::app::InputMode::SleepTimerPrompt
         ) {
-            self.search_modal.cursor_pos = self.search_modal.input.chars().count();
+            self.modals.search_modal.cursor_pos = self.modals.search_modal.input.chars().count();
         }
     }
 
     pub fn submit_search(&mut self) {
-        let query = self.search_modal.input.trim().to_string();
-        let open_new_tab = self.search_modal.opens_new_tab;
+        let query = self.modals.search_modal.input.trim().to_string();
+        let open_new_tab = self.modals.search_modal.opens_new_tab;
         self.exit_search_mode();
 
         if !query.is_empty() {
@@ -217,8 +219,8 @@ impl App {
             active_pane.is_loading = true;
             active_pane.loading_title = Some(format!("search: {}", query.to_lowercase()));
             active_pane.selected_idx = 0;
-            let limit = self.config.search.limit;
-            let timeout = self.config.network.timeout;
+            let limit = self.user_data.config.search.limit;
+            let timeout = self.user_data.config.network.timeout;
             self.network.send(NetworkCommand::Search {
                 request_id,
                 pane_id,

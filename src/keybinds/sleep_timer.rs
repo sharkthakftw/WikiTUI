@@ -9,8 +9,8 @@ pub fn handle_sleep_timer_mode(app: &mut App, key: KeyEvent) {
                 return;
             }
             KeyCode::Char('c') => {
-                app.search_modal.input.clear();
-                app.search_modal.cursor_pos = 0;
+                app.modals.search_modal.input.clear();
+                app.modals.search_modal.cursor_pos = 0;
                 app.input_mode = InputMode::Normal;
                 return;
             }
@@ -43,8 +43,8 @@ pub fn handle_sleep_timer_mode(app: &mut App, key: KeyEvent) {
             app.submit_sleep_timer_prompt();
         }
         KeyCode::Esc => {
-            app.search_modal.input.clear();
-            app.search_modal.cursor_pos = 0;
+            app.modals.search_modal.input.clear();
+            app.modals.search_modal.cursor_pos = 0;
             app.input_mode = InputMode::Normal;
         }
         _ => {}

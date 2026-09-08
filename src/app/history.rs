@@ -16,12 +16,12 @@ impl App {
     }
 
     pub fn open_article_in_background_tab(&mut self, title: &str) {
-        let cur_tab = self.active_tab_idx;
+        let cur_tab = self.workspace.active_tab_idx;
         self.new_tab();
         let pane_id = self.active_pane().id;
         self.active_pane_mut().prepare_for_article_fetch(title);
         self.send_fetch_article(pane_id, title.to_string());
-        self.active_tab_idx = cur_tab;
+        self.workspace.active_tab_idx = cur_tab;
         self.set_status_message(format!("opened '{}' in background tab", title));
     }
 

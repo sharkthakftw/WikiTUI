@@ -19,12 +19,12 @@ pub struct TabBarCache {
 
 fn compute_tab_bar_key(app: &App, area_width: u16) -> u64 {
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    app.active_tab_idx.hash(&mut hasher);
-    app.tabs.len().hash(&mut hasher);
+    app.workspace.active_tab_idx.hash(&mut hasher);
+    app.workspace.tabs.len().hash(&mut hasher);
     area_width.hash(&mut hasher);
-    app.config.ui.icons.hash(&mut hasher);
+    app.user_data.config.ui.icons.hash(&mut hasher);
 
-    for tab in &app.tabs {
+    for tab in &app.workspace.tabs {
         tab.name.hash(&mut hasher);
         tab.active_pane_idx.hash(&mut hasher);
         tab.panes.len().hash(&mut hasher);
@@ -43,7 +43,8 @@ fn compute_tab_bar_key(app: &App, area_width: u16) -> u64 {
                     0u8.hash(&mut hasher);
                     title.hash(&mut hasher);
                     parsed_doc.spoken_audio.is_some().hash(&mut hasher);
-                    app.saved_lists
+                    app.user_data
+                        .saved_lists
                         .is_article_saved_anywhere(title)
                         .hash(&mut hasher);
                 }
@@ -112,12 +113,12 @@ fn build_tab_bar_line(
 }
 
 pub fn compute_tab_titles(app: &App) -> Vec<String> {
-    app.tabs
+    app.workspace.tabs
         .iter()
         .enumerate()
         .map(|(i, tab)| {
             let loading_pane = tab.panes.iter().find(|p| p.is_loading);
-            let show_icons = app.config.ui.icons;
+            let show_icons = app.user_data.config.ui.icons;
             let (icon, raw_title, is_saved) = if let Some(pane) = loading_pane {
                 let title = pane
                     .loading_title
@@ -130,7 +131,7 @@ pub fn compute_tab_titles(app: &App) -> Vec<String> {
                     PaneContent::ArticleText {
                         title, parsed_doc, ..
                     } => {
-                        let saved = app.saved_lists.is_article_saved_anywhere(title);
+                        let saved = app.user_data.saved_lists.is_article_saved_anywhere(title);
                         let has_audio = parsed_doc.spoken_audio.is_some();
                         let icon_str = if show_icons {
                             if has_audio {
@@ -180,12 +181,12 @@ pub fn compute_tab_titles(app: &App) -> Vec<String> {
             };
 
             if icon.is_empty() {
-                if app.tabs.len() > 1 {
+                if app.workspace.tabs.len() > 1 {
                     format!("{} {}{}", i + 1, raw_title, star)
                 } else {
                     format!("{}{}", raw_title, star)
                 }
-            } else if app.tabs.len() > 1 {
+            } else if app.workspace.tabs.len() > 1 {
                 format!("{} {} {}{}", icon, i + 1, raw_title, star)
             } else {
                 format!("{} {}{}", icon, raw_title, star)
@@ -243,26 +244,27 @@ pub fn compute_visible_range(
 fn ensure_tab_bar_cache(app: &mut App, area_width: u16) -> &TabBarCache {
     let key = compute_tab_bar_key(app, area_width);
     let needs_update = app
+        .workspace
         .tab_bar_cache
         .as_ref()
         .map(|c| c.key != key)
         .unwrap_or(true);
     if needs_update {
         let tab_titles = compute_tab_titles(app);
-        let active_idx = app.active_tab_idx.min(tab_titles.len().saturating_sub(1));
+        let active_idx = app.workspace.active_tab_idx.min(tab_titles.len().saturating_sub(1));
         let (new_line, visible_range) = build_tab_bar_line(&tab_titles, active_idx, area_width);
-        app.tab_bar_cache = Some(TabBarCache {
+        app.workspace.tab_bar_cache = Some(TabBarCache {
             key,
             rendered_line: new_line,
             tab_titles,
             visible_range,
         });
     }
-    app.tab_bar_cache.as_ref().unwrap()
+    app.workspace.tab_bar_cache.as_ref().unwrap()
 }
 
 pub fn get_tab_at_col(app: &mut App, area_width: u16, target_col: u16) -> Option<usize> {
-    if app.tabs.is_empty() {
+    if app.workspace.tabs.is_empty() {
         return None;
     }
 
@@ -299,7 +301,7 @@ pub fn get_tab_at_col(app: &mut App, area_width: u16, target_col: u16) -> Option
 }
 
 pub fn render(f: &mut Frame, app: &mut App, area: Rect) {
-    if app.tabs.is_empty() {
+    if app.workspace.tabs.is_empty() {
         return;
     }
 

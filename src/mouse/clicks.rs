@@ -34,8 +34,8 @@ pub fn handle_middle_click(app: &mut App, col: u16, row: u16, term_width: u16, t
         return;
     }
 
-    if app.feed.active {
-        if let Some(item) = app.feed.current_item().cloned() {
+    if app.user_data.feed.active {
+        if let Some(item) = app.user_data.feed.current_item().cloned() {
             app.open_article_in_background_tab(&item.title);
         }
         return;
@@ -53,7 +53,7 @@ pub fn handle_middle_click(app: &mut App, col: u16, row: u16, term_width: u16, t
         return;
     }
 
-    if app.zen_mode {
+    if app.workspace.zen_mode {
         let zen_rect = crate::ui::compute_zen_area(Rect::new(0, 0, term_width, term_height));
         if rect_contains(zen_rect, col, row) {
             let pane = app.active_pane_mut();
@@ -156,7 +156,7 @@ fn handle_modal_left_click(
     term_height: u16,
     alt: bool,
 ) -> bool {
-    if app.feed.active {
+    if app.user_data.feed.active {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([Constraint::Min(0), Constraint::Length(1)])
@@ -168,8 +168,8 @@ fn handle_modal_left_click(
             && col >= card_area.x + card_area.width.saturating_sub(14)
         {
             app.toggle_feed_like();
-        } else if let Some(item) = app.feed.current_item().cloned() {
-            app.feed.active = false;
+        } else if let Some(item) = app.user_data.feed.current_item().cloned() {
+            app.user_data.feed.active = false;
             if alt {
                 app.new_tab();
             }
@@ -179,7 +179,7 @@ fn handle_modal_left_click(
     }
 
     if app.input_mode == InputMode::DailyFeedModal {
-        if let Some(modal) = &mut app.daily_feed_modal {
+        if let Some(modal) = &mut app.modals.daily_feed_modal {
             let area = crate::ui::modals::compute_daily_feed_modal_area(size, modal.kind);
             if !rect_contains(area, col, row) {
                 app.close_daily_feed_modal();
@@ -249,9 +249,9 @@ fn handle_modal_left_click(
     if app.input_mode == InputMode::CreateNewList {
         let create_area = crate::ui::modals::compute_search_modal_area(size);
         if !rect_contains(create_area, col, row) {
-            app.search_modal.input.clear();
-            app.search_modal.cursor_pos = 0;
-            app.input_mode = app.lists_modal.create_return_mode.clone();
+            app.modals.search_modal.input.clear();
+            app.modals.search_modal.cursor_pos = 0;
+            app.input_mode = app.modals.lists_modal.create_return_mode.clone();
         }
         return true;
     }
@@ -259,8 +259,8 @@ fn handle_modal_left_click(
     if app.input_mode == InputMode::SleepTimerPrompt {
         let prompt_area = crate::ui::modals::compute_search_modal_area(size);
         if !rect_contains(prompt_area, col, row) {
-            app.search_modal.input.clear();
-            app.search_modal.cursor_pos = 0;
+            app.modals.search_modal.input.clear();
+            app.modals.search_modal.cursor_pos = 0;
             app.input_mode = InputMode::Normal;
         }
         return true;
@@ -283,9 +283,9 @@ fn handle_modal_left_click(
         if let Some((idx, item, val_start_x)) = crate::ui::modals::settings::get_setting_row_at(
             inner,
             row,
-            app.settings_modal.cursor_idx,
+            app.modals.settings_modal.cursor_idx,
         ) {
-            app.settings_modal.cursor_idx = idx;
+            app.modals.settings_modal.cursor_idx = idx;
             let is_numeric = matches!(
                 item,
                 crate::app::SettingItem::ScrollLines
@@ -317,8 +317,8 @@ fn handle_modal_left_click(
         if rect_contains(area, col, row) {
             match crate::ui::modals::onboarding::get_onboarding_row_at(area, row) {
                 Some(crate::ui::modals::onboarding::OnboardingHit::Category(idx)) => {
-                    app.onboarding.cursor_idx = idx;
-                    if let Some(val) = app.onboarding.selected.get_mut(idx) {
+                    app.modals.onboarding.cursor_idx = idx;
+                    if let Some(val) = app.modals.onboarding.selected.get_mut(idx) {
                         *val = !*val;
                     }
                 }
@@ -339,12 +339,12 @@ fn handle_modal_left_click(
 
         if rect_contains(container_area, col, row) {
             if rect_contains(left_area, col, row) {
-                app.categories_modal.focus_right = false;
+                app.modals.categories_modal.focus_right = false;
                 if let Some(clicked_cat_idx) =
                     crate::ui::modals::get_category_item_at(app, false, left_area, row)
                 {
-                    app.categories_modal.cursor_idx = clicked_cat_idx;
-                    app.categories_modal.article_cursor_idx = 0;
+                    app.modals.categories_modal.cursor_idx = clicked_cat_idx;
+                    app.modals.categories_modal.article_cursor_idx = 0;
                     let pane = app.active_pane();
                     if let PaneContent::ArticleText { parsed_doc, .. } = &pane.content {
                         if let Some(cat) = parsed_doc.categories.get(clicked_cat_idx) {
@@ -357,7 +357,7 @@ fn handle_modal_left_click(
             }
 
             if rect_contains(right_area, col, row) {
-                app.categories_modal.focus_right = true;
+                app.modals.categories_modal.focus_right = true;
                 if let Some(clicked_art_idx) =
                     crate::ui::modals::get_category_item_at(app, true, right_area, row)
                 {
@@ -365,11 +365,13 @@ fn handle_modal_left_click(
                     let target_title =
                         if let PaneContent::ArticleText { parsed_doc, .. } = &pane.content {
                             let selected_cat_idx = app
+                                .modals
                                 .categories_modal
                                 .cursor_idx
                                 .min(parsed_doc.categories.len().saturating_sub(1));
                             parsed_doc.categories.get(selected_cat_idx).and_then(|cat| {
-                                app.categories_modal
+                                app.modals
+                                    .categories_modal
                                     .cached_members
                                     .get(cat)
                                     .and_then(|members| members.get(clicked_art_idx).cloned())
@@ -379,7 +381,7 @@ fn handle_modal_left_click(
                         };
 
                     if let Some(title) = target_title {
-                        app.categories_modal.article_cursor_idx = clicked_art_idx;
+                        app.modals.categories_modal.article_cursor_idx = clicked_art_idx;
                         app.input_mode = InputMode::Normal;
                         if alt {
                             app.new_tab();
@@ -400,8 +402,9 @@ fn handle_modal_left_click(
         if rect_contains(area, col, row) {
             match crate::ui::modals::lists::get_save_to_list_item_at(app, area, row) {
                 Some(crate::ui::modals::lists::SaveToListHit::Toggle(idx)) => {
-                    app.lists_modal.save_cursor_idx = idx;
+                    app.modals.lists_modal.save_cursor_idx = idx;
                     let custom_lists: Vec<_> = app
+                        .user_data
                         .saved_lists
                         .lists
                         .iter()
@@ -410,22 +413,24 @@ fn handle_modal_left_click(
                         .collect();
                     if let Some(list) = custom_lists.get(idx) {
                         let list_id = list.id.clone();
-                        let target_title = app.lists_modal.target_title.clone();
-                        app.saved_lists
+                        let target_title = app.modals.lists_modal.target_title.clone();
+                        app.user_data
+                            .saved_lists
                             .toggle_article_in_list(&list_id, &target_title);
                     }
                 }
                 Some(crate::ui::modals::lists::SaveToListHit::CreateNew) => {
                     let custom_lists_count = app
+                        .user_data
                         .saved_lists
                         .lists
                         .iter()
                         .filter(|l| l.id != "liked")
                         .count();
-                    app.lists_modal.save_cursor_idx = custom_lists_count;
-                    app.search_modal.input.clear();
-                    app.search_modal.cursor_pos = 0;
-                    app.lists_modal.create_return_mode = InputMode::SaveToList;
+                    app.modals.lists_modal.save_cursor_idx = custom_lists_count;
+                    app.modals.search_modal.input.clear();
+                    app.modals.search_modal.cursor_pos = 0;
+                    app.modals.lists_modal.create_return_mode = InputMode::SaveToList;
                     app.input_mode = InputMode::CreateNewList;
                 }
                 None => {}
@@ -450,7 +455,7 @@ fn handle_modal_left_click(
             }
         } else {
             app.input_mode = InputMode::Normal;
-            app.confirm_action = None;
+            app.modals.confirm_action = None;
         }
         return true;
     }
@@ -491,28 +496,28 @@ fn handle_modal_left_click(
 
         if rect_contains(container_area, col, row) {
             if rect_contains(left_area, col, row) {
-                app.lists_modal.viewer_focus_right = false;
+                app.modals.lists_modal.viewer_focus_right = false;
                 if let Some(clicked_list_idx) =
                     crate::ui::modals::lists::get_saved_lists_viewer_item_at(
                         app, false, left_area, row,
                     )
                 {
-                    app.lists_modal.viewer_list_idx = clicked_list_idx;
-                    app.lists_modal.viewer_article_idx = 0;
+                    app.modals.lists_modal.viewer_list_idx = clicked_list_idx;
+                    app.modals.lists_modal.viewer_article_idx = 0;
                 }
                 return true;
             }
 
             if rect_contains(right_area, col, row) {
-                app.lists_modal.viewer_focus_right = true;
+                app.modals.lists_modal.viewer_focus_right = true;
                 if let Some(clicked_art_idx) =
                     crate::ui::modals::lists::get_saved_lists_viewer_item_at(
                         app, true, right_area, row,
                     )
                 {
-                    if let Some(list) = app.saved_lists.lists.get(app.lists_modal.viewer_list_idx) {
+                    if let Some(list) = app.user_data.saved_lists.lists.get(app.modals.lists_modal.viewer_list_idx) {
                         if clicked_art_idx < list.articles.len() {
-                            app.lists_modal.viewer_article_idx = clicked_art_idx;
+                            app.modals.lists_modal.viewer_article_idx = clicked_art_idx;
                             let title = list.articles[clicked_art_idx].clone();
                             app.input_mode = InputMode::Normal;
                             if alt {
@@ -545,7 +550,7 @@ fn handle_workspace_left_click(
         return;
     }
 
-    if app.zen_mode {
+    if app.workspace.zen_mode {
         let zen_rect = crate::ui::compute_zen_area(Rect::new(0, 0, term_width, term_height));
         if rect_contains(zen_rect, col, row) {
             let pane = app.active_pane_mut();
@@ -698,7 +703,7 @@ pub fn handle_mouse_move(
         if let Some((item_idx, l_idx, _)) =
             crate::ui::modals::get_daily_feed_item_at(app, col, row, size)
         {
-            if let Some(modal) = &mut app.daily_feed_modal {
+            if let Some(modal) = &mut app.modals.daily_feed_modal {
                 modal.cursor_idx = item_idx;
                 modal.link_idx = l_idx;
             }
@@ -712,7 +717,7 @@ pub fn handle_mouse_move(
 
     let mut hovered_link = None;
 
-    if app.zen_mode {
+    if app.workspace.zen_mode {
         let zen_rect = crate::ui::compute_zen_area(Rect::new(0, 0, term_width, term_height));
         if rect_contains(zen_rect, col, row) {
             let pane = app.active_pane_mut();
@@ -764,7 +769,7 @@ pub fn handle_mouse_move(
 
     if ctrl {
         if let Some((title, raw_target)) = hovered_link {
-            if app.link_peek.as_ref().map(|p| &p.raw_target) != Some(&raw_target) {
+            if app.modals.link_peek.as_ref().map(|p| &p.raw_target) != Some(&raw_target) {
                 app.open_link_peek(title, raw_target, col, row);
             }
         } else if app.input_mode == InputMode::LinkPeek {

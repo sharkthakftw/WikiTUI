@@ -5,7 +5,7 @@ impl App {
         if self.daily_feed.is_none() {
             self.send_fetch_daily_feed();
         }
-        self.daily_feed_modal = Some(crate::ui::modals::DailyFeedModalState {
+        self.modals.daily_feed_modal = Some(crate::ui::modals::DailyFeedModalState {
             kind,
             cursor_idx: 0,
             link_idx: 0,
@@ -17,23 +17,23 @@ impl App {
     }
 
     pub fn close_daily_feed_modal(&mut self) {
-        self.daily_feed_modal = None;
+        self.modals.daily_feed_modal = None;
         self.input_mode = InputMode::Normal;
     }
 
     pub fn maybe_fetch_feed_batch(&mut self) {
-        if !self.feed.is_fetching && self.feed.active_idx + 3 >= self.feed.items.len() {
-            self.feed.is_fetching = true;
+        if !self.user_data.feed.is_fetching && self.user_data.feed.active_idx + 3 >= self.user_data.feed.items.len() {
+            self.user_data.feed.is_fetching = true;
             self.send_fetch_feed_batch();
         }
     }
 
     pub fn toggle_feed_mode(&mut self) {
-        let is_active = self.feed.toggle_active();
+        let is_active = self.user_data.feed.toggle_active();
         if is_active {
-            if !self.feed.profile.has_onboarded {
+            if !self.user_data.feed.profile.has_onboarded {
                 self.input_mode = InputMode::CategoryOnboarding;
-            } else if self.feed.items.is_empty() {
+            } else if self.user_data.feed.items.is_empty() {
                 self.maybe_fetch_feed_batch();
             }
         }
@@ -41,6 +41,7 @@ impl App {
 
     pub fn submit_category_onboarding(&mut self) {
         let chosen_indices: Vec<usize> = self
+            .modals
             .onboarding
             .selected
             .iter()
@@ -48,18 +49,18 @@ impl App {
             .filter_map(|(idx, &sel)| if sel { Some(idx) } else { None })
             .collect();
 
-        self.feed.profile.complete_onboarding(&chosen_indices);
+        self.user_data.feed.profile.complete_onboarding(&chosen_indices);
         self.input_mode = InputMode::Normal;
-        if self.feed.items.is_empty() {
+        if self.user_data.feed.items.is_empty() {
             self.maybe_fetch_feed_batch();
         }
     }
 
     pub fn reset_feed(&mut self) {
-        self.feed.reset();
-        self.saved_lists.clear_list("liked");
-        self.onboarding.cursor_idx = 0;
-        self.onboarding.selected = vec![
+        self.user_data.feed.reset();
+        self.user_data.saved_lists.clear_list("liked");
+        self.modals.onboarding.cursor_idx = 0;
+        self.modals.onboarding.selected = vec![
             false, false, false, false, true, false, false, true, true, false, false, true,
         ];
         self.input_mode = InputMode::CategoryOnboarding;
@@ -67,8 +68,9 @@ impl App {
     }
 
     pub fn toggle_feed_like(&mut self) {
-        if let Some((title, _snippet, is_liked)) = self.feed.toggle_like() {
-            self.saved_lists
+        if let Some((title, _snippet, is_liked)) = self.user_data.feed.toggle_like() {
+            self.user_data
+                .saved_lists
                 .set_article_in_list("liked", "Liked", &title, is_liked);
         }
     }
@@ -97,9 +99,9 @@ impl App {
             }
         };
         if should_mark {
-            self.feed.profile.seen_articles.insert(title);
-            self.feed.profile.record_engagement(&categories, 15);
-            self.feed.profile.save();
+            self.user_data.feed.profile.seen_articles.insert(title);
+            self.user_data.feed.profile.record_engagement(&categories, 15);
+            self.user_data.feed.profile.save();
         }
     }
 
@@ -119,9 +121,9 @@ impl App {
             (true, title.clone(), parsed_doc.categories.clone())
         };
         if should_mark {
-            self.feed.profile.seen_articles.insert(title);
-            self.feed.profile.record_engagement(&categories, 15);
-            self.feed.profile.save();
+            self.user_data.feed.profile.seen_articles.insert(title);
+            self.user_data.feed.profile.record_engagement(&categories, 15);
+            self.user_data.feed.profile.save();
         }
     }
 
@@ -143,16 +145,17 @@ impl App {
         };
 
         if added {
-            self.feed
+            self.user_data
+                .feed
                 .profile
                 .seen_articles
                 .insert(target_title.to_string());
             if !categories.is_empty() {
-                self.feed.profile.record_engagement(&categories, 50);
+                self.user_data.feed.profile.record_engagement(&categories, 50);
             }
         } else if !categories.is_empty() {
-            self.feed.profile.record_engagement(&categories, -50);
+            self.user_data.feed.profile.record_engagement(&categories, -50);
         }
-        self.feed.profile.save();
+        self.user_data.feed.profile.save();
     }
 }

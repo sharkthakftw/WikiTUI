@@ -4,7 +4,7 @@ use ratatui::layout::Rect;
 
 pub fn active_pane_rect(app: &App, term_width: u16, term_height: u16) -> Rect {
     let size = Rect::new(0, 0, term_width, term_height);
-    let main_rect = if app.zen_mode {
+    let main_rect = if app.workspace.zen_mode {
         crate::ui::compute_zen_area(size)
     } else {
         Rect::new(0, 1, term_width, term_height.saturating_sub(2))
@@ -51,7 +51,7 @@ pub fn handle_scrollbar_down(
                 }
             }
             if dragged {
-                app.scroll_drag = Some(ScrollDragTarget::Toc);
+                app.workspace.scroll_drag = Some(ScrollDragTarget::Toc);
                 return true;
             }
         }
@@ -66,19 +66,19 @@ pub fn handle_scrollbar_down(
             && row > left_area.y
             && row < left_area.y + left_area.height.saturating_sub(1)
         {
-            let total = app.saved_lists.lists.len();
+            let total = app.user_data.saved_lists.lists.len();
             let visible_rows = (left_area.height.saturating_sub(2)) as usize;
             if total > visible_rows && visible_rows > 0 {
-                app.scroll_drag = Some(ScrollDragTarget::SavedLists(false));
+                app.workspace.scroll_drag = Some(ScrollDragTarget::SavedLists(false));
                 let rel_y = (row - (left_area.y + 1)) as usize;
                 let target_idx = if visible_rows > 1 {
                     (rel_y * (total - 1)) / (visible_rows - 1)
                 } else {
                     0
                 };
-                app.lists_modal.viewer_list_idx = target_idx.min(total - 1);
-                app.lists_modal.viewer_article_idx = 0;
-                app.lists_modal.viewer_focus_right = false;
+                app.modals.lists_modal.viewer_list_idx = target_idx.min(total - 1);
+                app.modals.lists_modal.viewer_article_idx = 0;
+                app.modals.lists_modal.viewer_focus_right = false;
                 return true;
             }
         }
@@ -87,19 +87,19 @@ pub fn handle_scrollbar_down(
             && row > right_area.y
             && row < right_area.y + right_area.height.saturating_sub(1)
         {
-            if let Some(list) = app.saved_lists.lists.get(app.lists_modal.viewer_list_idx) {
+            if let Some(list) = app.user_data.saved_lists.lists.get(app.modals.lists_modal.viewer_list_idx) {
                 let total = list.articles.len();
                 let visible_rows = (right_area.height.saturating_sub(2)) as usize;
                 if total > visible_rows && visible_rows > 0 {
-                    app.scroll_drag = Some(ScrollDragTarget::SavedLists(true));
+                    app.workspace.scroll_drag = Some(ScrollDragTarget::SavedLists(true));
                     let rel_y = (row - (right_area.y + 1)) as usize;
                     let target_idx = if visible_rows > 1 {
                         (rel_y * (total - 1)) / (visible_rows - 1)
                     } else {
                         0
                     };
-                    app.lists_modal.viewer_article_idx = target_idx.min(total - 1);
-                    app.lists_modal.viewer_focus_right = true;
+                    app.modals.lists_modal.viewer_article_idx = target_idx.min(total - 1);
+                    app.modals.lists_modal.viewer_focus_right = true;
                     return true;
                 }
             }
@@ -107,7 +107,7 @@ pub fn handle_scrollbar_down(
         return false;
     }
 
-    if app.input_mode != InputMode::Normal || app.zen_mode || !app.config.ui.scroll_indicator {
+    if app.input_mode != InputMode::Normal || app.workspace.zen_mode || !app.user_data.config.ui.scroll_indicator {
         return false;
     }
 
@@ -161,7 +161,7 @@ pub fn handle_scrollbar_down(
             }
         }
         if let Some(pane_idx) = dragged_pane {
-            app.scroll_drag = Some(ScrollDragTarget::Pane(pane_idx));
+            app.workspace.scroll_drag = Some(ScrollDragTarget::Pane(pane_idx));
             return true;
         }
     }
@@ -170,7 +170,7 @@ pub fn handle_scrollbar_down(
 }
 
 pub fn handle_scrollbar_drag(app: &mut App, row: u16, term_width: u16, term_height: u16) {
-    let Some(target) = app.scroll_drag else {
+    let Some(target) = app.workspace.scroll_drag else {
         return;
     };
     let size = Rect::new(0, 0, term_width, term_height);
@@ -200,7 +200,7 @@ pub fn handle_scrollbar_drag(app: &mut App, row: u16, term_width: u16, term_heig
                 let (_container_area, left_area, right_area) =
                     crate::ui::modals::lists::compute_saved_lists_viewer_areas(size);
                 if is_right {
-                    if let Some(list) = app.saved_lists.lists.get(app.lists_modal.viewer_list_idx) {
+                    if let Some(list) = app.user_data.saved_lists.lists.get(app.modals.lists_modal.viewer_list_idx) {
                         let total = list.articles.len();
                         let visible_rows = (right_area.height.saturating_sub(2)) as usize;
                         if total > visible_rows && visible_rows > 1 {
@@ -209,11 +209,11 @@ pub fn handle_scrollbar_drag(app: &mut App, row: u16, term_width: u16, term_heig
                                 .min((visible_rows - 1) as u16)
                                 as usize;
                             let target_idx = (rel_y * (total - 1)) / (visible_rows - 1);
-                            app.lists_modal.viewer_article_idx = target_idx.min(total - 1);
+                            app.modals.lists_modal.viewer_article_idx = target_idx.min(total - 1);
                         }
                     }
                 } else {
-                    let total = app.saved_lists.lists.len();
+                    let total = app.user_data.saved_lists.lists.len();
                     let visible_rows = (left_area.height.saturating_sub(2)) as usize;
                     if total > visible_rows && visible_rows > 1 {
                         let rel_y = row
@@ -221,15 +221,15 @@ pub fn handle_scrollbar_drag(app: &mut App, row: u16, term_width: u16, term_heig
                             .min((visible_rows - 1) as u16)
                             as usize;
                         let target_idx = (rel_y * (total - 1)) / (visible_rows - 1);
-                        app.lists_modal.viewer_list_idx = target_idx.min(total - 1);
+                        app.modals.lists_modal.viewer_list_idx = target_idx.min(total - 1);
                     }
                 }
             }
         }
         ScrollDragTarget::Pane(pane_idx) => {
             if app.input_mode == InputMode::Normal
-                && !app.zen_mode
-                && app.config.ui.scroll_indicator
+                && !app.workspace.zen_mode
+                && app.user_data.config.ui.scroll_indicator
             {
                 let main_rect = Rect::new(0, 1, term_width, term_height.saturating_sub(2));
                 let tab = app.active_tab_mut();

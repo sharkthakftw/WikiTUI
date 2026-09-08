@@ -26,7 +26,7 @@ pub fn render_categories_modal(f: &mut Frame, app: &App, size: Rect) {
 
     let total = categories.len();
     let modal_title = format!("categories · {} ({})", title.to_lowercase(), total);
-    let icon = if app.config.ui.icons { "󰓹" } else { "" };
+    let icon = if app.user_data.config.ui.icons { "󰓹" } else { "" };
 
     let (container_area, left_area, right_area) = compute_categories_modal_areas(size);
     f.render_widget(ratatui::widgets::Clear, container_area);
@@ -34,11 +34,11 @@ pub fn render_categories_modal(f: &mut Frame, app: &App, size: Rect) {
         icon,
         &modal_title,
         theme::TEAL,
-        app.config.ui.rounded_borders,
+        app.user_data.config.ui.rounded_borders,
     );
     f.render_widget(block, container_area);
 
-    let left_border_color = if !app.categories_modal.focus_right {
+    let left_border_color = if !app.modals.categories_modal.focus_right {
         theme::TEAL
     } else {
         theme::GREY
@@ -47,10 +47,10 @@ pub fn render_categories_modal(f: &mut Frame, app: &App, size: Rect) {
         "",
         "categories",
         left_border_color,
-        app.config.ui.rounded_borders,
+        app.user_data.config.ui.rounded_borders,
     );
 
-    let selected_cat_idx = app.categories_modal.cursor_idx.min(total.saturating_sub(1));
+    let selected_cat_idx = app.modals.categories_modal.cursor_idx.min(total.saturating_sub(1));
 
     let mut cat_lines = Vec::new();
     if categories.is_empty() {
@@ -64,7 +64,7 @@ pub fn render_categories_modal(f: &mut Frame, app: &App, size: Rect) {
             cat_lines.push(create_selectable_line(
                 cat,
                 is_selected,
-                !app.categories_modal.focus_right,
+                !app.modals.categories_modal.focus_right,
                 theme::TEAL,
                 None,
             ));
@@ -82,7 +82,7 @@ pub fn render_categories_modal(f: &mut Frame, app: &App, size: Rect) {
     } else {
         format!("articles in {}", selected_category.to_lowercase())
     };
-    let right_border_color = if app.categories_modal.focus_right {
+    let right_border_color = if app.modals.categories_modal.focus_right {
         theme::TEAL
     } else {
         theme::GREY
@@ -91,7 +91,7 @@ pub fn render_categories_modal(f: &mut Frame, app: &App, size: Rect) {
         "",
         &right_title,
         right_border_color,
-        app.config.ui.rounded_borders,
+        app.user_data.config.ui.rounded_borders,
     );
 
     let mut article_lines = Vec::new();
@@ -104,6 +104,7 @@ pub fn render_categories_modal(f: &mut Frame, app: &App, size: Rect) {
             Style::default().fg(theme::GREY).italic(),
         )]));
     } else if app
+        .modals
         .categories_modal
         .fetching_categories
         .contains(selected_category)
@@ -112,7 +113,7 @@ pub fn render_categories_modal(f: &mut Frame, app: &App, size: Rect) {
             "  fetching articles in category...",
             Style::default().fg(theme::YELLOW).italic(),
         )]));
-    } else if let Some(members) = app.categories_modal.cached_members.get(selected_category) {
+    } else if let Some(members) = app.modals.categories_modal.cached_members.get(selected_category) {
         if members.is_empty() {
             article_lines.push(Line::from(vec![Span::styled(
                 "  no articles found in this category.",
@@ -121,6 +122,7 @@ pub fn render_categories_modal(f: &mut Frame, app: &App, size: Rect) {
         } else {
             total_members = members.len();
             selected_art_idx = app
+                .modals
                 .categories_modal
                 .article_cursor_idx
                 .min(total_members.saturating_sub(1));
@@ -130,7 +132,7 @@ pub fn render_categories_modal(f: &mut Frame, app: &App, size: Rect) {
                 article_lines.push(create_selectable_line(
                     member,
                     is_selected,
-                    app.categories_modal.focus_right,
+                    app.modals.categories_modal.focus_right,
                     theme::TEAL,
                     None,
                 ));
@@ -166,14 +168,15 @@ pub fn get_category_item_at(app: &App, is_right: bool, area: Rect, target_y: u16
             _ => return None,
         };
         let selected_cat_idx = app
+            .modals
             .categories_modal
             .cursor_idx
             .min(categories.len().saturating_sub(1));
         let selected_category = categories.get(selected_cat_idx)?;
-        let members = app.categories_modal.cached_members.get(selected_category)?;
+        let members = app.modals.categories_modal.cached_members.get(selected_category)?;
         let total = members.len();
         let scroll = crate::ui::modals::utils::compute_centered_scroll(
-            app.categories_modal.article_cursor_idx,
+            app.modals.categories_modal.article_cursor_idx,
             visible_rows,
             total,
         );
@@ -190,7 +193,7 @@ pub fn get_category_item_at(app: &App, is_right: bool, area: Rect, target_y: u16
             _ => 0,
         };
         let scroll = crate::ui::modals::utils::compute_centered_scroll(
-            app.categories_modal.cursor_idx,
+            app.modals.categories_modal.cursor_idx,
             visible_rows,
             total,
         );

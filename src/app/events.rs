@@ -50,16 +50,16 @@ impl App {
                         .unwrap_or(80);
                     let render_opts = crate::app::pane::ArticleRenderOptions {
                         width,
-                        show_footnotes: self.config.reader.show_footnotes,
-                        show_external_links: self.config.reader.show_external_links,
-                        heading_marker: self.config.reader.heading_marker,
-                        code_line_numbers: self.config.reader.code_line_numbers,
-                        show_icons: self.config.ui.icons,
-                        show_images: self.config.reader.show_images,
-                        max_image_height: self.config.reader.max_image_height,
+                        show_footnotes: self.user_data.config.reader.show_footnotes,
+                        show_external_links: self.user_data.config.reader.show_external_links,
+                        heading_marker: self.user_data.config.reader.heading_marker,
+                        code_line_numbers: self.user_data.config.reader.code_line_numbers,
+                        show_icons: self.user_data.config.ui.icons,
+                        show_images: self.user_data.config.reader.show_images,
+                        max_image_height: self.user_data.config.reader.max_image_height,
                     };
                     let resolved_proto =
-                        crate::graphics::resolve_protocol(self.config.reader.image_protocol);
+                        crate::graphics::resolve_protocol(self.user_data.config.reader.image_protocol);
                     let mut to_decode = Vec::new();
                     let mut to_predecode_kitty = Vec::new();
                     let mut to_fetch = Vec::new();
@@ -134,12 +134,12 @@ impl App {
             }
             NetworkEvent::ImageLoaded { url, path } => {
                 let resolved_proto =
-                    crate::graphics::resolve_protocol(self.config.reader.image_protocol);
+                    crate::graphics::resolve_protocol(self.user_data.config.reader.image_protocol);
                 if resolved_proto.is_kitty() {
                     self.send_predecode_kitty_image(path.clone());
                 }
                 let mut to_decode = Vec::new();
-                for tab in &mut self.tabs {
+                for tab in &mut self.workspace.tabs {
                     for pane in &mut tab.panes {
                         pane.loaded_images.insert(url.clone(), path.clone());
                         if resolved_proto.is_halfblocks() {
@@ -151,10 +151,10 @@ impl App {
                                     {
                                         pane.pending_image_decodes.insert((url.clone(), img.width_cols, img.height_lines));
                                         to_decode.push((
-                                            url.clone(),
-                                            path.clone(),
-                                            img.width_cols,
-                                            img.height_lines,
+                                             url.clone(),
+                                             path.clone(),
+                                             img.width_cols,
+                                             img.height_lines,
                                         ));
                                     }
                                 }
@@ -172,7 +172,7 @@ impl App {
                 rows,
                 lines,
             } => {
-                for tab in &mut self.tabs {
+                for tab in &mut self.workspace.tabs {
                     for pane in &mut tab.panes {
                         pane.pending_image_decodes
                             .remove(&(url.clone(), cols, rows));
@@ -197,20 +197,21 @@ impl App {
                 }
             }
             NetworkEvent::FeedBatchLoaded { items } => {
-                self.feed.is_fetching = false;
+                self.user_data.feed.is_fetching = false;
                 let read_titles: std::collections::HashSet<String> = self
+                    .user_data
                     .recent_articles
                     .iter()
                     .map(|e| e.title.to_lowercase())
                     .collect();
                 let ranked_items =
-                    crate::feed::algorithm::rank_batch(items, &self.feed.profile, &read_titles);
+                    crate::feed::algorithm::rank_batch(items, &self.user_data.feed.profile, &read_titles);
                 for mut item in ranked_items {
-                    item.is_liked = self.feed.profile.liked_articles.contains(&item.title)
-                        || self.saved_lists.is_article_in_list("liked", &item.title);
-                    self.feed.add_item(item);
+                    item.is_liked = self.user_data.feed.profile.liked_articles.contains(&item.title)
+                        || self.user_data.saved_lists.is_article_in_list("liked", &item.title);
+                    self.user_data.feed.add_item(item);
                 }
-                if self.feed.items.is_empty() {
+                if self.user_data.feed.items.is_empty() {
                     self.maybe_fetch_feed_batch();
                 }
             }
@@ -250,8 +251,9 @@ impl App {
                 }
             },
             NetworkEvent::CategoryMembersLoaded { category, members } => {
-                self.categories_modal.fetching_categories.remove(&category);
-                self.categories_modal
+                self.modals.categories_modal.fetching_categories.remove(&category);
+                self.modals
+                    .categories_modal
                     .cached_members
                     .insert(category, members);
             }
@@ -259,7 +261,7 @@ impl App {
                 original_url,
                 short_url,
             } => {
-                if let Some(qr_modal) = &mut self.qr_modal {
+                if let Some(qr_modal) = &mut self.modals.qr_modal {
                     if qr_modal.full_url == original_url {
                         if let Ok(qrcode) =
                             fast_qr::qr::QRBuilder::new(short_url.as_bytes()).build()
@@ -286,9 +288,10 @@ impl App {
                     .replace('_', " ")
                     .trim()
                     .to_string();
-                self.summary_cache
+                self.user_data
+                    .summary_cache
                     .insert(clean_title.clone(), (description.clone(), extract.clone()));
-                if let Some(peek) = &mut self.link_peek {
+                if let Some(peek) = &mut self.modals.link_peek {
                     let peek_clean = crate::parser::url_decode(&peek.title)
                         .replace('_', " ")
                         .trim()
@@ -306,17 +309,18 @@ impl App {
     }
 
     pub fn fetch_category_members_if_needed(&mut self, category: &str) {
-        if !self.categories_modal.cached_members.contains_key(category)
-            && !self.categories_modal.fetching_categories.contains(category)
+        if !self.modals.categories_modal.cached_members.contains_key(category)
+            && !self.modals.categories_modal.fetching_categories.contains(category)
         {
-            self.categories_modal
+            self.modals
+                .categories_modal
                 .fetching_categories
                 .insert(category.to_string());
             self.network
                 .send(crate::api::NetworkCommand::FetchCategoryMembers {
                     category: category.to_string(),
                     limit: 50,
-                    timeout: self.config.network.timeout,
+                    timeout: self.user_data.config.network.timeout,
                 });
         }
     }

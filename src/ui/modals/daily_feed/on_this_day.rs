@@ -69,7 +69,7 @@ pub fn render_on_this_day_modal(
     let avail_w = (modal_area.width as usize).saturating_sub(4);
 
     let dummy_cache;
-    let cache_ref = if let Some(modal_state) = &app.daily_feed_modal {
+    let cache_ref = if let Some(modal_state) = &app.modals.daily_feed_modal {
         let mut cache = modal_state.cache.borrow_mut();
         let parsed_list = match otd_tab {
             OnThisDayTab::Events => &mut cache.otd_events_parsed,
@@ -190,7 +190,7 @@ pub fn render_on_this_day_modal(
     let mut modal_block = modal_block;
     if let Some(page) = focused_page {
         if let Some(desc) = page.description.as_deref().filter(|d| !d.is_empty()) {
-            let icon = if app.config.ui.icons { "󰋼 " } else { "" };
+            let icon = if app.user_data.config.ui.icons { "󰋼 " } else { "" };
             let icon_w = unicode_width::UnicodeWidthStr::width(icon);
             let prefix_w = 1 + icon_w + 2;
 
@@ -349,7 +349,7 @@ pub fn render_on_this_day_modal(
                                     .fg(theme::VIOLET)
                                     .bold()
                                     .add_modifier(Modifier::UNDERLINED)
-                            } else if app.config.reader.underline_links {
+                            } else if app.user_data.config.reader.underline_links {
                                 Style::default()
                                     .fg(theme::BLUE)
                                     .add_modifier(Modifier::UNDERLINED)
@@ -365,7 +365,7 @@ pub fn render_on_this_day_modal(
                                     .fg(theme::VIOLET)
                                     .bold()
                                     .add_modifier(Modifier::UNDERLINED)
-                            } else if app.config.reader.underline_links {
+                            } else if app.user_data.config.reader.underline_links {
                                 Style::default()
                                     .fg(theme::BLUE)
                                     .bold()
@@ -386,6 +386,7 @@ pub fn render_on_this_day_modal(
     let inner_height = modal_area.height.saturating_sub(2) as usize;
     let total_lines = lines.len();
     let scroll = app
+        .modals
         .daily_feed_modal
         .as_ref()
         .map(|m| m.scroll)

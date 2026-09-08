@@ -7,7 +7,7 @@ pub fn handle_image_modal_mode(app: &mut App, key: KeyEvent) {
             app.close_image_modal();
         }
         KeyCode::Char('y') => {
-            if let Some(modal) = &app.image_modal {
+            if let Some(modal) = &app.modals.image_modal {
                 let url = modal.url.clone();
                 crate::clipboard::copy_to_clipboard(&url);
                 app.set_status_message("copied image url to clipboard");

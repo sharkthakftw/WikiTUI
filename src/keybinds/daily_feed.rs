@@ -37,6 +37,7 @@ fn get_modal_row_links(app: &App, kind: DailyFeedKind, cursor_idx: usize) -> Vec
         }
         DailyFeedKind::OnThisDay => {
             let otd_tab = app
+                .modals
                 .daily_feed_modal
                 .as_ref()
                 .map(|m| m.otd_tab)
@@ -69,7 +70,7 @@ fn get_modal_row_links(app: &App, kind: DailyFeedKind, cursor_idx: usize) -> Vec
 }
 
 pub fn handle_daily_feed_mode(app: &mut App, key: KeyEvent) {
-    let state = match &app.daily_feed_modal {
+    let state = match &app.modals.daily_feed_modal {
         Some(s) => s.clone(),
         None => {
             app.input_mode = InputMode::Normal;
@@ -87,7 +88,7 @@ pub fn handle_daily_feed_mode(app: &mut App, key: KeyEvent) {
         KeyCode::Char('j') | KeyCode::Down => {
             if total > 0 {
                 let kind = state.kind;
-                if let Some(modal) = &mut app.daily_feed_modal {
+                if let Some(modal) = &mut app.modals.daily_feed_modal {
                     if modal.cursor_idx + 1 < total {
                         modal.cursor_idx += 1;
                         modal.link_idx = 0;
@@ -96,12 +97,12 @@ pub fn handle_daily_feed_mode(app: &mut App, key: KeyEvent) {
                 let target_line = crate::ui::modals::get_modal_item_line_offset(
                     app,
                     kind,
-                    app.daily_feed_modal
+                    app.modals.daily_feed_modal
                         .as_ref()
                         .map(|m| m.cursor_idx)
                         .unwrap_or(0),
                 );
-                if let Some(modal) = &mut app.daily_feed_modal {
+                if let Some(modal) = &mut app.modals.daily_feed_modal {
                     if target_line >= modal.scroll + 12 {
                         modal.scroll = target_line.saturating_sub(8);
                     }
@@ -111,7 +112,7 @@ pub fn handle_daily_feed_mode(app: &mut App, key: KeyEvent) {
         KeyCode::Char('k') | KeyCode::Up => {
             if total > 0 {
                 let kind = state.kind;
-                if let Some(modal) = &mut app.daily_feed_modal {
+                if let Some(modal) = &mut app.modals.daily_feed_modal {
                     if modal.cursor_idx > 0 {
                         modal.cursor_idx -= 1;
                         modal.link_idx = 0;
@@ -120,12 +121,12 @@ pub fn handle_daily_feed_mode(app: &mut App, key: KeyEvent) {
                 let target_line = crate::ui::modals::get_modal_item_line_offset(
                     app,
                     kind,
-                    app.daily_feed_modal
+                    app.modals.daily_feed_modal
                         .as_ref()
                         .map(|m| m.cursor_idx)
                         .unwrap_or(0),
                 );
-                if let Some(modal) = &mut app.daily_feed_modal {
+                if let Some(modal) = &mut app.modals.daily_feed_modal {
                     if target_line < modal.scroll {
                         modal.scroll = target_line;
                     }
@@ -133,7 +134,7 @@ pub fn handle_daily_feed_mode(app: &mut App, key: KeyEvent) {
             }
         }
         KeyCode::Char('g') | KeyCode::Home => {
-            if let Some(modal) = &mut app.daily_feed_modal {
+            if let Some(modal) = &mut app.modals.daily_feed_modal {
                 modal.cursor_idx = 0;
                 modal.link_idx = 0;
                 modal.scroll = 0;
@@ -142,19 +143,19 @@ pub fn handle_daily_feed_mode(app: &mut App, key: KeyEvent) {
         KeyCode::Char('G') | KeyCode::End => {
             if total > 0 {
                 let kind = state.kind;
-                if let Some(modal) = &mut app.daily_feed_modal {
+                if let Some(modal) = &mut app.modals.daily_feed_modal {
                     modal.cursor_idx = total.saturating_sub(1);
                     modal.link_idx = 0;
                 }
                 let target_line = crate::ui::modals::get_modal_item_line_offset(
                     app,
                     kind,
-                    app.daily_feed_modal
+                    app.modals.daily_feed_modal
                         .as_ref()
                         .map(|m| m.cursor_idx)
                         .unwrap_or(0),
                 );
-                if let Some(modal) = &mut app.daily_feed_modal {
+                if let Some(modal) = &mut app.modals.daily_feed_modal {
                     modal.scroll = target_line.saturating_sub(6);
                 }
             }
@@ -164,7 +165,7 @@ pub fn handle_daily_feed_mode(app: &mut App, key: KeyEvent) {
                 let links = get_modal_row_links(app, state.kind, state.cursor_idx);
                 let total_links = links.len();
                 if total_links > 0 {
-                    if let Some(modal) = &mut app.daily_feed_modal {
+                    if let Some(modal) = &mut app.modals.daily_feed_modal {
                         modal.link_idx = (modal.link_idx + 1) % total_links;
                     }
                 }
@@ -175,7 +176,7 @@ pub fn handle_daily_feed_mode(app: &mut App, key: KeyEvent) {
                 let links = get_modal_row_links(app, state.kind, state.cursor_idx);
                 let total_links = links.len();
                 if total_links > 0 {
-                    if let Some(modal) = &mut app.daily_feed_modal {
+                    if let Some(modal) = &mut app.modals.daily_feed_modal {
                         modal.link_idx = if modal.link_idx == 0 {
                             total_links - 1
                         } else {
@@ -239,7 +240,7 @@ pub fn handle_daily_feed_mode(app: &mut App, key: KeyEvent) {
             }
         }
         KeyCode::Char('1') if state.kind == DailyFeedKind::OnThisDay => {
-            if let Some(modal) = &mut app.daily_feed_modal {
+            if let Some(modal) = &mut app.modals.daily_feed_modal {
                 modal.otd_tab = OnThisDayTab::Events;
                 modal.cursor_idx = 0;
                 modal.link_idx = 0;
@@ -247,7 +248,7 @@ pub fn handle_daily_feed_mode(app: &mut App, key: KeyEvent) {
             }
         }
         KeyCode::Char('2') if state.kind == DailyFeedKind::OnThisDay => {
-            if let Some(modal) = &mut app.daily_feed_modal {
+            if let Some(modal) = &mut app.modals.daily_feed_modal {
                 modal.otd_tab = OnThisDayTab::Births;
                 modal.cursor_idx = 0;
                 modal.link_idx = 0;
@@ -255,7 +256,7 @@ pub fn handle_daily_feed_mode(app: &mut App, key: KeyEvent) {
             }
         }
         KeyCode::Char('3') if state.kind == DailyFeedKind::OnThisDay => {
-            if let Some(modal) = &mut app.daily_feed_modal {
+            if let Some(modal) = &mut app.modals.daily_feed_modal {
                 modal.otd_tab = OnThisDayTab::Deaths;
                 modal.cursor_idx = 0;
                 modal.link_idx = 0;
@@ -263,7 +264,7 @@ pub fn handle_daily_feed_mode(app: &mut App, key: KeyEvent) {
             }
         }
         KeyCode::Char('4') if state.kind == DailyFeedKind::OnThisDay => {
-            if let Some(modal) = &mut app.daily_feed_modal {
+            if let Some(modal) = &mut app.modals.daily_feed_modal {
                 modal.otd_tab = OnThisDayTab::Holidays;
                 modal.cursor_idx = 0;
                 modal.link_idx = 0;
@@ -271,7 +272,7 @@ pub fn handle_daily_feed_mode(app: &mut App, key: KeyEvent) {
             }
         }
         KeyCode::Char(']') if state.kind == DailyFeedKind::OnThisDay => {
-            if let Some(modal) = &mut app.daily_feed_modal {
+            if let Some(modal) = &mut app.modals.daily_feed_modal {
                 modal.otd_tab = match modal.otd_tab {
                     OnThisDayTab::Events => OnThisDayTab::Births,
                     OnThisDayTab::Births => OnThisDayTab::Deaths,
@@ -284,7 +285,7 @@ pub fn handle_daily_feed_mode(app: &mut App, key: KeyEvent) {
             }
         }
         KeyCode::Char('[') if state.kind == DailyFeedKind::OnThisDay => {
-            if let Some(modal) = &mut app.daily_feed_modal {
+            if let Some(modal) = &mut app.modals.daily_feed_modal {
                 modal.otd_tab = match modal.otd_tab {
                     OnThisDayTab::Events => OnThisDayTab::Holidays,
                     OnThisDayTab::Births => OnThisDayTab::Events,

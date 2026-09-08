@@ -84,6 +84,7 @@ pub fn get_feed_entries(app: &App, kind: DailyFeedKind) -> Vec<FeedEntry> {
         }
         DailyFeedKind::OnThisDay => {
             let otd_tab = app
+                .modals
                 .daily_feed_modal
                 .as_ref()
                 .map(|m| m.otd_tab)
@@ -151,22 +152,22 @@ pub fn get_feed_entries(app: &App, kind: DailyFeedKind) -> Vec<FeedEntry> {
 }
 
 pub fn render_daily_feed_modal(f: &mut Frame, app: &App, size: Rect) {
-    let state = match &app.daily_feed_modal {
+    let state = match &app.modals.daily_feed_modal {
         Some(s) => s,
         None => return,
     };
 
     let (icon, title_text) = match state.kind {
         DailyFeedKind::News => (
-            if app.config.ui.icons { "󰋫" } else { "" },
+            if app.user_data.config.ui.icons { "󰋫" } else { "" },
             "in the news".to_string(),
         ),
         DailyFeedKind::OnThisDay => (
-            if app.config.ui.icons { "󰃭" } else { "" },
+            if app.user_data.config.ui.icons { "󰃭" } else { "" },
             format!("on this day · {}", today_date_str()),
         ),
         DailyFeedKind::MostRead => (
-            if app.config.ui.icons { "󰄬" } else { "" },
+            if app.user_data.config.ui.icons { "󰄬" } else { "" },
             "most read".to_string(),
         ),
     };
@@ -179,7 +180,7 @@ pub fn render_daily_feed_modal(f: &mut Frame, app: &App, size: Rect) {
         icon,
         &title_text,
         accent_color,
-        app.config.ui.rounded_borders,
+        app.user_data.config.ui.rounded_borders,
     );
 
     if app.daily_feed.is_none() {
@@ -252,7 +253,7 @@ pub fn get_daily_feed_item_at(
     size: Rect,
 ) -> Option<(usize, usize, String)> {
     let feed = app.daily_feed.as_ref()?;
-    let modal = app.daily_feed_modal.as_ref()?;
+    let modal = app.modals.daily_feed_modal.as_ref()?;
     let modal_area = compute_daily_feed_modal_area(size, modal.kind);
 
     let inner_x = modal_area.x + 1;
@@ -477,7 +478,7 @@ pub fn get_modal_item_line_offset(app: &App, kind: DailyFeedKind, cursor_idx: us
     match kind {
         DailyFeedKind::MostRead => cursor_idx,
         DailyFeedKind::News => {
-            let Some(modal) = &app.daily_feed_modal else {
+            let Some(modal) = &app.modals.daily_feed_modal else {
                 return 0;
             };
             let cache_ref = modal.cache.borrow();
@@ -503,7 +504,7 @@ pub fn get_modal_item_line_offset(app: &App, kind: DailyFeedKind, cursor_idx: us
             line_offsets.get(cursor_idx).copied().unwrap_or(0)
         }
         DailyFeedKind::OnThisDay => {
-            let Some(modal) = &app.daily_feed_modal else {
+            let Some(modal) = &app.modals.daily_feed_modal else {
                 return 0;
             };
             let cache_ref = modal.cache.borrow();

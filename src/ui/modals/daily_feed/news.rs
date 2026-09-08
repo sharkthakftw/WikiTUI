@@ -54,7 +54,7 @@ pub fn render_news_modal(
         let mut row_counter = 0;
 
         let dummy_cache;
-        let cache_ref = if let Some(modal_state) = &app.daily_feed_modal {
+        let cache_ref = if let Some(modal_state) = &app.modals.daily_feed_modal {
             let mut cache = modal_state.cache.borrow_mut();
             if cache.news_parsed.len() != feed.news.len() {
                 cache.news_parsed = feed
@@ -149,7 +149,7 @@ pub fn render_news_modal(
                                     .fg(theme::VIOLET)
                                     .bold()
                                     .add_modifier(Modifier::UNDERLINED)
-                            } else if app.config.reader.underline_links {
+                            } else if app.user_data.config.reader.underline_links {
                                 Style::default()
                                     .fg(theme::BLUE)
                                     .add_modifier(Modifier::UNDERLINED)
@@ -165,7 +165,7 @@ pub fn render_news_modal(
                                     .fg(theme::VIOLET)
                                     .bold()
                                     .add_modifier(Modifier::UNDERLINED)
-                            } else if app.config.reader.underline_links {
+                            } else if app.user_data.config.reader.underline_links {
                                 Style::default()
                                     .fg(theme::BLUE)
                                     .bold()
@@ -225,7 +225,7 @@ pub fn render_news_modal(
                         .fg(theme::VIOLET)
                         .bold()
                         .add_modifier(Modifier::UNDERLINED)
-                } else if app.config.reader.underline_links {
+                } else if app.user_data.config.reader.underline_links {
                     Style::default()
                         .fg(theme::BLUE)
                         .add_modifier(Modifier::UNDERLINED)
@@ -243,7 +243,7 @@ pub fn render_news_modal(
                             .fg(theme::VIOLET)
                             .bold()
                             .add_modifier(Modifier::UNDERLINED)
-                    } else if app.config.reader.underline_links {
+                    } else if app.user_data.config.reader.underline_links {
                         Style::default()
                             .fg(theme::BLUE)
                             .add_modifier(Modifier::UNDERLINED)
@@ -287,7 +287,7 @@ pub fn render_news_modal(
                         .fg(theme::VIOLET)
                         .bold()
                         .add_modifier(Modifier::UNDERLINED)
-                } else if app.config.reader.underline_links {
+                } else if app.user_data.config.reader.underline_links {
                     Style::default()
                         .fg(theme::BLUE)
                         .add_modifier(Modifier::UNDERLINED)
@@ -303,6 +303,7 @@ pub fn render_news_modal(
     let inner_height = modal_area.height.saturating_sub(2) as usize;
     let total_lines = lines.len();
     let scroll = app
+        .modals
         .daily_feed_modal
         .as_ref()
         .map(|m| m.scroll)
