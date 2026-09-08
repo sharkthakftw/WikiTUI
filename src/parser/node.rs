@@ -177,9 +177,21 @@ fn handle_section_and_skip_tag<'a>(
                         | "mw-references-wrap"
                         | "references-wrap"
                 ))
+                || (!ctx.show_images
+                    && matches!(
+                        cls,
+                        "thumbcaption"
+                            | "gallerytext"
+                            | "caption"
+                            | "thumbcaption-inline"
+                    ))
         }) {
             return true;
         }
+    }
+
+    if !ctx.show_images && tag.name().as_utf8_str() == "figcaption" {
+        return true;
     }
 
     if !ctx.show_footnotes {
@@ -240,18 +252,28 @@ fn handle_media_tag<'a>(
         }
     }
 
-    if ctx.show_images
-        && (tag_name == "figure"
-            || tag_name == "figure-inline"
+    if tag_name == "figure"
+        || tag_name == "figure-inline"
+        || class_attr
+            .map(|c| c.contains("thumb") || c.contains("gallerybox"))
+            .unwrap_or(false)
+    {
+        if ctx.show_images {
+            if !current_tokens.is_empty() {
+                wrap_and_append_block(current_tokens, doc, ctx.max_width);
+                current_tokens.clear();
+            }
+            crate::parser::images::render_image_node(tag, ctx.parser, doc, ctx);
+        }
+        return true;
+    }
+
+    if !ctx.show_images
+        && (tag_name == "figcaption"
             || class_attr
-                .map(|c| c.contains("thumb") || c.contains("gallerybox"))
+                .map(|c| c.contains("thumbcaption") || c.contains("gallerytext"))
                 .unwrap_or(false))
     {
-        if !current_tokens.is_empty() {
-            wrap_and_append_block(current_tokens, doc, ctx.max_width);
-            current_tokens.clear();
-        }
-        crate::parser::images::render_image_node(tag, ctx.parser, doc, ctx);
         return true;
     }
 

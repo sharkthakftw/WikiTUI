@@ -29,7 +29,7 @@ pub use lists::{
 };
 pub use onboarding::{compute_onboarding_modal_area, render_category_onboarding_modal};
 pub use palette::{compute_palette_modal_area, render_palette_modal};
-pub use peek::render_link_peek;
+pub use peek::{compute_link_peek_area, render_link_peek};
 pub use qr::{compute_qr_modal_area, render_qr_modal};
 pub use search::{compute_search_modal_area, render_search_modal};
 pub use settings::{compute_settings_modal_area, render_settings_modal};

@@ -121,6 +121,14 @@ pub fn draw(f: &mut Frame, app: &mut App) {
 
     if is_modal_open {
         app.graphics.pending_image_renders.clear();
+    } else if let Some(peek) = &app.modals.link_peek {
+        let peek_area = modals::compute_link_peek_area(peek, size);
+        app.graphics.pending_image_renders.retain(|task| {
+            task.screen_x >= peek_area.x + peek_area.width
+                || task.screen_x + task.cols <= peek_area.x
+                || task.screen_y >= peek_area.y + peek_area.height
+                || task.screen_y + task.rows <= peek_area.y
+        });
     }
 
     if app.input_mode == InputMode::ImageModal {

@@ -8,11 +8,7 @@ use ratatui::{
     Frame,
 };
 
-pub fn render_link_peek(f: &mut Frame, app: &App, size: Rect) {
-    let Some(peek) = &app.modals.link_peek else {
-        return;
-    };
-
+pub fn compute_link_peek_area(peek: &crate::app::types::LinkPeekState, size: Rect) -> Rect {
     let max_w = size.width.saturating_sub(4).clamp(34, 68);
     let title_chars = peek.title.chars().count();
     let desc_chars = peek
@@ -75,10 +71,18 @@ pub fn render_link_peek(f: &mut Frame, app: &App, size: Rect) {
         peek.anchor_y.saturating_sub(height).max(1)
     };
 
-    let area = Rect::new(x, y, width, height);
+    Rect::new(x, y, width, height)
+}
+
+pub fn render_link_peek(f: &mut Frame, app: &App, size: Rect) {
+    let Some(peek) = &app.modals.link_peek else {
+        return;
+    };
+
+    let area = compute_link_peek_area(peek, size);
     f.render_widget(Clear, area);
 
-    let max_title_chars = (width as usize).saturating_sub(6);
+    let max_title_chars = (area.width as usize).saturating_sub(6);
     let display_title = if peek.title.chars().count() > max_title_chars {
         let truncated: String = peek.title.chars().take(max_title_chars).collect();
         format!("{}…", truncated)
@@ -169,6 +173,10 @@ pub fn render_link_peek(f: &mut Frame, app: &App, size: Rect) {
                 )));
             }
         }
+    }
+
+    while lines.len() < inner.height as usize {
+        lines.push(Line::from(""));
     }
 
     let p = Paragraph::new(lines).style(Style::default().bg(theme::BG));

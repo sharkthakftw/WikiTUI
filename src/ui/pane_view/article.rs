@@ -310,17 +310,26 @@ pub fn render_article_pane(
                             view_start,
                             inner_rect,
                         ) {
-                            app.graphics
-                                .pending_image_renders
-                                .push(crate::app::ImageRenderTask {
-                                    path,
-                                    screen_x: bounds.screen_x,
-                                    screen_y: bounds.screen_y,
-                                    cols: bounds.visible_cols,
-                                    rows: bounds.visible_rows,
-                                    crop_top_lines: bounds.top_clipped,
-                                    crop_bot_lines: bounds.bot_clipped,
-                                });
+                            let overlaps_peek = app.modals.link_peek.as_ref().is_some_and(|peek| {
+                                let peek_area = crate::ui::modals::compute_link_peek_area(peek, f.size());
+                                !(bounds.screen_x >= peek_area.x + peek_area.width
+                                    || bounds.screen_x + bounds.visible_cols <= peek_area.x
+                                    || bounds.screen_y >= peek_area.y + peek_area.height
+                                    || bounds.screen_y + bounds.visible_rows <= peek_area.y)
+                            });
+                            if !overlaps_peek {
+                                app.graphics
+                                    .pending_image_renders
+                                    .push(crate::app::ImageRenderTask {
+                                        path,
+                                        screen_x: bounds.screen_x,
+                                        screen_y: bounds.screen_y,
+                                        cols: bounds.visible_cols,
+                                        rows: bounds.visible_rows,
+                                        crop_top_lines: bounds.top_clipped,
+                                        crop_bot_lines: bounds.bot_clipped,
+                                    });
+                            }
                         }
                     }
                 } else {

@@ -10,7 +10,7 @@ use ratatui::{
 };
 
 pub fn compute_confirm_modal_area(size: Rect) -> Rect {
-    let width = 50.min(size.width.saturating_sub(2));
+    let width = 58.min(size.width.saturating_sub(2));
     let height = 9.min(size.height.saturating_sub(2));
     let x = (size.width.saturating_sub(width)) / 2;
     let y = (size.height.saturating_sub(height)) / 2;
@@ -55,27 +55,29 @@ pub fn get_confirm_button_at(app: &App, area: Rect, col: u16, row: u16) -> Optio
 
 fn build_confirm_lines(
     prompt: &str,
-    detail_spans: Vec<Span<'static>>,
+    detail_lines: Vec<Line<'static>>,
     action_verb: &str,
 ) -> Vec<Line<'static>> {
-    vec![
-        Line::from(""),
-        Line::from(vec![Span::styled(
-            prompt.to_string(),
-            Style::default().fg(theme::FG).bold(),
-        )]),
-        Line::from(detail_spans),
-        Line::from(""),
-        Line::from(vec![
-            Span::styled("[y] ", Style::default().fg(theme::RED).bold()),
-            Span::styled(
-                format!("{}          ", action_verb),
-                Style::default().fg(theme::FG),
-            ),
-            Span::styled("[esc] ", Style::default().fg(theme::GREY).bold()),
-            Span::styled("cancel", Style::default().fg(theme::FG)),
-        ]),
-    ]
+    let mut lines = Vec::new();
+    if detail_lines.len() <= 1 {
+        lines.push(Line::from(""));
+    }
+    lines.push(Line::from(vec![Span::styled(
+        prompt.to_string(),
+        Style::default().fg(theme::FG).bold(),
+    )]));
+    lines.extend(detail_lines);
+    lines.push(Line::from(""));
+    lines.push(Line::from(vec![
+        Span::styled("[y] ", Style::default().fg(theme::RED).bold()),
+        Span::styled(
+            format!("{}          ", action_verb),
+            Style::default().fg(theme::FG),
+        ),
+        Span::styled("[esc] ", Style::default().fg(theme::GREY).bold()),
+        Span::styled("cancel", Style::default().fg(theme::FG)),
+    ]));
+    lines
 }
 
 pub fn render_confirm_modal(f: &mut Frame, app: &App, size: Rect) {
@@ -110,34 +112,45 @@ pub fn render_confirm_modal(f: &mut Frame, app: &App, size: Rect) {
     let lines = match &app.modals.confirm_action {
         Some(crate::app::ConfirmAction::DeleteList { title, .. }) => build_confirm_lines(
             "are you sure you want to delete:",
-            vec![
+            vec![Line::from(vec![
                 Span::styled("custom list: ", Style::default().fg(theme::GREY)),
                 Span::styled(
                     truncate_title(title),
                     Style::default().fg(theme::YELLOW).bold(),
                 ),
-            ],
+            ])],
             "delete",
         ),
         Some(crate::app::ConfirmAction::DeleteArticle { title, .. }) => build_confirm_lines(
             "are you sure you want to delete:",
-            vec![
+            vec![Line::from(vec![
                 Span::styled("article: ", Style::default().fg(theme::GREY)),
                 Span::styled(
                     truncate_title(title),
                     Style::default().fg(theme::YELLOW).bold(),
                 ),
-            ],
+            ])],
             "delete",
         ),
-        Some(crate::app::ConfirmAction::ResetFeed) => build_confirm_lines(
-            "are you sure you want to reset your feed?",
-            vec![Span::styled(
-                "all category scores and preferences will be cleared",
-                Style::default().fg(theme::GREY),
-            )],
-            "reset",
-        ),
+        Some(crate::app::ConfirmAction::ResetFeed) => {
+            let detail_text = "all category scores and preferences will be cleared";
+            let detail_lines = if inner_width < detail_text.chars().count() {
+                crate::ui::pane_view::search::wrap_text(detail_text, inner_width)
+                    .into_iter()
+                    .map(|l| Line::from(Span::styled(l, Style::default().fg(theme::GREY))))
+                    .collect()
+            } else {
+                vec![Line::from(Span::styled(
+                    detail_text,
+                    Style::default().fg(theme::GREY),
+                ))]
+            };
+            build_confirm_lines(
+                "are you sure you want to reset your feed?",
+                detail_lines,
+                "reset",
+            )
+        }
         Some(crate::app::ConfirmAction::Quit) => {
             let tab_count = app.workspace.tabs.len();
             let subtext = if tab_count > 1 {
@@ -147,7 +160,7 @@ pub fn render_confirm_modal(f: &mut Frame, app: &App, size: Rect) {
             };
             build_confirm_lines(
                 "are you sure you want to quit wikid?",
-                vec![Span::styled(subtext, Style::default().fg(theme::GREY))],
+                vec![Line::from(Span::styled(subtext, Style::default().fg(theme::GREY)))],
                 "quit",
             )
         }
