@@ -31,6 +31,11 @@ fn restore_terminal() {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    if let Some(cmd) = wikid::cli::parse_args(&args) {
+        return wikid::cli::run(cmd);
+    }
+
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     let _ = execute!(

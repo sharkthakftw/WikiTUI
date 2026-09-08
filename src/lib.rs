@@ -3,6 +3,7 @@ pub mod app;
 pub mod audio;
 pub mod cache;
 pub mod clipboard;
+pub mod cli;
 pub mod config;
 pub mod feed;
 pub mod graphics;
