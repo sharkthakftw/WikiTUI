@@ -15,7 +15,7 @@ optdepends=(
 makedepends=('cargo')
 options=('!lto')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('2d8e0dda910864fe1045e9be938a8248b650a6bd339c8785d2ebc7100be1cc13')
+sha256sums=('fc788ea0b2ad8d8fd66c1be55c648f24606dcc9a251eae4d149f97c530f6b21a')
 
 build() {
   cd "$pkgname-$pkgver"
@@ -28,4 +28,5 @@ package() {
   cd "$pkgname-$pkgver"
   install -Dm755 "target/release/$pkgname" "$pkgdir/usr/bin/$pkgname"
   install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 completions/wikid.fish "$pkgdir/usr/share/fish/vendor_completions.d/wikid.fish"
 }

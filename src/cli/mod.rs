@@ -1,3 +1,4 @@
+pub mod completions;
 pub mod output;
 pub mod search;
 
@@ -5,6 +6,7 @@ use search::SearchArgs;
 
 pub enum CliCommand {
     Search(SearchArgs),
+    Completions(String),
     Help,
     Version,
 }
@@ -19,6 +21,10 @@ pub fn parse_args(args: &[String]) -> Option<CliCommand> {
     match first {
         "help" => Some(CliCommand::Help),
         "version" => Some(CliCommand::Version),
+        "completions" => {
+            let shell = args.get(1).map(|s| s.as_str()).unwrap_or("fish");
+            Some(CliCommand::Completions(shell.to_string()))
+        }
         "search" => {
             let mut query_words = Vec::new();
             let mut limit = 10usize;
@@ -61,6 +67,7 @@ pub fn parse_args(args: &[String]) -> Option<CliCommand> {
 pub fn run(cmd: CliCommand) -> Result<(), Box<dyn std::error::Error>> {
     match cmd {
         CliCommand::Search(args) => search::run_search(&args),
+        CliCommand::Completions(shell) => completions::run_completions(&shell),
         CliCommand::Help => {
             print_help();
             Ok(())
@@ -79,11 +86,12 @@ fn print_help() {
     println!("    wikid [COMMAND] [OPTIONS] [ARTICLE]");
     println!();
     println!("COMMANDS:");
-    println!("    search <query>  search wikipedia articles");
-    println!("    help            print help information");
-    println!("    version         print version");
+    println!("    search <query>      search wikipedia articles");
+    println!("    completions <shell> generate shell completions (fish)");
+    println!("    help                print help information");
+    println!("    version             print version");
     println!();
     println!("SEARCH OPTIONS:");
-    println!("    -l, --limit <n> maximum number of results (default: 10)");
-    println!("    -j, --json      output results as json");
+    println!("    -l, --limit <n>     maximum number of results (default: 10)");
+    println!("    -j, --json          output results as json");
 }
