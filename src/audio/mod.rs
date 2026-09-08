@@ -198,9 +198,15 @@ impl AudioPlayer {
         if let (Some(title), Some(url)) = (self.current_title.clone(), self.current_url.clone()) {
             let total = self.total_duration_secs;
             let was_paused = self.state == PlaybackState::Paused;
+            let saved_deadline = self.sleep_timer_deadline;
+            let saved_expired = self.sleep_timer_expired;
             let success = self.play_at_offset(&title, &url, target_offset, total);
-            if success && was_paused {
-                self.pause();
+            if success {
+                self.sleep_timer_deadline = saved_deadline;
+                self.sleep_timer_expired = saved_expired;
+                if was_paused {
+                    self.pause();
+                }
             }
             return success;
         }
