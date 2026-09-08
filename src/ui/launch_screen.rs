@@ -62,7 +62,7 @@ pub fn render_launch_screen(f: &mut Frame, app: &App, rect: Rect, block: Block) 
         0
     };
 
-    let show_stats = app.config.ui.stats;
+    let show_stats = app.user_data.config.ui.stats;
     let mut lines = Vec::new();
     let total_content_height = LOGO.len()
         + 4
@@ -100,7 +100,7 @@ pub fn render_launch_screen(f: &mut Frame, app: &App, rect: Rect, block: Block) 
 
     if show_stats {
         lines.push(Line::from(""));
-        let show_icons = app.config.ui.icons;
+        let show_icons = app.user_data.config.ui.icons;
         let icon_art = if show_icons { "󰈙 " } else { "" };
         let icon_edits = if show_icons { "󰑐 " } else { "" };
         let icon_users = if show_icons { "󰒓 " } else { "" };
@@ -214,7 +214,7 @@ pub fn render_launch_screen(f: &mut Frame, app: &App, rect: Rect, block: Block) 
             inner_width,
         ));
 
-        let hint_mode = app.config.general.hint_mode;
+        let hint_mode = app.user_data.config.general.hint_mode;
         let hints_map = if hint_mode == crate::config::HintMode::Semantic {
             app.current_continue_reading_hints()
         } else {

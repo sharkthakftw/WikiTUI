@@ -7,7 +7,7 @@ use super::audio::build_audio_progress_bar;
 use super::history::build_history_trail;
 
 pub fn get_mode_badge(app: &App) -> (&'static str, Color) {
-    if app.feed.active {
+    if app.user_data.feed.active {
         (" FEED ", theme::PINK)
     } else {
         match app.input_mode {
@@ -114,7 +114,7 @@ pub fn get_center_spans(
                 .add_modifier(Modifier::BOLD),
         )],
         InputMode::DailyFeedModal => {
-            if let Some(modal) = &app.daily_feed_modal {
+            if let Some(modal) = &app.modals.daily_feed_modal {
                 if modal.kind == crate::ui::modals::DailyFeedKind::OnThisDay {
                     vec![Span::styled(
                         "1-4 category · j/k navigate · tab links · enter read · esc close",
@@ -173,7 +173,7 @@ pub fn get_center_spans(
         InputMode::Normal => {
             if app.audio_player.is_active() {
                 build_audio_progress_bar(app, available_width)
-            } else if app.feed.active {
+            } else if app.user_data.feed.active {
                 vec![Span::styled(
                     "j/k browse · l like · enter read · t tab · r reset · esc exit",
                     Style::default().fg(theme::GREY),

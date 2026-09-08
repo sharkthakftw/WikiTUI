@@ -18,17 +18,17 @@ use ratatui::{
 };
 
 pub fn render_single_active_pane(f: &mut Frame, app: &mut App, area: Rect) {
-    let active_tab_idx = app.active_tab_idx;
-    let active_pane_idx = app.tabs[active_tab_idx].active_pane_idx;
+    let active_tab_idx = app.workspace.active_tab_idx;
+    let active_pane_idx = app.workspace.tabs[active_tab_idx].active_pane_idx;
     render_pane_at(f, app, active_tab_idx, active_pane_idx, area, true);
 }
 
 pub fn render_panes(f: &mut Frame, app: &mut App, main_area: Rect) {
-    let active_tab_idx = app.active_tab_idx;
-    let rects = app.tabs[active_tab_idx]
+    let active_tab_idx = app.workspace.active_tab_idx;
+    let rects = app.workspace.tabs[active_tab_idx]
         .layout_root
         .compute_rects(main_area);
-    let active_pane_idx = app.tabs[active_tab_idx].active_pane_idx;
+    let active_pane_idx = app.workspace.tabs[active_tab_idx].active_pane_idx;
 
     for (pane_idx, rect) in rects {
         let is_active = pane_idx == active_pane_idx;
@@ -44,7 +44,7 @@ fn render_pane_at(
     rect: Rect,
     is_active: bool,
 ) {
-    let content_width = if app.zen_mode {
+    let content_width = if app.workspace.zen_mode {
         rect.width.saturating_sub(2) as usize
     } else {
         rect.width.saturating_sub(4) as usize
@@ -52,23 +52,23 @@ fn render_pane_at(
 
     let render_opts = crate::app::pane::ArticleRenderOptions {
         width: content_width,
-        show_footnotes: app.config.reader.show_footnotes,
-        show_external_links: app.config.reader.show_external_links,
-        heading_marker: app.config.reader.heading_marker,
-        code_line_numbers: app.config.reader.code_line_numbers,
-        show_icons: app.config.ui.icons,
-        show_images: app.config.reader.show_images,
-        max_image_height: app.config.reader.max_image_height,
+        show_footnotes: app.user_data.config.reader.show_footnotes,
+        show_external_links: app.user_data.config.reader.show_external_links,
+        heading_marker: app.user_data.config.reader.heading_marker,
+        code_line_numbers: app.user_data.config.reader.code_line_numbers,
+        show_icons: app.user_data.config.ui.icons,
+        show_images: app.user_data.config.reader.show_images,
+        max_image_height: app.user_data.config.reader.max_image_height,
     };
     let is_image_modal = app.input_mode == crate::app::InputMode::ImageModal;
-    let has_multiple_panes = app.tabs[tab_idx].panes.len() > 1;
+    let has_multiple_panes = app.workspace.tabs[tab_idx].panes.len() > 1;
     let should_dim =
-        (app.config.ui.dim_inactive_panes && !is_active && has_multiple_panes) || is_image_modal;
+        (app.user_data.config.ui.dim_inactive_panes && !is_active && has_multiple_panes) || is_image_modal;
 
-    let pane = &mut app.tabs[tab_idx].panes[pane_idx];
+    let pane = &mut app.workspace.tabs[tab_idx].panes[pane_idx];
     pane.viewport_width = content_width;
     pane.ensure_parsed_width(render_opts);
-    pane.viewport_height = if app.zen_mode {
+    pane.viewport_height = if app.workspace.zen_mode {
         rect.height as usize
     } else {
         rect.height.saturating_sub(2) as usize
@@ -106,7 +106,7 @@ fn render_pane_at(
         PaneContent::Error(_) => " error ".to_string(),
     };
 
-    let border_type = app.config.ui.border_type();
+    let border_type = app.user_data.config.ui.border_type();
 
     let title_style = if should_dim {
         Style::default().fg(theme::DARK_GREY).dim()
@@ -120,7 +120,7 @@ fn render_pane_at(
         Style::default().fg(border_color)
     };
 
-    let block = if app.zen_mode {
+    let block = if app.workspace.zen_mode {
         Block::default().padding(Padding::horizontal(1))
     } else {
         Block::bordered()
@@ -169,7 +169,7 @@ fn render_pane_at(
     if is_empty {
         crate::ui::launch_screen::render_launch_screen(f, app, rect, block);
     } else if is_search {
-        let pane = &app.tabs[tab_idx].panes[pane_idx];
+        let pane = &app.workspace.tabs[tab_idx].panes[pane_idx];
         if let PaneContent::SearchResults { items, .. } = &pane.content {
             search::render_search_pane(
                 f,
@@ -179,14 +179,14 @@ fn render_pane_at(
                 items,
                 border_color,
                 if is_image_modal { false } else { is_active },
-                app.zen_mode,
-                app.config.ui.scroll_indicator,
-                app.config.ui.icons,
+                app.workspace.zen_mode,
+                app.user_data.config.ui.scroll_indicator,
+                app.user_data.config.ui.icons,
                 should_dim,
             );
         }
     } else if is_error {
-        let pane = &app.tabs[tab_idx].panes[pane_idx];
+        let pane = &app.workspace.tabs[tab_idx].panes[pane_idx];
         if let PaneContent::Error(err_msg) = &pane.content {
             let vertical_offset = (rect.height.saturating_sub(2) / 2) as usize;
             let mut lines = Vec::new();

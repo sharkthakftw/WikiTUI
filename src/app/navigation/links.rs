@@ -29,12 +29,37 @@ impl App {
         });
 
         if !is_visible {
-            let candidate_idx = parsed_doc.links.partition_point(|link| {
+            let mut candidate_idx = parsed_doc.links.partition_point(|link| {
                 link.span_indices
-                    .last()
+                    .first()
                     .map(|&(l, _)| l < view_start)
                     .unwrap_or(true)
             });
+
+            if candidate_idx > 0 {
+                if let Some(prev_link) = parsed_doc.links.get(candidate_idx - 1) {
+                    if prev_link
+                        .span_indices
+                        .last()
+                        .is_some_and(|&(l, _)| l >= view_start)
+                    {
+                        candidate_idx -= 1;
+                    }
+                }
+            }
+
+            #[cfg(debug_assertions)]
+            if candidate_idx < parsed_doc.links.len() {
+                if let Some(&(first_line, _)) = parsed_doc.links[candidate_idx].span_indices.first() {
+                    debug_assert!(
+                        first_line >= view_start
+                            || parsed_doc.links[candidate_idx]
+                                .span_indices
+                                .last()
+                                .is_some_and(|&(l, _)| l >= view_start)
+                    );
+                }
+            }
 
             if candidate_idx < parsed_doc.links.len() {
                 pane.selected_link_idx = Some(candidate_idx);
@@ -154,14 +179,7 @@ impl App {
         let selected_title = self.active_selected_target();
 
         if let Some(title) = selected_title.filter(|t| is_article_link(t)) {
-            let cur_tab = self.active_tab_idx;
-            self.new_tab();
-            let pane_id = self.active_pane().id;
-            let active_pane = self.active_pane_mut();
-            active_pane.prepare_for_article_fetch(&title);
-            self.send_fetch_article(pane_id, title.clone());
-            self.active_tab_idx = cur_tab;
-            self.set_status_message(format!("opened '{}' in background tab", title));
+            self.open_article_in_background_tab(&title);
         }
     }
 

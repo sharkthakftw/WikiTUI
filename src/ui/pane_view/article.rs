@@ -21,7 +21,7 @@ pub fn render_article_pane(
     border_color: ratatui::style::Color,
     is_active: bool,
 ) {
-    let pane = &app.tabs[tab_idx].panes[pane_idx];
+    let pane = &app.workspace.tabs[tab_idx].panes[pane_idx];
     let crate::app::PaneContent::ArticleText { parsed_doc, .. } = &pane.content else {
         return;
     };
@@ -31,19 +31,19 @@ pub fn render_article_pane(
         (pane.viewport_height + 2).min(parsed_doc.lines.len().saturating_sub(view_start));
     let view_end = view_start + view_len;
 
-    let resolved_proto = crate::graphics::resolve_protocol(app.config.reader.image_protocol);
-    if resolved_proto.is_halfblocks() && app.config.reader.show_images {
-        let pane = &mut app.tabs[tab_idx].panes[pane_idx];
+    let resolved_proto = crate::graphics::resolve_protocol(app.user_data.config.reader.image_protocol);
+    if resolved_proto.is_halfblocks() && app.user_data.config.reader.show_images {
+        let pane = &mut app.workspace.tabs[tab_idx].panes[pane_idx];
         if let crate::app::PaneContent::ArticleText { parsed_doc, .. } = &pane.content {
             let mut to_request = Vec::new();
             for img in &parsed_doc.images {
                 if img.line_idx + img.height_lines > view_start && img.line_idx < view_end {
                     let cols = img.width_cols;
                     let rows = img.height_lines;
-                    let key = (img.url.clone(), cols, rows);
-                    if !pane.halfblock_cache.contains_key(&key)
-                        && pane.pending_image_decodes.insert(key)
+                    if !pane.contains_halfblock(&img.url, cols, rows)
+                        && !pane.is_pending_decode(&img.url, cols, rows)
                     {
+                        pane.pending_image_decodes.insert((img.url.clone(), cols, rows));
                         if let Some(path) = pane
                             .loaded_images
                             .get(&img.url)
@@ -61,12 +61,12 @@ pub fn render_article_pane(
         }
     }
 
-    let pane = &app.tabs[tab_idx].panes[pane_idx];
+    let pane = &app.workspace.tabs[tab_idx].panes[pane_idx];
     let crate::app::PaneContent::ArticleText { parsed_doc, .. } = &pane.content else {
         return;
     };
 
-    let (has_underline, first_link_idx) = if app.config.reader.underline_links {
+    let (has_underline, first_link_idx) = if app.user_data.config.reader.underline_links {
         let first_idx = parsed_doc.links.partition_point(|link| {
             link.span_indices
                 .last()
@@ -122,7 +122,7 @@ pub fn render_article_pane(
         let line_idx = view_start + local_idx;
 
         let mut image_override = None;
-        if app.config.reader.show_images {
+        if app.user_data.config.reader.show_images {
             for img in &parsed_doc.images {
                 if line_idx >= img.line_idx && line_idx < img.line_idx + img.height_lines {
                     let has_img = pane.loaded_images.contains_key(&img.url)
@@ -131,8 +131,7 @@ pub fn render_article_pane(
                         let rel_row = line_idx - img.line_idx;
                         let cols = img.width_cols;
                         let rows = img.height_lines;
-                        let key = (img.url.clone(), cols, rows);
-                        if let Some(hb_lines) = pane.halfblock_cache.get(&key) {
+                        if let Some(hb_lines) = pane.get_halfblock(&img.url, cols, rows) {
                             if let Some(hb_line) = hb_lines.get(rel_row) {
                                 image_override = Some(hb_line.clone());
                             }
@@ -233,12 +232,18 @@ pub fn render_article_pane(
                 let m = &pane.search.matches[match_ptr];
                 let is_active = selected_match
                     .is_some_and(|sm| sm.line_idx == m.line_idx && sm.char_offset == m.char_offset);
-                line_matches.push((m.char_offset, m.char_offset + query_len, is_active));
+                let bg_color = if is_active {
+                    theme::YELLOW
+                } else {
+                    theme::BEIGE
+                };
+                let match_style = Style::default().bg(bg_color).fg(theme::BG).bold();
+                line_matches.push((m.char_offset, m.char_offset + query_len, match_style));
                 match_ptr += 1;
             }
 
             if !line_matches.is_empty() {
-                spans = build_search_highlighted_spans(&spans, &line_matches);
+                spans = apply_span_highlights(&spans, &line_matches);
             }
         }
 
@@ -257,7 +262,10 @@ pub fn render_article_pane(
                     line_len
                 };
                 if from < to {
-                    spans = build_selection_highlighted_spans(&spans, from, to);
+                    let byte_from = char_to_byte_offset(&spans, from);
+                    let byte_to = char_to_byte_offset(&spans, to);
+                    let sel_style = Style::default().bg(theme::PINK).fg(theme::BG).bold();
+                    spans = apply_span_highlights(&spans, &[(byte_from, byte_to, sel_style)]);
                 }
             }
         }
@@ -268,7 +276,7 @@ pub fn render_article_pane(
     }
 
     let should_dim =
-        (app.config.ui.dim_inactive_panes && !is_active && app.tabs[tab_idx].panes.len() > 1)
+        (app.user_data.config.ui.dim_inactive_panes && !is_active && app.workspace.tabs[tab_idx].panes.len() > 1)
             || app.input_mode == crate::app::InputMode::ImageModal;
     if should_dim {
         for line in &mut rendered_lines {
@@ -282,7 +290,7 @@ pub fn render_article_pane(
     let paragraph = Paragraph::new(rendered_lines).block(block);
     f.render_widget(paragraph, rect);
 
-    if app.config.reader.show_images {
+    if app.user_data.config.reader.show_images {
         for img in &parsed_doc.images {
             let img_top = img.line_idx;
             let img_bot = img.line_idx + img.height_lines;
@@ -330,8 +338,8 @@ pub fn render_article_pane(
         pane.scroll_offset,
         border_color,
         is_active,
-        app.zen_mode,
-        app.config.ui.scroll_indicator,
+        app.workspace.zen_mode,
+        app.user_data.config.ui.scroll_indicator,
     );
 
     if is_active && pane.show_toc && !parsed_doc.headings.is_empty() {
@@ -340,9 +348,9 @@ pub fn render_article_pane(
             pane,
             parsed_doc,
             rect,
-            app.config.reader.toc_section_numbers,
-            app.config.ui.rounded_borders,
-            app.config.ui.icons,
+            app.user_data.config.reader.toc_section_numbers,
+            app.user_data.config.ui.rounded_borders,
+            app.user_data.config.ui.icons,
         );
     }
 }
@@ -357,15 +365,37 @@ pub fn clamp_to_char_boundary(s: &str, mut idx: usize) -> usize {
     idx
 }
 
-fn build_search_highlighted_spans<'a>(
+fn sub_span<'a>(span: &Span<'a>, start: usize, end: usize, style: Style) -> Span<'a> {
+    match &span.content {
+        std::borrow::Cow::Borrowed(s) => Span::styled(&s[start..end], style),
+        std::borrow::Cow::Owned(s) => Span::styled(s[start..end].to_string(), style),
+    }
+}
+
+fn char_to_byte_offset(spans: &[Span<'_>], char_pos: usize) -> usize {
+    let mut current_char = 0;
+    let mut current_byte = 0;
+    for span in spans {
+        for (b_idx, _) in span.content.char_indices() {
+            if current_char == char_pos {
+                return current_byte + b_idx;
+            }
+            current_char += 1;
+        }
+        current_byte += span.content.len();
+    }
+    current_byte
+}
+
+fn apply_span_highlights<'a>(
     spans: &[Span<'a>],
-    line_matches: &[(usize, usize, bool)],
+    intervals: &[(usize, usize, Style)],
 ) -> Vec<Span<'a>> {
-    if line_matches.is_empty() {
+    if intervals.is_empty() {
         return spans.to_vec();
     }
 
-    let mut new_spans = Vec::with_capacity(spans.len() + line_matches.len() * 2);
+    let mut new_spans = Vec::with_capacity(spans.len() + intervals.len() * 2);
     let mut global_offset = 0;
 
     for span in spans {
@@ -376,7 +406,7 @@ fn build_search_highlighted_spans<'a>(
 
         let mut text_cursor = 0;
 
-        for &(m_start, m_end, is_active) in line_matches {
+        for &(m_start, m_end, highlight_style) in intervals {
             if m_end <= span_start || m_start >= span_end {
                 continue;
             }
@@ -389,117 +419,18 @@ fn build_search_highlighted_spans<'a>(
             text_cursor = clamp_to_char_boundary(text, text_cursor);
 
             if rel_match_start > text_cursor && rel_match_start <= span_len {
-                let unmatch_span = match &span.content {
-                    std::borrow::Cow::Borrowed(s) => {
-                        Span::styled(&s[text_cursor..rel_match_start], span.style)
-                    }
-                    std::borrow::Cow::Owned(s) => {
-                        Span::styled(s[text_cursor..rel_match_start].to_string(), span.style)
-                    }
-                };
-                new_spans.push(unmatch_span);
+                new_spans.push(sub_span(span, text_cursor, rel_match_start, span.style));
                 text_cursor = rel_match_start;
             }
 
             if rel_match_end > text_cursor && rel_match_end <= span_len {
-                let bg_color = if is_active {
-                    theme::YELLOW
-                } else {
-                    theme::BEIGE
-                };
-                let match_style = Style::default().bg(bg_color).fg(theme::BG).bold();
-                let match_span = match &span.content {
-                    std::borrow::Cow::Borrowed(s) => {
-                        Span::styled(&s[text_cursor..rel_match_end], match_style)
-                    }
-                    std::borrow::Cow::Owned(s) => {
-                        Span::styled(s[text_cursor..rel_match_end].to_string(), match_style)
-                    }
-                };
-                new_spans.push(match_span);
+                new_spans.push(sub_span(span, text_cursor, rel_match_end, highlight_style));
                 text_cursor = rel_match_end;
             }
         }
 
         if text_cursor < span_len {
-            let trailing_span = match &span.content {
-                std::borrow::Cow::Borrowed(s) => Span::styled(&s[text_cursor..], span.style),
-                std::borrow::Cow::Owned(s) => {
-                    Span::styled(s[text_cursor..].to_string(), span.style)
-                }
-            };
-            new_spans.push(trailing_span);
-        }
-
-        global_offset = span_end;
-    }
-
-    new_spans
-}
-
-fn build_selection_highlighted_spans<'a>(
-    spans: &[Span<'a>],
-    sel_start: usize,
-    sel_end: usize,
-) -> Vec<Span<'a>> {
-    let mut new_spans = Vec::new();
-    let mut global_offset = 0;
-
-    for span in spans {
-        let span_len = span.content.chars().count();
-        let span_start = global_offset;
-        let span_end = span_start + span_len;
-
-        if sel_end <= span_start || sel_start >= span_end {
-            new_spans.push(span.clone());
-        } else {
-            let rel_start = sel_start.saturating_sub(span_start).min(span_len);
-            let rel_end = sel_end.saturating_sub(span_start).min(span_len);
-
-            let mut byte_start = span.content.len();
-            let mut byte_end = span.content.len();
-            for (char_idx, (b_idx, _)) in span.content.char_indices().enumerate() {
-                if char_idx == rel_start {
-                    byte_start = b_idx;
-                }
-                if char_idx == rel_end {
-                    byte_end = b_idx;
-                    break;
-                }
-            }
-
-            if rel_start > 0 {
-                let prefix_span = match &span.content {
-                    std::borrow::Cow::Borrowed(s) => Span::styled(&s[..byte_start], span.style),
-                    std::borrow::Cow::Owned(s) => {
-                        Span::styled(s[..byte_start].to_string(), span.style)
-                    }
-                };
-                new_spans.push(prefix_span);
-            }
-
-            if rel_end > rel_start {
-                let sel_style = Style::default().bg(theme::PINK).fg(theme::BG).bold();
-                let sel_span = match &span.content {
-                    std::borrow::Cow::Borrowed(s) => {
-                        Span::styled(&s[byte_start..byte_end], sel_style)
-                    }
-                    std::borrow::Cow::Owned(s) => {
-                        Span::styled(s[byte_start..byte_end].to_string(), sel_style)
-                    }
-                };
-                new_spans.push(sel_span);
-            }
-
-            if rel_end < span_len {
-                let suffix_span = match &span.content {
-                    std::borrow::Cow::Borrowed(s) => Span::styled(&s[byte_end..], span.style),
-                    std::borrow::Cow::Owned(s) => {
-                        Span::styled(s[byte_end..].to_string(), span.style)
-                    }
-                };
-                new_spans.push(suffix_span);
-            }
+            new_spans.push(sub_span(span, text_cursor, span_len, span.style));
         }
 
         global_offset = span_end;
@@ -545,11 +476,28 @@ pub fn get_link_at_coord(
     }
 
     let span_idx = target_span_idx?;
+    let target = (line_idx, span_idx);
 
-    parsed_doc
-        .links
-        .iter()
-        .position(|link| link.span_indices.contains(&(line_idx, span_idx)))
+    let upper = parsed_doc.links.partition_point(|link| {
+        link.span_indices
+            .first()
+            .is_some_and(|&first| first <= target)
+    });
+
+    for (rev_offset, link) in parsed_doc.links[..upper].iter().rev().enumerate() {
+        if link.span_indices.contains(&target) {
+            return Some(upper - 1 - rev_offset);
+        }
+        if link
+            .span_indices
+            .first()
+            .is_some_and(|&(l, _)| l.saturating_add(30) < line_idx)
+        {
+            break;
+        }
+    }
+
+    None
 }
 
 pub fn get_image_at_coord(

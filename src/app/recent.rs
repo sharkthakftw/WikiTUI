@@ -46,7 +46,7 @@ impl App {
         if let Some(parent) = path.parent() {
             let _ = std::fs::create_dir_all(parent);
         }
-        if let Ok(json) = serde_json::to_string_pretty(&self.recent_articles) {
+        if let Ok(json) = serde_json::to_string_pretty(&self.user_data.recent_articles) {
             let _ = std::fs::write(path, json);
         }
     }
@@ -62,22 +62,23 @@ impl App {
             .map(|d| d.as_secs())
             .unwrap_or(0);
 
-        self.recent_articles.retain(|e| e.title != clean);
-        self.recent_articles.insert(
+        self.user_data.recent_articles.retain(|e| e.title != clean);
+        self.user_data.recent_articles.insert(
             0,
             RecentArticleEntry {
                 title: clean,
                 timestamp: now,
             },
         );
-        if self.recent_articles.len() > 10 {
-            self.recent_articles.truncate(10);
+        if self.user_data.recent_articles.len() > 10 {
+            self.user_data.recent_articles.truncate(10);
         }
         self.save_recent_articles();
     }
 
     pub fn get_continue_reading_articles(&self) -> Vec<String> {
         let filtered: Vec<String> = self
+            .user_data
             .recent_articles
             .iter()
             .filter(|e| {
@@ -93,7 +94,7 @@ impl App {
 
         let mut seen = HashSet::new();
         let mut list = Vec::with_capacity(10);
-        for l in &self.saved_lists.lists {
+        for l in &self.user_data.saved_lists.lists {
             for a in l.articles.iter().rev() {
                 let lower = a.to_lowercase();
                 if !lower.starts_with("category:")
@@ -112,6 +113,7 @@ impl App {
 
     pub fn get_continue_reading_with_timestamps(&self) -> Vec<(String, Option<u64>)> {
         let filtered: Vec<(String, Option<u64>)> = self
+            .user_data
             .recent_articles
             .iter()
             .filter(|e| {
@@ -134,7 +136,7 @@ impl App {
 
         let mut seen = HashSet::new();
         let mut list = Vec::with_capacity(10);
-        for l in &self.saved_lists.lists {
+        for l in &self.user_data.saved_lists.lists {
             for a in l.articles.iter().rev() {
                 let lower = a.to_lowercase();
                 if !lower.starts_with("category:")

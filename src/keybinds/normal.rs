@@ -3,47 +3,41 @@ use crate::layout::SplitDirection;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
 pub fn handle_normal_mode(app: &mut App, key: KeyEvent, term_width: u16, term_height: u16) {
-    if app.feed.active {
+    if app.user_data.feed.active {
         match key.code {
             KeyCode::Esc | KeyCode::Char('F') | KeyCode::Char('q') => {
-                app.feed.active = false;
+                app.user_data.feed.active = false;
             }
             KeyCode::Char('j') | KeyCode::Down => {
-                app.feed.next_post();
+                app.user_data.feed.next_post();
                 app.maybe_fetch_feed_batch();
             }
             KeyCode::Char('k') | KeyCode::Up => {
-                app.feed.prev_post();
+                app.user_data.feed.prev_post();
             }
             KeyCode::Char('l') => {
                 app.toggle_feed_like();
             }
             KeyCode::Char('r') | KeyCode::Char('R') => {
-                app.confirm_action = Some(crate::app::ConfirmAction::ResetFeed);
+                app.modals.confirm_action = Some(crate::app::ConfirmAction::ResetFeed);
                 app.input_mode = crate::app::InputMode::Confirm;
             }
             KeyCode::Enter if key.modifiers.contains(KeyModifiers::ALT) => {
-                if let Some(item) = app.feed.current_item().cloned() {
-                    let cur_tab = app.active_tab_idx;
-                    app.new_tab();
-                    let pane_id = app.active_pane().id;
-                    app.active_pane_mut().is_loading = true;
-                    app.send_fetch_article(pane_id, item.title.clone());
-                    app.active_tab_idx = cur_tab;
-                    app.set_status_message(format!("opened '{}' in background tab", item.title));
+                if let Some(item) = app.user_data.feed.current_item().cloned() {
+                    app.open_article_in_background_tab(&item.title);
                 }
             }
             KeyCode::Enter => {
-                if let Some(item) = app.feed.current_item().cloned() {
-                    app.feed.active = false;
+                if let Some(item) = app.user_data.feed.current_item().cloned() {
+                    app.user_data.feed.active = false;
                     let pane_id = app.active_pane().id;
                     app.active_pane_mut().is_loading = true;
                     app.send_fetch_article(pane_id, item.title);
                 }
             }
             KeyCode::Char('t') => {
-                if let Some(item) = app.feed.current_item().cloned() {
-                    app.feed.active = false;
+                if let Some(item) = app.user_data.feed.current_item().cloned() {
+                    app.user_data.feed.active = false;
                     app.new_tab();
                     let pane_id = app.active_pane().id;
                     app.active_pane_mut().is_loading = true;
@@ -68,8 +62,8 @@ pub fn handle_normal_mode(app: &mut App, key: KeyEvent, term_width: u16, term_he
             }
             _ => {}
         }
-    } else if app.waiting_for_split_cmd {
-        app.waiting_for_split_cmd = false;
+    } else if app.workspace.waiting_for_split_cmd {
+        app.workspace.waiting_for_split_cmd = false;
         match key.code {
             KeyCode::Char('v') => {
                 app.split_active_pane(SplitDirection::Vertical);
@@ -111,7 +105,7 @@ pub fn handle_normal_mode(app: &mut App, key: KeyEvent, term_width: u16, term_he
             && (key.modifiers.is_empty() || key.modifiers == KeyModifiers::SHIFT)
         {
             if let KeyCode::Char(c) = key.code {
-                match app.config.general.hint_mode {
+                match app.user_data.config.general.hint_mode {
                     crate::config::HintMode::Semantic => {
                         if let Some(title) = app.find_semantic_hint_article(c) {
                             app.open_article(&title);
@@ -346,7 +340,7 @@ pub fn handle_normal_mode(app: &mut App, key: KeyEvent, term_width: u16, term_he
                 app.new_tab();
             }
             KeyCode::Char('w') if key.modifiers.contains(KeyModifiers::CONTROL) => {
-                app.waiting_for_split_cmd = true;
+                app.workspace.waiting_for_split_cmd = true;
             }
             KeyCode::Char('=') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                 app.resize_active_split(5);

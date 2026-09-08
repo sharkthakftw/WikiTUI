@@ -14,7 +14,7 @@ pub fn compute_settings_modal_area(size: Rect) -> Rect {
 }
 
 pub fn render_settings_modal(f: &mut Frame, app: &App, size: Rect) {
-    let icon = if app.config.ui.icons { "󰒓" } else { "" };
+    let icon = if app.user_data.config.ui.icons { "󰒓" } else { "" };
     let area = compute_settings_modal_area(size);
     let inner = render_modal_container_at(
         f,
@@ -22,7 +22,7 @@ pub fn render_settings_modal(f: &mut Frame, app: &App, size: Rect) {
         icon,
         "settings (config.toml)",
         theme::ORANGE,
-        app.config.ui.rounded_borders,
+        app.user_data.config.ui.rounded_borders,
     );
 
     let mut lines: Vec<Line> = Vec::new();
@@ -42,7 +42,7 @@ pub fn render_settings_modal(f: &mut Frame, app: &App, size: Rect) {
             current_section = section;
         }
 
-        let is_focused = idx == app.settings_modal.cursor_idx;
+        let is_focused = idx == app.modals.settings_modal.cursor_idx;
         let prefix = if is_focused { " ▶ " } else { "   " };
         let prefix_style = if is_focused {
             Style::default().fg(theme::YELLOW).bold()
@@ -59,19 +59,19 @@ pub fn render_settings_modal(f: &mut Frame, app: &App, size: Rect) {
 
         let value_span = match item {
             SettingItem::LikedReadonly => {
-                let val = app.config.general.liked_readonly;
+                let val = app.user_data.config.general.liked_readonly;
                 bool_span(val)
             }
             SettingItem::AutoRestoreSession => {
-                let val = app.config.general.auto_restore_session;
+                let val = app.user_data.config.general.auto_restore_session;
                 bool_span(val)
             }
             SettingItem::ConfirmQuit => {
-                let val = app.config.general.confirm_quit;
+                let val = app.user_data.config.general.confirm_quit;
                 bool_span(val)
             }
             SettingItem::HintMode => {
-                let val = app.config.general.hint_mode;
+                let val = app.user_data.config.general.hint_mode;
                 let text = match val {
                     crate::config::HintMode::Semantic => "semantic",
                     crate::config::HintMode::Numbered => "numbered",
@@ -83,62 +83,62 @@ pub fn render_settings_modal(f: &mut Frame, app: &App, size: Rect) {
                 )
             }
             SettingItem::RoundedBorders => {
-                let val = app.config.ui.rounded_borders;
+                let val = app.user_data.config.ui.rounded_borders;
                 bool_span(val)
             }
             SettingItem::Icons => {
-                let val = app.config.ui.icons;
+                let val = app.user_data.config.ui.icons;
                 bool_span(val)
             }
             SettingItem::ScrollIndicator => {
-                let val = app.config.ui.scroll_indicator;
+                let val = app.user_data.config.ui.scroll_indicator;
                 bool_span(val)
             }
             SettingItem::Stats => {
-                let val = app.config.ui.stats;
+                let val = app.user_data.config.ui.stats;
                 bool_span(val)
             }
             SettingItem::DimInactivePanes => {
-                let val = app.config.ui.dim_inactive_panes;
+                let val = app.user_data.config.ui.dim_inactive_panes;
                 bool_span(val)
             }
             SettingItem::HeadingMarker => {
-                let val = app.config.reader.heading_marker;
+                let val = app.user_data.config.reader.heading_marker;
                 bool_span(val)
             }
             SettingItem::ScrollLines => {
-                let val = app.config.reader.scroll_lines;
+                let val = app.user_data.config.reader.scroll_lines;
                 Span::styled(
                     format!("◄  {:>2} lines  ►", val),
                     Style::default().fg(theme::TEAL).bold(),
                 )
             }
             SettingItem::UnderlineLinks => {
-                let val = app.config.reader.underline_links;
+                let val = app.user_data.config.reader.underline_links;
                 bool_span(val)
             }
             SettingItem::ShowFootnotes => {
-                let val = app.config.reader.show_footnotes;
+                let val = app.user_data.config.reader.show_footnotes;
                 bool_span(val)
             }
             SettingItem::ShowExternalLinks => {
-                let val = app.config.reader.show_external_links;
+                let val = app.user_data.config.reader.show_external_links;
                 bool_span(val)
             }
             SettingItem::TocSectionNumbers => {
-                let val = app.config.reader.toc_section_numbers;
+                let val = app.user_data.config.reader.toc_section_numbers;
                 bool_span(val)
             }
             SettingItem::CodeLineNumbers => {
-                let val = app.config.reader.code_line_numbers;
+                let val = app.user_data.config.reader.code_line_numbers;
                 bool_span(val)
             }
             SettingItem::ShowImages => {
-                let val = app.config.reader.show_images;
+                let val = app.user_data.config.reader.show_images;
                 bool_span(val)
             }
             SettingItem::ImageProtocol => {
-                let val = app.config.reader.image_protocol;
+                let val = app.user_data.config.reader.image_protocol;
                 let text = match val {
                     crate::config::ImageProtocol::Auto => "auto",
                     crate::config::ImageProtocol::Kitty => "kitty",
@@ -151,7 +151,7 @@ pub fn render_settings_modal(f: &mut Frame, app: &App, size: Rect) {
                 )
             }
             SettingItem::HalfblockFilter => {
-                let val = app.config.reader.halfblock_filter;
+                let val = app.user_data.config.reader.halfblock_filter;
                 let text = match val {
                     crate::config::HalfblockFilter::Nearest => "nearest",
                     crate::config::HalfblockFilter::Triangle => "triangle",
@@ -165,36 +165,36 @@ pub fn render_settings_modal(f: &mut Frame, app: &App, size: Rect) {
                 )
             }
             SettingItem::SearchLimit => {
-                let val = app.config.search.limit;
+                let val = app.user_data.config.search.limit;
                 Span::styled(
                     format!("◄  {:>2} items  ►", val),
                     Style::default().fg(theme::TEAL).bold(),
                 )
             }
             SettingItem::NetworkTimeout => {
-                let val = app.config.network.timeout;
+                let val = app.user_data.config.network.timeout;
                 Span::styled(
                     format!("◄  {:>2}s  ►", val),
                     Style::default().fg(theme::TEAL).bold(),
                 )
             }
             SettingItem::OfflineCache => {
-                let val = app.config.network.offline_cache;
+                let val = app.user_data.config.network.offline_cache;
                 bool_span(val)
             }
             SettingItem::CacheLifetime => {
-                let val = app.config.network.cache_lifetime;
+                let val = app.user_data.config.network.cache_lifetime;
                 Span::styled(
                     format!("◄  {:>3}h  ►", val),
                     Style::default().fg(theme::TEAL).bold(),
                 )
             }
             SettingItem::MouseSupport => {
-                let val = app.config.input.mouse_support;
+                let val = app.user_data.config.input.mouse_support;
                 bool_span(val)
             }
             SettingItem::ScrollSpeed => {
-                let val = app.config.input.scroll_speed;
+                let val = app.user_data.config.input.scroll_speed;
                 Span::styled(
                     format!("◄  {:>2} lines  ►", val),
                     Style::default().fg(theme::TEAL).bold(),
@@ -214,7 +214,7 @@ pub fn render_settings_modal(f: &mut Frame, app: &App, size: Rect) {
     }
 
     lines.push(Line::from(""));
-    let focused_item = SettingItem::ALL.get(app.settings_modal.cursor_idx).copied();
+    let focused_item = SettingItem::ALL.get(app.modals.settings_modal.cursor_idx).copied();
     if let Some(item) = focused_item {
         lines.push(Line::from(vec![
             Span::styled("   ", Style::default()),
@@ -234,7 +234,7 @@ pub fn render_settings_modal(f: &mut Frame, app: &App, size: Rect) {
         ),
     ]));
 
-    let scroll = compute_settings_scroll(app.settings_modal.cursor_idx, inner.height as usize);
+    let scroll = compute_settings_scroll(app.modals.settings_modal.cursor_idx, inner.height as usize);
     let paragraph = Paragraph::new(lines).scroll((scroll as u16, 0));
     f.render_widget(paragraph, inner);
 }

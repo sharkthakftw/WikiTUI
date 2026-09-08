@@ -27,12 +27,12 @@ pub fn compute_image_modal_area(size: Rect) -> Rect {
 }
 
 pub fn render_image_modal(f: &mut Frame, app: &mut App, size: Rect) {
-    let Some(modal) = app.image_modal.clone() else {
+    let Some(modal) = app.modals.image_modal.clone() else {
         return;
     };
 
     let area = compute_image_modal_area(size);
-    let icon = if app.config.ui.icons { "󰋩" } else { "" };
+    let icon = if app.user_data.config.ui.icons { "󰋩" } else { "" };
 
     let filename = modal
         .url
@@ -63,7 +63,7 @@ pub fn render_image_modal(f: &mut Frame, app: &mut App, size: Rect) {
         icon,
         &display_title,
         theme::PINK,
-        app.config.ui.rounded_borders,
+        app.user_data.config.ui.rounded_borders,
     );
 
     if inner.width < 4 || inner.height < 4 {
@@ -80,7 +80,7 @@ pub fn render_image_modal(f: &mut Frame, app: &mut App, size: Rect) {
         .clone()
         .or_else(|| crate::graphics::cache::get_cached_image_path(&modal.url));
 
-    let resolved_proto = crate::graphics::resolve_protocol(app.config.reader.image_protocol);
+    let resolved_proto = crate::graphics::resolve_protocol(app.user_data.config.reader.image_protocol);
 
     if let Some(path) = img_path {
         let dimensions = image::image_dimensions(&path).ok();
@@ -119,7 +119,7 @@ pub fn render_image_modal(f: &mut Frame, app: &mut App, size: Rect) {
                 &bytes,
                 display_cols as usize,
                 display_rows as usize,
-                app.config.reader.halfblock_filter,
+                app.user_data.config.reader.halfblock_filter,
             ) {
                 let mut lines = Vec::with_capacity(canvas_h as usize);
                 for _ in 0..pad_top {

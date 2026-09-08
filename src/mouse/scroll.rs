@@ -19,11 +19,11 @@ pub fn handle_scroll(
 }
 
 fn handle_modal_scroll(app: &mut App, delta: i32, col: u16, row: u16, size: Rect) -> bool {
-    if app.feed.active {
+    if app.user_data.feed.active {
         if delta < 0 {
-            app.feed.prev_post();
+            app.user_data.feed.prev_post();
         } else {
-            app.feed.next_post();
+            app.user_data.feed.next_post();
             app.maybe_fetch_feed_batch();
         }
         return true;
@@ -43,13 +43,13 @@ fn handle_modal_scroll(app: &mut App, delta: i32, col: u16, row: u16, size: Rect
             let total = SettingItem::ALL.len();
             if total > 0 {
                 if delta < 0 {
-                    app.settings_modal.cursor_idx = if app.settings_modal.cursor_idx == 0 {
+                    app.modals.settings_modal.cursor_idx = if app.modals.settings_modal.cursor_idx == 0 {
                         total - 1
                     } else {
-                        app.settings_modal.cursor_idx - 1
+                        app.modals.settings_modal.cursor_idx - 1
                     };
                 } else {
-                    app.settings_modal.cursor_idx = (app.settings_modal.cursor_idx + 1) % total;
+                    app.modals.settings_modal.cursor_idx = (app.modals.settings_modal.cursor_idx + 1) % total;
                 }
             }
             true
@@ -57,6 +57,7 @@ fn handle_modal_scroll(app: &mut App, delta: i32, col: u16, row: u16, size: Rect
         InputMode::ImageModal => true,
         InputMode::SaveToList => {
             let count = app
+                .user_data
                 .saved_lists
                 .lists
                 .iter()
@@ -65,13 +66,13 @@ fn handle_modal_scroll(app: &mut App, delta: i32, col: u16, row: u16, size: Rect
                 + 1;
             if count > 0 {
                 if delta < 0 {
-                    app.lists_modal.save_cursor_idx = if app.lists_modal.save_cursor_idx == 0 {
+                    app.modals.lists_modal.save_cursor_idx = if app.modals.lists_modal.save_cursor_idx == 0 {
                         count - 1
                     } else {
-                        app.lists_modal.save_cursor_idx - 1
+                        app.modals.lists_modal.save_cursor_idx - 1
                     };
                 } else {
-                    app.lists_modal.save_cursor_idx = (app.lists_modal.save_cursor_idx + 1) % count;
+                    app.modals.lists_modal.save_cursor_idx = (app.modals.lists_modal.save_cursor_idx + 1) % count;
                 }
             }
             true
@@ -85,43 +86,44 @@ fn handle_modal_scroll(app: &mut App, delta: i32, col: u16, row: u16, size: Rect
                 && row >= right_area.y
                 && row < right_area.y + right_area.height
             {
-                app.lists_modal.viewer_focus_right = true;
+                app.modals.lists_modal.viewer_focus_right = true;
             } else if col >= left_area.x
                 && col < left_area.x + left_area.width
                 && row >= left_area.y
                 && row < left_area.y + left_area.height
             {
-                app.lists_modal.viewer_focus_right = false;
+                app.modals.lists_modal.viewer_focus_right = false;
             }
 
-            let lists_count = app.saved_lists.lists.len();
+            let lists_count = app.user_data.saved_lists.lists.len();
             let current_articles_count = app
+                .user_data
                 .saved_lists
                 .lists
-                .get(app.lists_modal.viewer_list_idx)
+                .get(app.modals.lists_modal.viewer_list_idx)
                 .map(|l| l.articles.len())
                 .unwrap_or(0);
 
-            if app.lists_modal.viewer_focus_right {
+            if app.modals.lists_modal.viewer_focus_right {
                 if current_articles_count > 0 {
                     if delta < 0 {
-                        app.lists_modal.viewer_article_idx =
-                            app.lists_modal.viewer_article_idx.saturating_sub(1);
+                        app.modals.lists_modal.viewer_article_idx =
+                            app.modals.lists_modal.viewer_article_idx.saturating_sub(1);
                     } else {
-                        app.lists_modal.viewer_article_idx = (app.lists_modal.viewer_article_idx
+                        app.modals.lists_modal.viewer_article_idx = (app.modals.lists_modal.viewer_article_idx
                             + 1)
                         .min(current_articles_count - 1);
                     }
                 }
             } else if lists_count > 0 {
                 if delta < 0 {
-                    app.lists_modal.viewer_list_idx =
-                        app.lists_modal.viewer_list_idx.saturating_sub(1);
+                    app.modals.lists_modal.viewer_list_idx =
+                        app.modals.lists_modal.viewer_list_idx.saturating_sub(1);
                 } else {
-                    app.lists_modal.viewer_list_idx =
-                        (app.lists_modal.viewer_list_idx + 1).min(lists_count - 1);
+                    app.modals.lists_modal.viewer_list_idx =
+                        (app.modals.lists_modal.viewer_list_idx + 1).min(lists_count - 1);
                 }
-                app.lists_modal.viewer_article_idx = 0;
+                app.modals.lists_modal.viewer_article_idx = 0;
             }
             true
         }
@@ -129,13 +131,13 @@ fn handle_modal_scroll(app: &mut App, delta: i32, col: u16, row: u16, size: Rect
             let total = crate::feed::profile::POPULAR_CATEGORIES.len();
             if total > 0 {
                 if delta < 0 {
-                    app.onboarding.cursor_idx = if app.onboarding.cursor_idx == 0 {
+                    app.modals.onboarding.cursor_idx = if app.modals.onboarding.cursor_idx == 0 {
                         total - 1
                     } else {
-                        app.onboarding.cursor_idx - 1
+                        app.modals.onboarding.cursor_idx - 1
                     };
                 } else {
-                    app.onboarding.cursor_idx = (app.onboarding.cursor_idx + 1) % total;
+                    app.modals.onboarding.cursor_idx = (app.modals.onboarding.cursor_idx + 1) % total;
                 }
             }
             true
@@ -147,19 +149,19 @@ fn handle_modal_scroll(app: &mut App, delta: i32, col: u16, row: u16, size: Rect
             };
             if total > 0 {
                 if delta < 0 {
-                    app.categories_modal.cursor_idx = if app.categories_modal.cursor_idx == 0 {
+                    app.modals.categories_modal.cursor_idx = if app.modals.categories_modal.cursor_idx == 0 {
                         total - 1
                     } else {
-                        app.categories_modal.cursor_idx - 1
+                        app.modals.categories_modal.cursor_idx - 1
                     };
                 } else {
-                    app.categories_modal.cursor_idx = (app.categories_modal.cursor_idx + 1) % total;
+                    app.modals.categories_modal.cursor_idx = (app.modals.categories_modal.cursor_idx + 1) % total;
                 }
             }
             true
         }
         InputMode::DailyFeedModal => {
-            if let Some(modal) = &mut app.daily_feed_modal {
+            if let Some(modal) = &mut app.modals.daily_feed_modal {
                 if delta < 0 {
                     modal.scroll = modal.scroll.saturating_sub(2);
                 } else {
@@ -181,7 +183,7 @@ fn handle_workspace_scroll(
     term_height: u16,
 ) {
     if matches!(app.input_mode, InputMode::Normal | InputMode::LocalSearch) {
-        if !app.zen_mode && row >= 1 && row < term_height.saturating_sub(1) {
+        if !app.workspace.zen_mode && row >= 1 && row < term_height.saturating_sub(1) {
             let main_rect = Rect::new(0, 1, term_width, term_height.saturating_sub(2));
             let tab = app.active_tab_mut();
             let rects = tab.layout_root.compute_rects(main_rect);
@@ -191,7 +193,7 @@ fn handle_workspace_scroll(
                 tab.active_pane_idx = pane_idx;
             }
         }
-        let speed = app.config.input.scroll_speed.max(1);
+        let speed = app.user_data.config.input.scroll_speed.max(1);
         if delta < 0 {
             app.scroll_up_lines(speed, term_height);
         } else {

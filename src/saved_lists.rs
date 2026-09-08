@@ -157,9 +157,47 @@ impl SavedListsStore {
     }
 
     pub fn is_article_saved_anywhere(&self, title: &str) -> bool {
+        if self.cached_saved_set.is_empty() {
+            return false;
+        }
         let title_trimmed = title.trim();
         if title_trimmed.is_empty() {
             return false;
+        }
+        if title_trimmed.is_ascii() {
+            if title_trimmed.len() <= 256 {
+                let mut buf = [0u8; 256];
+                let bytes = title_trimmed.as_bytes();
+                for (i, &b) in bytes.iter().enumerate() {
+                    buf[i] = b.to_ascii_lowercase();
+                }
+                if let Ok(s) = std::str::from_utf8(&buf[..bytes.len()]) {
+                    return self.cached_saved_set.contains(s);
+                }
+            }
+        } else {
+            let mut buf = [0u8; 256];
+            let mut cursor = 0;
+            let mut fits = true;
+            for c in title_trimmed.chars() {
+                for lc in c.to_lowercase() {
+                    let len = lc.len_utf8();
+                    if cursor + len > buf.len() {
+                        fits = false;
+                        break;
+                    }
+                    lc.encode_utf8(&mut buf[cursor..]);
+                    cursor += len;
+                }
+                if !fits {
+                    break;
+                }
+            }
+            if fits {
+                if let Ok(s) = std::str::from_utf8(&buf[..cursor]) {
+                    return self.cached_saved_set.contains(s);
+                }
+            }
         }
         self.cached_saved_set
             .contains(&title_trimmed.to_lowercase())

@@ -16,9 +16,9 @@ impl App {
             request_id,
             pane_id,
             title,
-            timeout: self.config.network.timeout,
-            offline_cache: self.config.network.offline_cache,
-            cache_lifetime: self.config.network.cache_lifetime,
+            timeout: self.user_data.config.network.timeout,
+            offline_cache: self.user_data.config.network.offline_cache,
+            cache_lifetime: self.user_data.config.network.cache_lifetime,
         });
     }
 
@@ -31,29 +31,29 @@ impl App {
         self.network.send(NetworkCommand::FetchRandomArticle {
             request_id,
             pane_id,
-            timeout: self.config.network.timeout,
-            offline_cache: self.config.network.offline_cache,
-            cache_lifetime: self.config.network.cache_lifetime,
+            timeout: self.user_data.config.network.timeout,
+            offline_cache: self.user_data.config.network.offline_cache,
+            cache_lifetime: self.user_data.config.network.cache_lifetime,
         });
     }
 
     pub fn send_fetch_feed_batch(&self) {
         self.network.send(NetworkCommand::FetchFeedBatch {
-            timeout: self.config.network.timeout,
+            timeout: self.user_data.config.network.timeout,
         });
     }
 
     pub fn send_fetch_daily_feed(&self) {
         self.network.send(NetworkCommand::FetchDailyFeed {
-            timeout: self.config.network.timeout,
-            offline_cache: self.config.network.offline_cache,
+            timeout: self.user_data.config.network.timeout,
+            offline_cache: self.user_data.config.network.offline_cache,
         });
     }
 
     pub fn send_fetch_stats(&self) {
-        if self.config.ui.stats {
+        if self.user_data.config.ui.stats {
             self.network.send(NetworkCommand::FetchStats {
-                timeout: self.config.network.timeout,
+                timeout: self.user_data.config.network.timeout,
             });
         }
     }
@@ -61,15 +61,15 @@ impl App {
     pub fn check_for_updates(&mut self) {
         self.set_status_message("checking for updates...".to_string());
         self.network.send(NetworkCommand::CheckForUpdates {
-            timeout: self.config.network.timeout,
+            timeout: self.user_data.config.network.timeout,
         });
     }
 
     pub fn send_fetch_image(&self, url: String) {
-        if self.config.reader.show_images {
+        if self.user_data.config.reader.show_images {
             self.network.send(NetworkCommand::FetchImage {
                 url,
-                timeout: self.config.network.timeout,
+                timeout: self.user_data.config.network.timeout,
             });
         }
     }
@@ -86,7 +86,7 @@ impl App {
             path,
             cols,
             rows,
-            filter: self.config.reader.halfblock_filter,
+            filter: self.user_data.config.reader.halfblock_filter,
         });
     }
 

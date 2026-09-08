@@ -53,7 +53,7 @@ impl App {
     pub fn select_next_item(&mut self, term_height: u16) {
         let is_article = matches!(self.active_pane().content, PaneContent::ArticleText { .. });
         let step = if is_article {
-            self.config.reader.scroll_lines.max(1)
+            self.user_data.config.reader.scroll_lines.max(1)
         } else {
             1
         };
@@ -63,7 +63,7 @@ impl App {
     pub fn select_prev_item(&mut self, term_height: u16) {
         let is_article = matches!(self.active_pane().content, PaneContent::ArticleText { .. });
         let step = if is_article {
-            self.config.reader.scroll_lines.max(1)
+            self.user_data.config.reader.scroll_lines.max(1)
         } else {
             1
         };

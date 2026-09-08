@@ -19,28 +19,29 @@ impl App {
             return;
         }
 
-        self.saved_lists = crate::saved_lists::SavedListsStore::load();
-        self.lists_modal.target_title = title;
-        self.lists_modal.target_snippet = snippet;
-        self.lists_modal.save_cursor_idx = 0;
+        self.user_data.saved_lists = crate::saved_lists::SavedListsStore::load();
+        self.modals.lists_modal.target_title = title;
+        self.modals.lists_modal.target_snippet = snippet;
+        self.modals.lists_modal.save_cursor_idx = 0;
         self.input_mode = InputMode::SaveToList;
     }
 
     pub fn open_saved_lists_viewer(&mut self) {
-        self.saved_lists = crate::saved_lists::SavedListsStore::load();
-        self.lists_modal.viewer_list_idx = 0;
-        self.lists_modal.viewer_article_idx = 0;
-        self.lists_modal.viewer_focus_right = false;
+        self.user_data.saved_lists = crate::saved_lists::SavedListsStore::load();
+        self.modals.lists_modal.viewer_list_idx = 0;
+        self.modals.lists_modal.viewer_article_idx = 0;
+        self.modals.lists_modal.viewer_focus_right = false;
         self.input_mode = InputMode::SavedListsViewer;
     }
 
     pub fn submit_create_new_list(&mut self) {
-        let name = self.search_modal.input.trim().to_string();
+        let name = self.modals.search_modal.input.trim().to_string();
         if !name.is_empty() {
-            let list_id = self.saved_lists.create_list(&name);
-            if !self.lists_modal.target_title.is_empty() {
-                let target_title = self.lists_modal.target_title.clone();
+            let list_id = self.user_data.saved_lists.create_list(&name);
+            if !self.modals.lists_modal.target_title.is_empty() {
+                let target_title = self.modals.lists_modal.target_title.clone();
                 let added = self
+                    .user_data
                     .saved_lists
                     .toggle_article_in_list(&list_id, &target_title);
                 self.mark_active_article_read();
@@ -48,9 +49,9 @@ impl App {
             }
             self.set_status_message(format!("created list '{}'", name));
         }
-        self.search_modal.input.clear();
-        self.search_modal.cursor_pos = 0;
-        self.input_mode = self.lists_modal.create_return_mode.clone();
+        self.modals.search_modal.input.clear();
+        self.modals.search_modal.cursor_pos = 0;
+        self.input_mode = self.modals.lists_modal.create_return_mode.clone();
     }
 
     pub fn toggle_help_popup(&mut self) {
@@ -68,9 +69,9 @@ impl App {
         }
 
         if matches!(self.active_pane().content, PaneContent::ArticleText { .. }) {
-            self.categories_modal.cursor_idx = 0;
-            self.categories_modal.article_cursor_idx = 0;
-            self.categories_modal.focus_right = false;
+            self.modals.categories_modal.cursor_idx = 0;
+            self.modals.categories_modal.article_cursor_idx = 0;
+            self.modals.categories_modal.focus_right = false;
             self.input_mode = InputMode::Categories;
 
             let first_cat =

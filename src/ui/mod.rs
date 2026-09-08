@@ -32,7 +32,7 @@ pub fn compute_zen_area(size: ratatui::layout::Rect) -> ratatui::layout::Rect {
 pub fn draw(f: &mut Frame, app: &mut App) {
     let size = f.size();
 
-    if app.feed.active {
+    if app.user_data.feed.active {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([Constraint::Min(0), Constraint::Length(1)])
@@ -41,9 +41,9 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         let feed_area = chunks[0];
         let status_area = chunks[1];
 
-        feed::render_feed_view(f, &app.feed, feed_area, app.config.ui.rounded_borders);
+        feed::render_feed_view(f, &app.user_data.feed, feed_area, app.user_data.config.ui.rounded_borders);
         status_bar::render(f, app, status_area);
-    } else if app.zen_mode {
+    } else if app.workspace.zen_mode {
         let zen_area = compute_zen_area(size);
         pane_view::render_single_active_pane(f, app, zen_area);
     } else {
@@ -116,8 +116,8 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     let is_modal_open = (app.input_mode != InputMode::Normal
         && app.input_mode != InputMode::LocalSearch
         && app.input_mode != InputMode::LinkPeek)
-        || app.tabs.iter().any(|t| t.panes.iter().any(|p| p.show_toc))
-        || app.daily_feed_modal.is_some();
+        || app.workspace.tabs.iter().any(|t| t.panes.iter().any(|p| p.show_toc))
+        || app.modals.daily_feed_modal.is_some();
 
     if is_modal_open {
         app.graphics.pending_image_renders.clear();

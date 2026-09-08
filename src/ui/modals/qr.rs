@@ -23,11 +23,11 @@ pub fn compute_qr_modal_area(size: Rect) -> Rect {
 }
 
 pub fn render_qr_modal(f: &mut Frame, app: &App, size: Rect) {
-    let Some(qr_state) = &app.qr_modal else {
+    let Some(qr_state) = &app.modals.qr_modal else {
         return;
     };
 
-    let icon = if app.config.ui.icons { "" } else { "" };
+    let icon = if app.user_data.config.ui.icons { "" } else { "" };
     let area = compute_qr_modal_area(size);
     let inner = render_modal_container_at(
         f,
@@ -35,7 +35,7 @@ pub fn render_qr_modal(f: &mut Frame, app: &App, size: Rect) {
         icon,
         "qr code",
         theme::PINK,
-        app.config.ui.rounded_borders,
+        app.user_data.config.ui.rounded_borders,
     );
 
     let h = inner.height as usize;

@@ -12,6 +12,7 @@ pub(crate) fn wrap_and_append_block(
     let mut active_link_target: Option<String> = None;
     let mut active_link_text = String::new();
     let mut active_link_spans: Vec<(usize, usize)> = Vec::new();
+    let mut last_span_link_target: Option<String> = None;
 
     for token in tokens {
         if token.link_target != active_link_target {
@@ -41,16 +42,34 @@ pub(crate) fn wrap_and_append_block(
                 doc.lines
                     .push(Line::from(std::mem::take(&mut current_line_spans)));
                 current_line_len = 0;
+                last_span_link_target = None;
             }
 
             let current_line_idx = doc.lines.len();
             if token.link_target.is_some() {
-                active_link_spans.push((current_line_idx, current_line_spans.len()));
                 active_link_text.push_str(word);
             }
 
-            let trimmed_word = word.to_string();
-            current_line_spans.push(Span::styled(trimmed_word, token.style));
+            let can_merge = !current_line_spans.is_empty()
+                && last_span_link_target.as_deref() == token.link_target.as_deref()
+                && current_line_spans.last().map(|s| s.style) == Some(token.style);
+
+            if can_merge {
+                let last_span = current_line_spans.last_mut().unwrap();
+                match &mut last_span.content {
+                    std::borrow::Cow::Owned(s) => s.push_str(word),
+                    std::borrow::Cow::Borrowed(_) => {
+                        last_span.content.to_mut().push_str(word);
+                    }
+                }
+            } else {
+                if token.link_target.is_some() {
+                    active_link_spans.push((current_line_idx, current_line_spans.len()));
+                }
+                current_line_spans.push(Span::styled(word.to_string(), token.style));
+                last_span_link_target = token.link_target.clone();
+            }
+
             current_line_len += word_len;
         }
     }

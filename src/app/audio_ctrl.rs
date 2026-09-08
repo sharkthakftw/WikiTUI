@@ -94,15 +94,15 @@ impl App {
             self.set_status_message("no audio currently playing".to_string());
             return;
         }
-        self.search_modal.input.clear();
-        self.search_modal.cursor_pos = 0;
+        self.modals.search_modal.input.clear();
+        self.modals.search_modal.cursor_pos = 0;
         self.input_mode = crate::app::InputMode::SleepTimerPrompt;
     }
 
     pub fn submit_sleep_timer_prompt(&mut self) {
-        let input = self.search_modal.input.trim().to_lowercase();
-        self.search_modal.input.clear();
-        self.search_modal.cursor_pos = 0;
+        let input = self.modals.search_modal.input.trim().to_lowercase();
+        self.modals.search_modal.input.clear();
+        self.modals.search_modal.cursor_pos = 0;
         self.input_mode = crate::app::InputMode::Normal;
 
         if input.is_empty() {

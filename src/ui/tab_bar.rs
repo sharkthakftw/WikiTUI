@@ -8,26 +8,23 @@ use ratatui::{
     Frame,
 };
 use std::hash::{Hash, Hasher};
-use std::sync::Mutex;
 
-#[derive(Default)]
-struct TabBarCache {
-    key: u64,
-    rendered_line: Line<'static>,
-    tab_titles: Vec<String>,
-    visible_range: (usize, usize),
+#[derive(Debug, Clone, Default)]
+pub struct TabBarCache {
+    pub key: u64,
+    pub rendered_line: Line<'static>,
+    pub tab_titles: Vec<String>,
+    pub visible_range: (usize, usize),
 }
-
-static TAB_BAR_CACHE: Mutex<Option<TabBarCache>> = Mutex::new(None);
 
 fn compute_tab_bar_key(app: &App, area_width: u16) -> u64 {
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    app.active_tab_idx.hash(&mut hasher);
-    app.tabs.len().hash(&mut hasher);
+    app.workspace.active_tab_idx.hash(&mut hasher);
+    app.workspace.tabs.len().hash(&mut hasher);
     area_width.hash(&mut hasher);
-    app.config.ui.icons.hash(&mut hasher);
+    app.user_data.config.ui.icons.hash(&mut hasher);
 
-    for tab in &app.tabs {
+    for tab in &app.workspace.tabs {
         tab.name.hash(&mut hasher);
         tab.active_pane_idx.hash(&mut hasher);
         tab.panes.len().hash(&mut hasher);
@@ -46,7 +43,8 @@ fn compute_tab_bar_key(app: &App, area_width: u16) -> u64 {
                     0u8.hash(&mut hasher);
                     title.hash(&mut hasher);
                     parsed_doc.spoken_audio.is_some().hash(&mut hasher);
-                    app.saved_lists
+                    app.user_data
+                        .saved_lists
                         .is_article_saved_anywhere(title)
                         .hash(&mut hasher);
                 }
@@ -115,12 +113,12 @@ fn build_tab_bar_line(
 }
 
 pub fn compute_tab_titles(app: &App) -> Vec<String> {
-    app.tabs
+    app.workspace.tabs
         .iter()
         .enumerate()
         .map(|(i, tab)| {
             let loading_pane = tab.panes.iter().find(|p| p.is_loading);
-            let show_icons = app.config.ui.icons;
+            let show_icons = app.user_data.config.ui.icons;
             let (icon, raw_title, is_saved) = if let Some(pane) = loading_pane {
                 let title = pane
                     .loading_title
@@ -133,7 +131,7 @@ pub fn compute_tab_titles(app: &App) -> Vec<String> {
                     PaneContent::ArticleText {
                         title, parsed_doc, ..
                     } => {
-                        let saved = app.saved_lists.is_article_saved_anywhere(title);
+                        let saved = app.user_data.saved_lists.is_article_saved_anywhere(title);
                         let has_audio = parsed_doc.spoken_audio.is_some();
                         let icon_str = if show_icons {
                             if has_audio {
@@ -183,12 +181,12 @@ pub fn compute_tab_titles(app: &App) -> Vec<String> {
             };
 
             if icon.is_empty() {
-                if app.tabs.len() > 1 {
+                if app.workspace.tabs.len() > 1 {
                     format!("{} {}{}", i + 1, raw_title, star)
                 } else {
                     format!("{}{}", raw_title, star)
                 }
-            } else if app.tabs.len() > 1 {
+            } else if app.workspace.tabs.len() > 1 {
                 format!("{} {} {}{}", icon, i + 1, raw_title, star)
             } else {
                 format!("{} {}{}", icon, raw_title, star)
@@ -243,34 +241,36 @@ pub fn compute_visible_range(
     (start_idx, end_idx)
 }
 
-pub fn get_tab_at_col(app: &App, area_width: u16, target_col: u16) -> Option<usize> {
-    if app.tabs.is_empty() {
+fn ensure_tab_bar_cache(app: &mut App, area_width: u16) -> &TabBarCache {
+    let key = compute_tab_bar_key(app, area_width);
+    let needs_update = app
+        .workspace
+        .tab_bar_cache
+        .as_ref()
+        .map(|c| c.key != key)
+        .unwrap_or(true);
+    if needs_update {
+        let tab_titles = compute_tab_titles(app);
+        let active_idx = app.workspace.active_tab_idx.min(tab_titles.len().saturating_sub(1));
+        let (new_line, visible_range) = build_tab_bar_line(&tab_titles, active_idx, area_width);
+        app.workspace.tab_bar_cache = Some(TabBarCache {
+            key,
+            rendered_line: new_line,
+            tab_titles,
+            visible_range,
+        });
+    }
+    app.workspace.tab_bar_cache.as_ref().unwrap()
+}
+
+pub fn get_tab_at_col(app: &mut App, area_width: u16, target_col: u16) -> Option<usize> {
+    if app.workspace.tabs.is_empty() {
         return None;
     }
 
-    let key = compute_tab_bar_key(app, area_width);
-    let mut cache_guard = TAB_BAR_CACHE.lock().unwrap();
-    let (tab_titles, start_idx, end_idx) =
-        if let Some(cache) = cache_guard.as_ref().filter(|c| c.key == key) {
-            (
-                cache.tab_titles.clone(),
-                cache.visible_range.0,
-                cache.visible_range.1,
-            )
-        } else {
-            let titles = compute_tab_titles(app);
-            let active_idx = app.active_tab_idx.min(titles.len().saturating_sub(1));
-            let (line, (s, e)) = build_tab_bar_line(&titles, active_idx, area_width);
-            *cache_guard = Some(TabBarCache {
-                key,
-                rendered_line: line,
-                tab_titles: titles.clone(),
-                visible_range: (s, e),
-            });
-            (titles, s, e)
-        };
-    drop(cache_guard);
-
+    let cache = ensure_tab_bar_cache(app, area_width);
+    let (start_idx, end_idx) = cache.visible_range;
+    let tab_titles = &cache.tab_titles;
     let total_tabs = tab_titles.len();
     let mut col: u16 = 1;
     if start_idx > 0 {
@@ -300,31 +300,12 @@ pub fn get_tab_at_col(app: &App, area_width: u16, target_col: u16) -> Option<usi
     None
 }
 
-pub fn render(f: &mut Frame, app: &App, area: Rect) {
-    if app.tabs.is_empty() {
+pub fn render(f: &mut Frame, app: &mut App, area: Rect) {
+    if app.workspace.tabs.is_empty() {
         return;
     }
 
-    let key = compute_tab_bar_key(app, area.width);
-    let mut cache_guard = TAB_BAR_CACHE.lock().unwrap();
-    let line = if let Some(cache) = cache_guard.as_ref().filter(|c| c.key == key) {
-        cache.rendered_line.clone()
-    } else {
-        let tab_titles = compute_tab_titles(app);
-        let active_idx = app.active_tab_idx.min(tab_titles.len().saturating_sub(1));
-        let (new_line, (start_idx, end_idx)) =
-            build_tab_bar_line(&tab_titles, active_idx, area.width);
-        let line_clone = new_line.clone();
-        *cache_guard = Some(TabBarCache {
-            key,
-            rendered_line: new_line,
-            tab_titles,
-            visible_range: (start_idx, end_idx),
-        });
-        line_clone
-    };
-    drop(cache_guard);
-
-    let tab_bar_paragraph = Paragraph::new(line);
+    let cache = ensure_tab_bar_cache(app, area.width);
+    let tab_bar_paragraph = Paragraph::new(cache.rendered_line.clone());
     f.render_widget(tab_bar_paragraph, area);
 }

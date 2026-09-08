@@ -21,6 +21,7 @@ pub fn render_most_read_modal(
     let total = entries.len();
     let inner_height = modal_area.height.saturating_sub(2) as usize;
     let scroll = app
+        .modals
         .daily_feed_modal
         .as_ref()
         .map(|m| m.scroll)

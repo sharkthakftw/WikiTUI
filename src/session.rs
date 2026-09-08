@@ -64,7 +64,7 @@ impl SessionState {
 
     pub fn save_app_session(app: &App) {
         let mut saved_tabs = Vec::new();
-        for tab in &app.tabs {
+        for tab in &app.workspace.tabs {
             let mut saved_panes = Vec::new();
             let mut has_content = false;
             for pane in &tab.panes {
@@ -115,7 +115,7 @@ impl SessionState {
         let active_tab_idx = if saved_tabs.is_empty() {
             0
         } else {
-            app.active_tab_idx.min(saved_tabs.len() - 1)
+            app.workspace.active_tab_idx.min(saved_tabs.len() - 1)
         };
 
         let session = SessionState {
@@ -129,12 +129,12 @@ impl SessionState {
 
     pub fn restore_to_app(self, app: &mut App) {
         if !self.tabs.is_empty() {
-            app.tabs.clear();
+            app.workspace.tabs.clear();
             for saved_tab in self.tabs {
                 let mut panes = Vec::new();
                 for saved_pane in saved_tab.panes {
-                    let pane_id = app.next_pane_id;
-                    app.next_pane_id += 1;
+                    let pane_id = app.workspace.next_pane_id;
+                    app.workspace.next_pane_id += 1;
                     let mut pane = Pane::new(pane_id);
                     pane.scroll_offset = saved_pane.scroll_offset;
                     pane.history_back = saved_pane.history_back;
@@ -147,8 +147,8 @@ impl SessionState {
                     panes.push(pane);
                 }
                 if panes.is_empty() {
-                    let pane_id = app.next_pane_id;
-                    app.next_pane_id += 1;
+                    let pane_id = app.workspace.next_pane_id;
+                    app.workspace.next_pane_id += 1;
                     panes.push(Pane::new(pane_id));
                 }
                 let active_idx = saved_tab.active_pane_idx.min(panes.len() - 1);
@@ -156,15 +156,15 @@ impl SessionState {
                     .title()
                     .or_else(|| panes[active_idx].loading_title.clone())
                     .unwrap_or_else(|| "home".to_string());
-                app.tabs.push(Tab {
+                app.workspace.tabs.push(Tab {
                     name: tab_title,
                     panes,
                     active_pane_idx: active_idx,
                     layout_root: saved_tab.layout_root,
                 });
             }
-            if !app.tabs.is_empty() {
-                app.active_tab_idx = self.active_tab_idx.min(app.tabs.len() - 1);
+            if !app.workspace.tabs.is_empty() {
+                app.workspace.active_tab_idx = self.active_tab_idx.min(app.workspace.tabs.len() - 1);
             }
         }
 

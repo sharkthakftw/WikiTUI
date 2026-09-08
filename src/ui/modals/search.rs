@@ -19,16 +19,16 @@ pub fn compute_search_modal_area(size: Rect) -> Rect {
 pub fn render_search_modal(f: &mut Frame, app: &App, size: Rect) {
     let area = compute_search_modal_area(size);
     let (icon, title, border_color) = if app.input_mode == crate::app::InputMode::RenameList {
-        let ic = if app.config.ui.icons { "★" } else { "" };
+        let ic = if app.user_data.config.ui.icons { "★" } else { "" };
         (ic, "rename list", theme::VIOLET)
     } else if app.input_mode == crate::app::InputMode::CreateNewList {
-        let ic = if app.config.ui.icons { "★" } else { "" };
+        let ic = if app.user_data.config.ui.icons { "★" } else { "" };
         (ic, "create new list", theme::VIOLET)
     } else if app.input_mode == crate::app::InputMode::SleepTimerPrompt {
-        let ic = if app.config.ui.icons { "󰔛" } else { "" };
+        let ic = if app.user_data.config.ui.icons { "󰔛" } else { "" };
         (ic, "sleep timer (minutes, or 'off')", theme::VIOLET)
     } else {
-        let ic = if app.config.ui.icons { "󰍉" } else { "" };
+        let ic = if app.user_data.config.ui.icons { "󰍉" } else { "" };
         (ic, "search wikipedia", theme::BEIGE)
     };
     let search_block = render_modal_frame_at(
@@ -37,13 +37,13 @@ pub fn render_search_modal(f: &mut Frame, app: &App, size: Rect) {
         icon,
         title,
         border_color,
-        app.config.ui.rounded_borders,
+        app.user_data.config.ui.rounded_borders,
     );
 
     let visible_width = (area.width as usize).saturating_sub(6);
-    let chars: Vec<char> = app.search_modal.input.chars().collect();
+    let chars: Vec<char> = app.modals.search_modal.input.chars().collect();
     let total_len = chars.len();
-    let cursor_pos = app.search_modal.cursor_pos.min(total_len);
+    let cursor_pos = app.modals.search_modal.cursor_pos.min(total_len);
 
     let mut scroll_offset = 0;
     if cursor_pos >= visible_width && visible_width > 0 {

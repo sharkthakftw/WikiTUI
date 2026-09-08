@@ -35,14 +35,14 @@ pub fn handle_mouse_event(app: &mut App, mouse: MouseEvent, term_width: u16, ter
             handle_middle_click(app, mouse.column, mouse.row, term_width, term_height);
         }
         MouseEventKind::Drag(MouseButton::Left) => {
-            if app.scroll_drag.is_some() {
+            if app.workspace.scroll_drag.is_some() {
                 handle_scrollbar_drag(app, mouse.row, term_width, term_height);
             } else {
                 handle_selection_drag(app, mouse.column, mouse.row, term_width, term_height);
             }
         }
         MouseEventKind::Up(MouseButton::Left) => {
-            app.scroll_drag = None;
+            app.workspace.scroll_drag = None;
             handle_selection_up(app);
         }
         MouseEventKind::Moved => {

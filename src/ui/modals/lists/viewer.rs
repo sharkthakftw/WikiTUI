@@ -35,10 +35,10 @@ pub fn get_saved_lists_viewer_item_at(
     let row_offset = (target_y - (area.y + 1)) as usize;
     let visible_rows = (area.height.saturating_sub(2)) as usize;
     if is_right {
-        let selected_list = app.saved_lists.lists.get(app.lists_modal.viewer_list_idx)?;
+        let selected_list = app.user_data.saved_lists.lists.get(app.modals.lists_modal.viewer_list_idx)?;
         let total = selected_list.articles.len();
         let scroll =
-            compute_list_viewer_scroll(app.lists_modal.viewer_article_idx, visible_rows, total);
+            compute_list_viewer_scroll(app.modals.lists_modal.viewer_article_idx, visible_rows, total);
         let idx = scroll + row_offset;
         if idx < total {
             Some(idx)
@@ -46,9 +46,9 @@ pub fn get_saved_lists_viewer_item_at(
             None
         }
     } else {
-        let total = app.saved_lists.lists.len();
+        let total = app.user_data.saved_lists.lists.len();
         let scroll =
-            compute_list_viewer_scroll(app.lists_modal.viewer_list_idx, visible_rows, total);
+            compute_list_viewer_scroll(app.modals.lists_modal.viewer_list_idx, visible_rows, total);
         let idx = scroll + row_offset;
         if idx < total {
             Some(idx)
@@ -59,18 +59,18 @@ pub fn get_saved_lists_viewer_item_at(
 }
 
 pub fn render_saved_lists_viewer_modal(f: &mut Frame, app: &App, size: Rect) {
-    let icon = if app.config.ui.icons { "★" } else { "" };
+    let icon = if app.user_data.config.ui.icons { "★" } else { "" };
     let (container_area, left_area, right_area) = compute_saved_lists_viewer_areas(size);
     f.render_widget(ratatui::widgets::Clear, container_area);
     let block = create_modal_block(
         icon,
         "saved lists & articles",
         theme::VIOLET,
-        app.config.ui.rounded_borders,
+        app.user_data.config.ui.rounded_borders,
     );
     f.render_widget(block, container_area);
 
-    let left_border_color = if !app.lists_modal.viewer_focus_right {
+    let left_border_color = if !app.modals.lists_modal.viewer_focus_right {
         theme::VIOLET
     } else {
         theme::GREY
@@ -79,19 +79,19 @@ pub fn render_saved_lists_viewer_modal(f: &mut Frame, app: &App, size: Rect) {
         "",
         "custom lists",
         left_border_color,
-        app.config.ui.rounded_borders,
+        app.user_data.config.ui.rounded_borders,
     );
 
     let mut list_lines = Vec::new();
-    if app.saved_lists.lists.is_empty() {
+    if app.user_data.saved_lists.lists.is_empty() {
         list_lines.push(Line::from(Span::styled(
             " no lists created yet.",
             Style::default().fg(theme::GREY).italic(),
         )));
     } else {
-        for (idx, list) in app.saved_lists.lists.iter().enumerate() {
-            let is_selected = idx == app.lists_modal.viewer_list_idx;
-            let is_active = !app.lists_modal.viewer_focus_right;
+        for (idx, list) in app.user_data.saved_lists.lists.iter().enumerate() {
+            let is_selected = idx == app.modals.lists_modal.viewer_list_idx;
+            let is_active = !app.modals.lists_modal.viewer_focus_right;
             let suffix = format!(" ({})", list.articles.len());
 
             list_lines.push(create_selectable_line(
@@ -109,17 +109,17 @@ pub fn render_saved_lists_viewer_modal(f: &mut Frame, app: &App, size: Rect) {
         left_area,
         left_block,
         list_lines,
-        app.lists_modal.viewer_list_idx,
-        app.saved_lists.lists.len(),
+        app.modals.lists_modal.viewer_list_idx,
+        app.user_data.saved_lists.lists.len(),
     );
 
-    let right_border_color = if app.lists_modal.viewer_focus_right {
+    let right_border_color = if app.modals.lists_modal.viewer_focus_right {
         theme::YELLOW
     } else {
         theme::GREY
     };
 
-    let selected_list = app.saved_lists.lists.get(app.lists_modal.viewer_list_idx);
+    let selected_list = app.user_data.saved_lists.lists.get(app.modals.lists_modal.viewer_list_idx);
     let right_title = selected_list
         .map(|l| format!("articles in '{}'", l.name))
         .unwrap_or_else(|| "articles".to_string());
@@ -128,13 +128,13 @@ pub fn render_saved_lists_viewer_modal(f: &mut Frame, app: &App, size: Rect) {
         "",
         &right_title,
         right_border_color,
-        app.config.ui.rounded_borders,
+        app.user_data.config.ui.rounded_borders,
     );
 
     fn article_has_spoken_audio(app: &App, title: &str) -> bool {
         title.starts_with("Spoken:")
         || app.audio_player.current_title.as_deref() == Some(title)
-        || app.tabs.iter().flat_map(|t| &t.panes).any(|p| {
+        || app.workspace.tabs.iter().flat_map(|t| &t.panes).any(|p| {
             matches!(&p.content, crate::app::PaneContent::ArticleText { title: t, parsed_doc, .. } if t.eq_ignore_ascii_case(title) && parsed_doc.spoken_audio.is_some())
         })
         || crate::api::article::get_cached_article(title, 24 * 365)
@@ -151,11 +151,11 @@ pub fn render_saved_lists_viewer_modal(f: &mut Frame, app: &App, size: Rect) {
             )));
         } else {
             for (idx, article) in list.articles.iter().enumerate() {
-                let is_selected = idx == app.lists_modal.viewer_article_idx;
-                let is_active = app.lists_modal.viewer_focus_right;
+                let is_selected = idx == app.modals.lists_modal.viewer_article_idx;
+                let is_active = app.modals.lists_modal.viewer_focus_right;
                 let has_audio = article_has_spoken_audio(app, article);
                 let suffix = if has_audio {
-                    if app.config.ui.icons {
+                    if app.user_data.config.ui.icons {
                         Some(" 󰎆")
                     } else {
                         Some(" ♪")
@@ -180,7 +180,7 @@ pub fn render_saved_lists_viewer_modal(f: &mut Frame, app: &App, size: Rect) {
         right_area,
         right_block,
         article_lines,
-        app.lists_modal.viewer_article_idx,
+        app.modals.lists_modal.viewer_article_idx,
         right_total,
     );
 }

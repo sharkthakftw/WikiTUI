@@ -89,7 +89,7 @@ pub struct Pane {
     pub toc_focused: bool,
     pub loaded_images: std::collections::HashMap<String, std::path::PathBuf>,
     pub halfblock_cache:
-        std::collections::HashMap<(String, usize, usize), Vec<ratatui::text::Line<'static>>>,
+        std::collections::HashMap<String, Vec<(usize, usize, Vec<ratatui::text::Line<'static>>)>>,
     pub pending_image_decodes: std::collections::HashSet<(String, usize, usize)>,
 
     pub history_back: Vec<String>,
@@ -102,6 +102,41 @@ pub struct Pane {
 }
 
 impl Pane {
+    pub fn get_halfblock(&self, url: &str, cols: usize, rows: usize) -> Option<&[ratatui::text::Line<'static>]> {
+        self.halfblock_cache
+            .get(url)?
+            .iter()
+            .find(|(c, r, _)| *c == cols && *r == rows)
+            .map(|(_, _, lines)| lines.as_slice())
+    }
+
+    pub fn contains_halfblock(&self, url: &str, cols: usize, rows: usize) -> bool {
+        self.halfblock_cache
+            .get(url)
+            .is_some_and(|entries| entries.iter().any(|(c, r, _)| *c == cols && *r == rows))
+    }
+
+    pub fn insert_halfblock(
+        &mut self,
+        url: String,
+        cols: usize,
+        rows: usize,
+        lines: Vec<ratatui::text::Line<'static>>,
+    ) {
+        let entries = self.halfblock_cache.entry(url).or_default();
+        if let Some(existing) = entries.iter_mut().find(|(c, r, _)| *c == cols && *r == rows) {
+            existing.2 = lines;
+        } else {
+            entries.push((cols, rows, lines));
+        }
+    }
+
+    pub fn is_pending_decode(&self, url: &str, cols: usize, rows: usize) -> bool {
+        self.pending_image_decodes
+            .iter()
+            .any(|(u, c, r)| *c == cols && *r == rows && u == url)
+    }
+
     pub fn new(id: usize) -> Self {
         Self {
             id,
@@ -202,6 +237,10 @@ impl Pane {
         if query.trim().is_empty() {
             self.search.selected_match_idx = None;
             return;
+        }
+
+        if let PaneContent::ArticleText { parsed_doc, .. } = &mut self.content {
+            parsed_doc.ensure_plain_text_lower();
         }
 
         if let PaneContent::ArticleText { parsed_doc, .. } = &self.content {

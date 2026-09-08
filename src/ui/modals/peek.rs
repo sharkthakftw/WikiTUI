@@ -9,7 +9,7 @@ use ratatui::{
 };
 
 pub fn render_link_peek(f: &mut Frame, app: &App, size: Rect) {
-    let Some(peek) = &app.link_peek else {
+    let Some(peek) = &app.modals.link_peek else {
         return;
     };
 
@@ -86,7 +86,7 @@ pub fn render_link_peek(f: &mut Frame, app: &App, size: Rect) {
         peek.title.clone()
     };
 
-    let border_type = theme::border_type(app.config.ui.rounded_borders);
+    let border_type = theme::border_type(app.user_data.config.ui.rounded_borders);
     let block = Block::bordered()
         .border_type(border_type)
         .border_style(Style::default().fg(theme::PINK))

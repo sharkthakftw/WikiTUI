@@ -31,8 +31,14 @@ impl Default for LayoutNode {
 
 impl LayoutNode {
     pub fn compute_rects(&self, rect: Rect) -> Vec<(usize, Rect)> {
+        let mut rects = Vec::with_capacity(4);
+        self.compute_rects_into(rect, &mut rects);
+        rects
+    }
+
+    pub fn compute_rects_into(&self, rect: Rect, out: &mut Vec<(usize, Rect)>) {
         match self {
-            LayoutNode::Leaf(idx) => vec![(*idx, rect)],
+            LayoutNode::Leaf(idx) => out.push((*idx, rect)),
             LayoutNode::Split {
                 direction,
                 ratio,
@@ -48,9 +54,8 @@ impl LayoutNode {
                     .direction(dir)
                     .constraints([Constraint::Percentage(r), Constraint::Percentage(100 - r)])
                     .split(rect);
-                let mut rects = left.compute_rects(chunks[0]);
-                rects.extend(right.compute_rects(chunks[1]));
-                rects
+                left.compute_rects_into(chunks[0], out);
+                right.compute_rects_into(chunks[1], out);
             }
         }
     }

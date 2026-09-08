@@ -5,7 +5,7 @@ use crate::layout::SplitDirection;
 
 impl App {
     pub(crate) fn find_pane(&self, target_id: usize) -> Option<&Pane> {
-        for tab in &self.tabs {
+        for tab in &self.workspace.tabs {
             for pane in &tab.panes {
                 if pane.id == target_id {
                     return Some(pane);
@@ -16,7 +16,7 @@ impl App {
     }
 
     pub(crate) fn find_pane_mut(&mut self, target_id: usize) -> Option<&mut Pane> {
-        for tab in &mut self.tabs {
+        for tab in &mut self.workspace.tabs {
             for pane in &mut tab.panes {
                 if pane.id == target_id {
                     return Some(pane);
@@ -28,124 +28,106 @@ impl App {
 
     pub fn new_tab(&mut self) {
         let name = "new tab".to_string();
-        self.tabs.push(Tab::new(name, self.next_pane_id));
-        self.next_pane_id += 1;
-        self.prev_tab_idx = Some(self.active_tab_idx);
-        self.active_tab_idx = self.tabs.len() - 1;
+        self.workspace.tabs.push(Tab::new(name, self.workspace.next_pane_id));
+        self.workspace.next_pane_id += 1;
+        self.workspace.prev_tab_idx = Some(self.workspace.active_tab_idx);
+        self.workspace.active_tab_idx = self.workspace.tabs.len() - 1;
     }
 
     pub fn next_tab(&mut self) {
-        if self.tabs.len() > 1 {
-            let next = (self.active_tab_idx + 1) % self.tabs.len();
+        if self.workspace.tabs.len() > 1 {
+            let next = (self.workspace.active_tab_idx + 1) % self.workspace.tabs.len();
             self.switch_to_tab(next);
         }
     }
 
     pub fn prev_tab(&mut self) {
-        if self.tabs.len() > 1 {
-            let prev = if self.active_tab_idx == 0 {
-                self.tabs.len() - 1
+        if self.workspace.tabs.len() > 1 {
+            let prev = if self.workspace.active_tab_idx == 0 {
+                self.workspace.tabs.len() - 1
             } else {
-                self.active_tab_idx - 1
+                self.workspace.active_tab_idx - 1
             };
             self.switch_to_tab(prev);
         }
     }
 
     pub fn switch_to_tab(&mut self, idx: usize) {
-        if idx < self.tabs.len() && idx != self.active_tab_idx {
-            self.prev_tab_idx = Some(self.active_tab_idx);
-            self.active_tab_idx = idx;
+        if idx < self.workspace.tabs.len() && idx != self.workspace.active_tab_idx {
+            self.workspace.prev_tab_idx = Some(self.workspace.active_tab_idx);
+            self.workspace.active_tab_idx = idx;
         }
     }
 
     pub fn toggle_alternate_tab(&mut self) {
-        if let Some(prev_idx) = self.prev_tab_idx {
-            if prev_idx < self.tabs.len() && prev_idx != self.active_tab_idx {
+        if let Some(prev_idx) = self.workspace.prev_tab_idx {
+            if prev_idx < self.workspace.tabs.len() && prev_idx != self.workspace.active_tab_idx {
                 self.switch_to_tab(prev_idx);
             }
         }
     }
 
+    fn record_closed_panes(&mut self, panes: impl IntoIterator<Item = Pane>) {
+        for pane in panes {
+            if let Some(title) = pane.title() {
+                self.workspace.closed_tabs_stack.push(crate::app::ClosedTabState {
+                    title,
+                    scroll_offset: pane.scroll_offset,
+                    history_back: pane.history_back,
+                    history_forward: pane.history_forward,
+                });
+            }
+        }
+    }
+
+    fn remove_tab_internal(&mut self, idx: usize) {
+        let removed_tab = self.workspace.tabs.remove(idx);
+        if let Some(prev) = self.workspace.prev_tab_idx {
+            if prev == idx {
+                self.workspace.prev_tab_idx = None;
+            } else if prev > idx {
+                self.workspace.prev_tab_idx = Some(prev - 1);
+            }
+        }
+        self.record_closed_panes(removed_tab.panes);
+        if self.workspace.active_tab_idx > idx {
+            self.workspace.active_tab_idx -= 1;
+        } else if self.workspace.active_tab_idx >= self.workspace.tabs.len() {
+            self.workspace.active_tab_idx = self.workspace.tabs.len().saturating_sub(1);
+        }
+    }
+
     pub fn close_tab(&mut self, idx: usize) {
-        if idx >= self.tabs.len() {
+        if idx >= self.workspace.tabs.len() {
             return;
         }
-        if idx == self.active_tab_idx {
+        if idx == self.workspace.active_tab_idx {
             self.close_current_tab();
-        } else if self.tabs.len() > 1 {
-            let removed_tab = self.tabs.remove(idx);
-            if let Some(prev) = self.prev_tab_idx {
-                if prev == idx {
-                    self.prev_tab_idx = None;
-                } else if prev > idx {
-                    self.prev_tab_idx = Some(prev - 1);
-                }
-            }
-            for pane in removed_tab.panes {
-                if let Some(title) = pane.title() {
-                    self.closed_tabs_stack.push(crate::app::ClosedTabState {
-                        title,
-                        scroll_offset: pane.scroll_offset,
-                        history_back: pane.history_back,
-                        history_forward: pane.history_forward,
-                    });
-                }
-            }
-            if self.active_tab_idx > idx {
-                self.active_tab_idx -= 1;
-            }
+        } else if self.workspace.tabs.len() > 1 {
+            self.remove_tab_internal(idx);
         }
     }
 
     pub fn close_current_tab(&mut self) {
         self.maybe_mark_article_read();
-        let closed_idx = self.active_tab_idx;
-        if self.tabs.len() > 1 {
-            let removed_tab = self.tabs.remove(closed_idx);
-            if let Some(prev) = self.prev_tab_idx {
-                if prev == closed_idx {
-                    self.prev_tab_idx = None;
-                } else if prev > closed_idx {
-                    self.prev_tab_idx = Some(prev - 1);
-                }
-            }
-            for pane in removed_tab.panes {
-                if let Some(title) = pane.title() {
-                    self.closed_tabs_stack.push(crate::app::ClosedTabState {
-                        title,
-                        scroll_offset: pane.scroll_offset,
-                        history_back: pane.history_back,
-                        history_forward: pane.history_forward,
-                    });
-                }
-            }
-            if self.active_tab_idx >= self.tabs.len() {
-                self.active_tab_idx = self.tabs.len().saturating_sub(1);
-            }
+        let closed_idx = self.workspace.active_tab_idx;
+        if self.workspace.tabs.len() > 1 {
+            self.remove_tab_internal(closed_idx);
         } else {
-            let old_tab = &self.tabs[0];
-            for pane in &old_tab.panes {
-                if let Some(title) = pane.title() {
-                    self.closed_tabs_stack.push(crate::app::ClosedTabState {
-                        title,
-                        scroll_offset: pane.scroll_offset,
-                        history_back: pane.history_back.clone(),
-                        history_forward: pane.history_forward.clone(),
-                    });
-                }
-            }
-            let new_pane_id = self.next_pane_id;
-            self.next_pane_id += 1;
-            self.tabs[0] = Tab::new("home".to_string(), new_pane_id);
-            self.active_tab_idx = 0;
+            let new_pane_id = self.workspace.next_pane_id;
+            self.workspace.next_pane_id += 1;
+            let old_tab =
+                std::mem::replace(&mut self.workspace.tabs[0], Tab::new("home".to_string(), new_pane_id));
+            self.record_closed_panes(old_tab.panes);
+            self.workspace.active_tab_idx = 0;
+            self.workspace.prev_tab_idx = None;
         }
     }
 
     pub fn split_active_pane(&mut self, direction: SplitDirection) {
         self.mark_active_article_read();
-        let new_pane_id = self.next_pane_id;
-        self.next_pane_id += 1;
+        let new_pane_id = self.workspace.next_pane_id;
+        self.workspace.next_pane_id += 1;
 
         let tab = self.active_tab_mut();
         let current_pane_idx = tab.active_pane_idx;
@@ -189,14 +171,14 @@ impl App {
         };
 
         if let Some(closed) = closed_state {
-            self.closed_tabs_stack.push(closed);
+            self.workspace.closed_tabs_stack.push(closed);
         }
     }
 
     pub fn reopen_last_closed(&mut self) {
-        if let Some(closed) = self.closed_tabs_stack.pop() {
-            let pane_id = self.next_pane_id;
-            self.next_pane_id += 1;
+        if let Some(closed) = self.workspace.closed_tabs_stack.pop() {
+            let pane_id = self.workspace.next_pane_id;
+            self.workspace.next_pane_id += 1;
 
             let mut pane = Pane::new(pane_id);
             pane.prepare_for_article_fetch(&closed.title);
@@ -213,17 +195,17 @@ impl App {
                 layout_root: crate::layout::LayoutNode::Leaf(0),
             };
 
-            let is_single_empty_home = self.tabs.len() == 1
-                && self.tabs[0].name == "home"
-                && self.tabs[0].panes.len() == 1
-                && self.tabs[0].panes[0].title().is_none();
+            let is_single_empty_home = self.workspace.tabs.len() == 1
+                && self.workspace.tabs[0].name == "home"
+                && self.workspace.tabs[0].panes.len() == 1
+                && self.workspace.tabs[0].panes[0].title().is_none();
 
             if is_single_empty_home {
-                self.tabs[0] = tab;
-                self.active_tab_idx = 0;
+                self.workspace.tabs[0] = tab;
+                self.workspace.active_tab_idx = 0;
             } else {
-                self.tabs.push(tab);
-                self.active_tab_idx = self.tabs.len() - 1;
+                self.workspace.tabs.push(tab);
+                self.workspace.active_tab_idx = self.workspace.tabs.len() - 1;
             }
         }
     }

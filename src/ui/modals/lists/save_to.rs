@@ -25,6 +25,7 @@ pub fn get_save_to_list_item_at(app: &App, area: Rect, target_y: u16) -> Option<
     }
     let inner_y = area.y + 1;
     let custom_lists_count = app
+        .user_data
         .saved_lists
         .lists
         .iter()
@@ -41,7 +42,7 @@ pub fn get_save_to_list_item_at(app: &App, area: Rect, target_y: u16) -> Option<
 }
 
 pub fn render_save_to_list_modal(f: &mut Frame, app: &App, size: Rect) {
-    let icon = if app.config.ui.icons { "★" } else { "" };
+    let icon = if app.user_data.config.ui.icons { "★" } else { "" };
     let area = compute_save_to_list_modal_area(size);
     let block = render_modal_frame_at(
         f,
@@ -49,14 +50,14 @@ pub fn render_save_to_list_modal(f: &mut Frame, app: &App, size: Rect) {
         icon,
         "save to list",
         theme::VIOLET,
-        app.config.ui.rounded_borders,
+        app.user_data.config.ui.rounded_borders,
     );
 
     let mut lines = vec![
         Line::from(vec![
             Span::styled(" article: ", Style::default().fg(theme::GREY)),
             Span::styled(
-                &app.lists_modal.target_title,
+                &app.modals.lists_modal.target_title,
                 Style::default().fg(theme::YELLOW).bold(),
             ),
         ]),
@@ -69,6 +70,7 @@ pub fn render_save_to_list_modal(f: &mut Frame, app: &App, size: Rect) {
     ];
 
     let custom_lists: Vec<_> = app
+        .user_data
         .saved_lists
         .lists
         .iter()
@@ -76,10 +78,11 @@ pub fn render_save_to_list_modal(f: &mut Frame, app: &App, size: Rect) {
         .collect();
     let list_count = custom_lists.len();
     for (idx, list) in custom_lists.iter().enumerate() {
-        let is_focused = idx == app.lists_modal.save_cursor_idx;
+        let is_focused = idx == app.modals.lists_modal.save_cursor_idx;
         let is_in_list = app
+            .user_data
             .saved_lists
-            .is_article_in_list(&list.id, &app.lists_modal.target_title);
+            .is_article_in_list(&list.id, &app.modals.lists_modal.target_title);
         let suffix = format!(" ({} articles)", list.articles.len());
 
         lines.push(create_checkbox_line(
@@ -91,7 +94,7 @@ pub fn render_save_to_list_modal(f: &mut Frame, app: &App, size: Rect) {
         ));
     }
 
-    let is_create_focused = app.lists_modal.save_cursor_idx == list_count;
+    let is_create_focused = app.modals.lists_modal.save_cursor_idx == list_count;
     let create_cursor = if is_create_focused { " ▶ " } else { "   " };
     let create_style = if is_create_focused {
         Style::default().fg(theme::YELLOW).bold()
