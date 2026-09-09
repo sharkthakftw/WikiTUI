@@ -19,6 +19,18 @@ fn percent_encode(s: &str) -> String {
     out
 }
 
+fn fetch_summary_endpoint(
+    agent: &ureq::Agent,
+    endpoint: &str,
+    fallback_title: &str,
+    timeout_secs: u64,
+) -> Result<(String, Option<String>, Option<String>), super::ApiError> {
+    let req = agent.get(endpoint);
+    let data: SummaryResponse = super::send_request_json(req, timeout_secs)?;
+    let display_title = data.title.unwrap_or_else(|| fallback_title.to_string());
+    Ok((display_title, data.description, data.extract))
+}
+
 pub fn fetch_summary(
     agent: &ureq::Agent,
     title: &str,
@@ -30,14 +42,13 @@ pub fn fetch_summary(
         "https://en.wikipedia.org/api/rest_v1/page/summary/{}",
         encoded_title
     );
-    let resp = agent
-        .get(&endpoint)
-        .timeout(std::time::Duration::from_secs(timeout_secs.max(1)))
-        .call()
-        .map_err(|e| super::ApiError::Network(e.to_string()))?;
-    let data: SummaryResponse = resp
-        .into_json()
-        .map_err(|e| super::ApiError::Parse(e.to_string()))?;
-    let display_title = data.title.unwrap_or_else(|| title.to_string());
-    Ok((display_title, data.description, data.extract))
+    fetch_summary_endpoint(agent, &endpoint, title, timeout_secs)
+}
+
+pub fn fetch_random_summary(
+    agent: &ureq::Agent,
+    timeout_secs: u64,
+) -> Result<(String, Option<String>, Option<String>), super::ApiError> {
+    let endpoint = "https://en.wikipedia.org/api/rest_v1/page/random/summary";
+    fetch_summary_endpoint(agent, endpoint, "Random Article", timeout_secs)
 }

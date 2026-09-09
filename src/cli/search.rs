@@ -1,5 +1,5 @@
 use crate::api::search::search_wikipedia;
-use crate::cli::output::{bold, cyan, dim, yellow};
+use crate::cli::output::{article_url, bold, cyan, dim, yellow};
 use serde::Serialize;
 
 #[derive(Debug, Clone)]
@@ -18,16 +18,14 @@ struct SearchJsonItem {
 }
 
 pub fn run_search(args: &SearchArgs) -> Result<(), Box<dyn std::error::Error>> {
-    let agent = ureq::Agent::new();
-    let timeout_secs = 10;
+    let (agent, timeout_secs) = super::client();
     let results = search_wikipedia(&agent, &args.query, args.limit, timeout_secs)?;
 
     if args.json {
         let json_items: Vec<SearchJsonItem> = results
             .into_iter()
             .map(|item| {
-                let clean_title = item.title.replace(' ', "_");
-                let url = format!("https://en.wikipedia.org/wiki/{}", clean_title);
+                let url = article_url(&item.title);
                 SearchJsonItem {
                     title: item.title,
                     description: item.snippet,

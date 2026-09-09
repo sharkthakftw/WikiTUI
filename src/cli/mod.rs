@@ -1,14 +1,26 @@
 pub mod completions;
 pub mod output;
+pub mod random;
 pub mod search;
 
+use random::RandomArgs;
 use search::SearchArgs;
 
 pub enum CliCommand {
     Search(SearchArgs),
+    Random(RandomArgs),
     Completions(String),
     Help,
     Version,
+}
+
+pub fn client() -> (ureq::Agent, u64) {
+    let config = crate::config::Config::load();
+    (crate::api::default_agent(), config.network.timeout)
+}
+
+fn has_flag(args: &[String], long: &str, short: &str) -> bool {
+    args.iter().any(|a| a == long || a == short)
 }
 
 pub fn parse_args(args: &[String]) -> Option<CliCommand> {
@@ -24,6 +36,10 @@ pub fn parse_args(args: &[String]) -> Option<CliCommand> {
         "completions" => {
             let shell = args.get(1).map(|s| s.as_str()).unwrap_or("fish");
             Some(CliCommand::Completions(shell.to_string()))
+        }
+        "random" => {
+            let json = has_flag(&args[1..], "--json", "-j");
+            Some(CliCommand::Random(RandomArgs { json }))
         }
         "search" => {
             let mut query_words = Vec::new();
@@ -67,6 +83,7 @@ pub fn parse_args(args: &[String]) -> Option<CliCommand> {
 pub fn run(cmd: CliCommand) -> Result<(), Box<dyn std::error::Error>> {
     match cmd {
         CliCommand::Search(args) => search::run_search(&args),
+        CliCommand::Random(args) => random::run_random(&args),
         CliCommand::Completions(shell) => completions::run_completions(&shell),
         CliCommand::Help => {
             print_help();
@@ -87,11 +104,15 @@ fn print_help() {
     println!();
     println!("COMMANDS:");
     println!("    search <query>      search wikipedia articles");
+    println!("    random              fetch and print a random article summary");
     println!("    completions <shell> generate shell completions (fish)");
     println!("    help                print help information");
     println!("    version             print version");
     println!();
     println!("SEARCH OPTIONS:");
     println!("    -l, --limit <n>     maximum number of results (default: 10)");
+    println!("    -j, --json          output results as json");
+    println!();
+    println!("RANDOM OPTIONS:");
     println!("    -j, --json          output results as json");
 }

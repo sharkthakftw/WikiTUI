@@ -173,6 +173,15 @@ wikid search rust --limit 5
 wikid search rust --json
 ```
 
+### random
+
+fetch and print a random article summary:
+
+```bash
+wikid random
+wikid random --json
+```
+
 ### completions
 
 generate and install shell completions:
