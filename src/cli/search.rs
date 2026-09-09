@@ -18,8 +18,8 @@ struct SearchJsonItem {
 }
 
 pub fn run_search(args: &SearchArgs) -> Result<(), Box<dyn std::error::Error>> {
-    let (agent, timeout_secs) = super::client();
-    let results = search_wikipedia(&agent, &args.query, args.limit, timeout_secs)?;
+    let (agent, config) = super::client();
+    let results = search_wikipedia(&agent, &args.query, args.limit, config.network.timeout)?;
 
     if args.json {
         let json_items: Vec<SearchJsonItem> = results

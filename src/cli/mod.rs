@@ -14,9 +14,9 @@ pub enum CliCommand {
     Version,
 }
 
-pub fn client() -> (ureq::Agent, u64) {
+pub fn client() -> (ureq::Agent, crate::config::Config) {
     let config = crate::config::Config::load();
-    (crate::api::default_agent(), config.network.timeout)
+    (crate::api::default_agent(), config)
 }
 
 fn has_flag(args: &[String], long: &str, short: &str) -> bool {
@@ -39,7 +39,8 @@ pub fn parse_args(args: &[String]) -> Option<CliCommand> {
         }
         "random" => {
             let json = has_flag(&args[1..], "--json", "-j");
-            Some(CliCommand::Random(RandomArgs { json }))
+            let full = has_flag(&args[1..], "--full", "-f");
+            Some(CliCommand::Random(RandomArgs { json, full }))
         }
         "search" => {
             let mut query_words = Vec::new();
@@ -114,5 +115,6 @@ fn print_help() {
     println!("    -j, --json          output results as json");
     println!();
     println!("RANDOM OPTIONS:");
+    println!("    -f, --full          fetch and print the full article");
     println!("    -j, --json          output results as json");
 }

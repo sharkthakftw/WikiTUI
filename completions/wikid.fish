@@ -9,6 +9,7 @@ complete -c wikid -n "__fish_use_subcommand" -a completions -d "generate shell c
 complete -c wikid -n "__fish_seen_subcommand_from search" -s l -l limit -d "maximum number of results" -r
 complete -c wikid -n "__fish_seen_subcommand_from search" -s j -l json -d "output results as json"
 
+complete -c wikid -n "__fish_seen_subcommand_from random" -s f -l full -d "fetch the whole article"
 complete -c wikid -n "__fish_seen_subcommand_from random" -s j -l json -d "output results as json"
 
 complete -c wikid -n "__fish_seen_subcommand_from completions" -a fish -d "fish shell"

@@ -175,11 +175,13 @@ wikid search rust --json
 
 ### random
 
-fetch and print a random article summary:
+fetch and print a random article summary or full article:
 
 ```bash
 wikid random
+wikid random --full
 wikid random --json
+wikid random --full --json
 ```
 
 ### completions
