@@ -1,20 +1,11 @@
 use crate::api::random::fetch_random_article;
 use crate::api::summary::fetch_random_summary;
-use crate::cli::output::{article_url, bold, dim, is_stdout_terminal, italic, render_line};
-use serde::Serialize;
+use crate::cli::output::{bold, is_stdout_terminal, print_summary, render_line};
 
 #[derive(Debug, Clone)]
 pub struct RandomArgs {
     pub json: bool,
     pub full: bool,
-}
-
-#[derive(Serialize)]
-struct RandomJsonOutput {
-    title: String,
-    description: Option<String>,
-    extract: Option<String>,
-    url: String,
 }
 
 pub fn run_random(args: &RandomArgs) -> Result<(), Box<dyn std::error::Error>> {
@@ -60,15 +51,7 @@ pub fn run_random(args: &RandomArgs) -> Result<(), Box<dyn std::error::Error>> {
                 })
                 .collect::<Vec<_>>()
                 .join("\n");
-            let url = article_url(&title);
-            let out = RandomJsonOutput {
-                title,
-                description: None,
-                extract: Some(full_text),
-                url,
-            };
-            println!("{}", serde_json::to_string_pretty(&out)?);
-            return Ok(());
+            return print_summary(&title, None, Some(&full_text), true);
         }
 
         println!("{}", bold(&title));
@@ -80,31 +63,5 @@ pub fn run_random(args: &RandomArgs) -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let (title, description, extract) = fetch_random_summary(&agent, timeout_secs)?;
-
-    if args.json {
-        let url = article_url(&title);
-        let out = RandomJsonOutput {
-            title,
-            description,
-            extract,
-            url,
-        };
-        println!("{}", serde_json::to_string_pretty(&out)?);
-        return Ok(());
-    }
-
-    println!("{}", bold(&title));
-    if let Some(desc) = &description {
-        if !desc.trim().is_empty() {
-            println!("{}", italic(&dim(desc.trim())));
-        }
-    }
-    if let Some(ext) = &extract {
-        if !ext.trim().is_empty() {
-            println!();
-            println!("{}", ext.trim());
-        }
-    }
-
-    Ok(())
+    print_summary(&title, description.as_deref(), extract.as_deref(), args.json)
 }
