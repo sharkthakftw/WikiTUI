@@ -52,3 +52,68 @@ pub fn fetch_category_members(
 
     Ok(articles)
 }
+
+#[derive(Deserialize)]
+struct ArticleCategoryItem {
+    title: String,
+}
+
+#[derive(Deserialize)]
+struct ArticlePageItem {
+    title: Option<String>,
+    missing: Option<String>,
+    categories: Option<Vec<ArticleCategoryItem>>,
+}
+
+#[derive(Deserialize)]
+struct ArticleCategoriesQuery {
+    pages: Option<std::collections::HashMap<String, ArticlePageItem>>,
+}
+
+#[derive(Deserialize)]
+struct ArticleCategoriesResponse {
+    query: Option<ArticleCategoriesQuery>,
+}
+
+pub fn fetch_article_categories(
+    agent: &ureq::Agent,
+    title: &str,
+    timeout_secs: u64,
+) -> Result<(String, Vec<String>), super::ApiError> {
+    let url = "https://en.wikipedia.org/w/api.php";
+    let req = agent
+        .get(url)
+        .query("action", "query")
+        .query("prop", "categories")
+        .query("clshow", "!hidden")
+        .query("titles", title)
+        .query("cllimit", "500")
+        .query("format", "json");
+
+    let resp: ArticleCategoriesResponse = super::send_request_json(req, timeout_secs)?;
+
+    let page = resp
+        .query
+        .and_then(|q| q.pages)
+        .and_then(|mut p| p.drain().next().map(|(_, v)| v))
+        .ok_or_else(|| super::ApiError::NotFound(format!("article {:?} not found", title)))?;
+
+    if page.missing.is_some() {
+        return Err(super::ApiError::NotFound(format!("article {:?} not found", title)));
+    }
+
+    let display_title = page.title.unwrap_or_else(|| title.to_string());
+    let categories = page
+        .categories
+        .unwrap_or_default()
+        .into_iter()
+        .map(|c| {
+            c.title
+                .strip_prefix("Category:")
+                .unwrap_or(&c.title)
+                .to_string()
+        })
+        .collect();
+
+    Ok((display_title, categories))
+}

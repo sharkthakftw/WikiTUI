@@ -1,9 +1,11 @@
+pub mod category;
 pub mod completions;
 pub mod output;
 pub mod random;
 pub mod search;
 pub mod summary;
 
+use category::CategoryArgs;
 use random::RandomArgs;
 use search::SearchArgs;
 use summary::SummaryArgs;
@@ -12,6 +14,7 @@ pub enum CliCommand {
     Search(SearchArgs),
     Random(RandomArgs),
     Summary(SummaryArgs),
+    Category(CategoryArgs),
     Completions(String),
     Help,
     Version,
@@ -70,6 +73,31 @@ pub fn parse_args(args: &[String]) -> Option<CliCommand> {
                 json,
             }))
         }
+        "category" => {
+            let mut title_words = Vec::new();
+            let mut json = false;
+            let mut i = 1;
+            while i < args.len() {
+                match args[i].as_str() {
+                    "--json" | "-j" => {
+                        json = true;
+                    }
+                    other => {
+                        title_words.push(other.to_string());
+                    }
+                }
+                i += 1;
+            }
+            if title_words.is_empty() {
+                eprintln!("Error: 'category' requires an article title");
+                eprintln!("Usage: wikid category [OPTIONS] <title>");
+                std::process::exit(1);
+            }
+            Some(CliCommand::Category(CategoryArgs {
+                title: title_words.join(" "),
+                json,
+            }))
+        }
         "search" => {
             let mut query_words = Vec::new();
             let mut limit = 10usize;
@@ -114,6 +142,7 @@ pub fn run(cmd: CliCommand) -> Result<(), Box<dyn std::error::Error>> {
         CliCommand::Search(args) => search::run_search(&args),
         CliCommand::Random(args) => random::run_random(&args),
         CliCommand::Summary(args) => summary::run_summary(&args),
+        CliCommand::Category(args) => category::run_category(&args),
         CliCommand::Completions(shell) => completions::run_completions(&shell),
         CliCommand::Help => {
             print_help();
@@ -135,6 +164,7 @@ fn print_help() {
     println!("COMMANDS:");
     println!("    search <query>      search wikipedia articles");
     println!("    summary <title>     fetch and print an article summary");
+    println!("    category <title>    fetch article categories");
     println!("    random              fetch and print a random article summary");
     println!("    completions <shell> generate shell completions (fish)");
     println!("    help                print help information");
@@ -145,6 +175,9 @@ fn print_help() {
     println!("    -j, --json          output results as json");
     println!();
     println!("SUMMARY OPTIONS:");
+    println!("    -j, --json          output results as json");
+    println!();
+    println!("CATEGORY OPTIONS:");
     println!("    -j, --json          output results as json");
     println!();
     println!("RANDOM OPTIONS:");
