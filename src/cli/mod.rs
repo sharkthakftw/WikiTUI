@@ -37,8 +37,8 @@ pub fn parse_args(args: &[String]) -> Option<CliCommand> {
     let first = args[0].as_str();
 
     match first {
-        "help" => Some(CliCommand::Help),
-        "version" => Some(CliCommand::Version),
+        "help" | "--help" | "-h" => Some(CliCommand::Help),
+        "version" | "--version" | "-v" => Some(CliCommand::Version),
         "completions" => {
             let shell = args.get(1).map(|s| s.as_str()).unwrap_or("fish");
             Some(CliCommand::Completions(shell.to_string()))
@@ -159,7 +159,13 @@ fn print_help() {
     println!("wikid - a feature-rich terminal wikipedia client");
     println!();
     println!("USAGE:");
-    println!("    wikid [COMMAND] [OPTIONS] [ARTICLE]");
+    println!("    wikid [OPTIONS]");
+    println!("    wikid [COMMAND] [OPTIONS]");
+    println!();
+    println!("OPTIONS:");
+    println!("    -r, --random        open the tui with a random article");
+    println!("    -h, --help          print help information");
+    println!("    -v, --version       print version");
     println!();
     println!("COMMANDS:");
     println!("    search <query>      search wikipedia articles");

@@ -36,6 +36,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         return wikid::cli::run(cmd);
     }
 
+    let open_random = args.iter().any(|a| a == "-r" || a == "--random");
+
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     let _ = execute!(
@@ -61,6 +63,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     });
 
     let mut app = App::new(cmd_tx.clone());
+    if open_random {
+        app.fetch_random_article();
+    }
     if app.user_data.config.input.mouse_support {
         let _ = execute!(io::stdout(), EnableMouseCapture);
     }

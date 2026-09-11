@@ -1,5 +1,9 @@
 complete -c wikid -f
 
+complete -c wikid -s r -l random -d "open the tui with a random article"
+complete -c wikid -s h -l help -d "print help information"
+complete -c wikid -s v -l version -d "print version"
+
 complete -c wikid -n "__fish_use_subcommand" -a search -d "search wikipedia articles"
 complete -c wikid -n "__fish_use_subcommand" -a summary -d "fetch and print an article summary"
 complete -c wikid -n "__fish_use_subcommand" -a category -d "fetch article categories"

@@ -167,6 +167,7 @@ wikid can also be run headlessly from the command line without opening the tui:
 
 | command | action |
 | :--- | :--- |
+| `wikid -r` | open the tui with a random article (`-r, --random`) |
 | `wikid search <query>` | search wikipedia articles (`-l, --limit`, `-j, --json`) |
 | `wikid summary <title>` | fetch and print article summary (`-j, --json`) |
 | `wikid category <title>` | fetch article categories (`-j, --json`) |
