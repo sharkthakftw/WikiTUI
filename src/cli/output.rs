@@ -36,6 +36,48 @@ pub fn article_url(title: &str) -> String {
     format!("https://en.wikipedia.org/wiki/{}", title.replace(' ', "_"))
 }
 
+#[derive(serde::Serialize)]
+pub struct ArticleSummaryJson {
+    pub title: String,
+    pub description: Option<String>,
+    pub extract: Option<String>,
+    pub url: String,
+}
+
+pub fn print_summary(
+    title: &str,
+    description: Option<&str>,
+    extract: Option<&str>,
+    json: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
+    if json {
+        let url = article_url(title);
+        let out = ArticleSummaryJson {
+            title: title.to_string(),
+            description: description.map(|s| s.to_string()),
+            extract: extract.map(|s| s.to_string()),
+            url,
+        };
+        println!("{}", serde_json::to_string_pretty(&out)?);
+        return Ok(());
+    }
+
+    println!("{}", bold(title));
+    if let Some(desc) = description {
+        if !desc.trim().is_empty() {
+            println!("{}", italic(&dim(desc.trim())));
+        }
+    }
+    if let Some(ext) = extract {
+        if !ext.trim().is_empty() {
+            println!();
+            println!("{}", ext.trim());
+        }
+    }
+
+    Ok(())
+}
+
 pub fn render_line(line: &ratatui::text::Line) -> String {
     if is_stdout_terminal() {
         let mut out = String::new();
