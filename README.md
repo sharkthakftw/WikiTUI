@@ -165,32 +165,14 @@ scroll_speed = 3 # number of lines to scroll per mouse wheel tick (1-20)
 
 wikid can also be run headlessly from the command line without opening the tui:
 
-### search
-
-```bash
-wikid search "quantum mechanics"
-wikid search rust --limit 5
-wikid search rust --json
-```
-
-### random
-
-fetch and print a random article summary or full article:
-
-```bash
-wikid random
-wikid random --full
-wikid random --json
-wikid random --full --json
-```
-
-### completions
-
-generate and install shell completions:
-
-```fish
-wikid completions fish > ~/.config/fish/completions/wikid.fish
-```
+| command | action |
+| :--- | :--- |
+| `wikid search <query>` | search wikipedia articles (`-l, --limit`, `-j, --json`) |
+| `wikid summary <title>` | fetch and print article summary (`-j, --json`) |
+| `wikid random` | fetch and print random article summary (`-f, --full`, `-j, --json`) |
+| `wikid completions <shell>` | generate shell completions (`fish`) |
+| `wikid help` | print help information |
+| `wikid version` | print version |
 
 ## acknowledgements
 
