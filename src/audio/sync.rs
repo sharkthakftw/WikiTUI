@@ -17,9 +17,9 @@ pub fn spawn_playhead_monitor<R: Read + Send + 'static>(mut reader: R) -> Receiv
                 if !buf.is_empty() {
                     let line = String::from_utf8_lossy(&buf);
                     let trimmed = line.trim();
-                    if trimmed.contains("aq=") || trimmed.contains("fd=") {
-                        if let Some(first) = trimmed.split_whitespace().next() {
-                            if let Ok(sec) = first.parse::<f64>() {
+                    if (trimmed.contains("aq=") || trimmed.contains("fd="))
+                        && let Some(first) = trimmed.split_whitespace().next()
+                            && let Ok(sec) = first.parse::<f64>() {
                                 if sec.is_finite() && sec >= 0.0 {
                                     let _ = tx.send(PlayheadUpdate {
                                         is_buffering: false,
@@ -32,8 +32,6 @@ pub fn spawn_playhead_monitor<R: Read + Send + 'static>(mut reader: R) -> Receiv
                                     });
                                 }
                             }
-                        }
-                    }
                     buf.clear();
                 }
             } else {

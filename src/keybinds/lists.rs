@@ -151,8 +151,8 @@ pub fn handle_saved_lists_viewer_mode(app: &mut App, key: KeyEvent) {
             }
         }
         KeyCode::Enter => {
-            if app.modals.lists_modal.viewer_focus_right {
-                if let Some(title) = app
+            if app.modals.lists_modal.viewer_focus_right
+                && let Some(title) = app
                     .user_data
                     .saved_lists
                     .lists
@@ -169,11 +169,10 @@ pub fn handle_saved_lists_viewer_mode(app: &mut App, key: KeyEvent) {
                     }
                     app.open_article(&title);
                 }
-            }
         }
         KeyCode::Char('t') => {
-            if app.modals.lists_modal.viewer_focus_right {
-                if let Some(title) = app
+            if app.modals.lists_modal.viewer_focus_right
+                && let Some(title) = app
                     .user_data
                     .saved_lists
                     .lists
@@ -185,7 +184,6 @@ pub fn handle_saved_lists_viewer_mode(app: &mut App, key: KeyEvent) {
                     app.new_tab();
                     app.open_article(&title);
                 }
-            }
         }
         KeyCode::Char('d') | KeyCode::Delete => {
             if app.modals.lists_modal.viewer_focus_right {
@@ -194,51 +192,43 @@ pub fn handle_saved_lists_viewer_mode(app: &mut App, key: KeyEvent) {
                     .saved_lists
                     .lists
                     .get(app.modals.lists_modal.viewer_list_idx)
+                    && (!app.user_data.config.general.liked_readonly || list.id != "liked")
+                    && let Some(art) =
+                        list.articles.get(app.modals.lists_modal.viewer_article_idx)
                 {
-                    if !app.user_data.config.general.liked_readonly || list.id != "liked" {
-                        if let Some(art) =
-                            list.articles.get(app.modals.lists_modal.viewer_article_idx)
-                        {
-                            app.modals.confirm_action =
-                                Some(crate::app::ConfirmAction::DeleteArticle {
-                                    list_id: list.id.clone(),
-                                    title: art.clone(),
-                                });
-                            app.input_mode = InputMode::Confirm;
-                        }
-                    }
+                    app.modals.confirm_action =
+                        Some(crate::app::ConfirmAction::DeleteArticle {
+                            list_id: list.id.clone(),
+                            title: art.clone(),
+                        });
+                    app.input_mode = InputMode::Confirm;
                 }
             } else if let Some(list) = app
                 .user_data
                 .saved_lists
                 .lists
                 .get(app.modals.lists_modal.viewer_list_idx)
-            {
-                if list.id != "liked" {
+                && list.id != "liked" {
                     app.modals.confirm_action = Some(crate::app::ConfirmAction::DeleteList {
                         list_id: list.id.clone(),
                         title: list.name.clone(),
                     });
                     app.input_mode = InputMode::Confirm;
                 }
-            }
         }
         KeyCode::Char('r') => {
-            if !app.modals.lists_modal.viewer_focus_right {
-                if let Some(list) = app
+            if !app.modals.lists_modal.viewer_focus_right
+                && let Some(list) = app
                     .user_data
                     .saved_lists
                     .lists
                     .get(app.modals.lists_modal.viewer_list_idx)
-                {
-                    if list.id != "liked" {
+                    && list.id != "liked" {
                         app.modals.lists_modal.rename_list_id = list.id.clone();
                         app.modals.search_modal.input = list.name.clone();
                         app.modals.search_modal.cursor_pos = list.name.chars().count();
                         app.input_mode = InputMode::RenameList;
                     }
-                }
-            }
         }
         KeyCode::Char('n') => {
             app.modals.lists_modal.target_title.clear();

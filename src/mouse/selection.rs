@@ -60,14 +60,13 @@ pub fn handle_selection_down(
         {
             tab.active_pane_idx = pane_idx;
             let pane = &mut tab.panes[pane_idx];
-            if matches!(pane.content, PaneContent::ArticleText { .. }) {
-                if let Some(coord) = get_char_coord_in_article_pane(pane, rect, col, row) {
+            if matches!(pane.content, PaneContent::ArticleText { .. })
+                && let Some(coord) = get_char_coord_in_article_pane(pane, rect, col, row) {
                     pane.selection.text_selection = None;
                     pane.selection.selection_anchor = Some(coord);
                     pane.selection.is_mouse_selecting = true;
                     return true;
                 }
-            }
         }
     }
     false
@@ -90,17 +89,15 @@ pub fn handle_selection_drag(
 
     if let Some(&(_, rect)) = rects.iter().find(|(idx, _)| *idx == tab.active_pane_idx) {
         let pane = &mut tab.panes[tab.active_pane_idx];
-        if pane.selection.is_mouse_selecting {
-            if let Some(anchor) = pane.selection.selection_anchor {
-                if let Some(coord) = get_char_coord_in_article_pane(pane, rect, col, row) {
+        if pane.selection.is_mouse_selecting
+            && let Some(anchor) = pane.selection.selection_anchor
+                && let Some(coord) = get_char_coord_in_article_pane(pane, rect, col, row) {
                     pane.selection.text_selection = Some(TextSelection {
                         start: anchor,
                         end: coord,
                     });
                     return true;
                 }
-            }
-        }
     }
     false
 }
@@ -112,8 +109,8 @@ pub fn handle_selection_up(app: &mut App) {
         pane.selection.is_mouse_selecting = false;
         if let Some(selection) = pane.selection.text_selection {
             let (start, end) = selection.normalized();
-            if start != end {
-                if let PaneContent::ArticleText { parsed_doc, .. } = &pane.content {
+            if start != end
+                && let PaneContent::ArticleText { parsed_doc, .. } = &pane.content {
                     let text = extract_selected_text(parsed_doc, &selection);
                     if !text.trim().is_empty() {
                         let count = text.chars().count();
@@ -125,7 +122,6 @@ pub fn handle_selection_up(app: &mut App) {
                         }
                     }
                 }
-            }
         }
     }
 }

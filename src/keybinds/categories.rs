@@ -45,36 +45,33 @@ pub fn handle_categories_mode(app: &mut App, key: KeyEvent) {
         }
         KeyCode::Down | KeyCode::Char('j') if key.modifiers.is_empty() => {
             if app.modals.categories_modal.focus_right {
-                if let Some(ref cat) = current_category {
-                    if let Some(members) = app.modals.categories_modal.cached_members.get(cat) {
-                        if !members.is_empty() {
+                if let Some(ref cat) = current_category
+                    && let Some(members) = app.modals.categories_modal.cached_members.get(cat)
+                        && !members.is_empty() {
                             app.modals.categories_modal.article_cursor_idx =
                                 (app.modals.categories_modal.article_cursor_idx + 1)
                                     % members.len();
                         }
-                    }
-                }
             } else if categories_count > 0 {
                 app.modals.categories_modal.cursor_idx =
                     (app.modals.categories_modal.cursor_idx + 1) % categories_count;
                 app.modals.categories_modal.article_cursor_idx = 0;
                 let pane = app.active_pane();
-                if let PaneContent::ArticleText { parsed_doc, .. } = &pane.content {
-                    if let Some(cat) = parsed_doc
+                if let PaneContent::ArticleText { parsed_doc, .. } = &pane.content
+                    && let Some(cat) = parsed_doc
                         .categories
                         .get(app.modals.categories_modal.cursor_idx)
                     {
                         let cat = cat.clone();
                         app.fetch_category_members_if_needed(&cat);
                     }
-                }
             }
         }
         KeyCode::Up | KeyCode::Char('k') if key.modifiers.is_empty() => {
             if app.modals.categories_modal.focus_right {
-                if let Some(ref cat) = current_category {
-                    if let Some(members) = app.modals.categories_modal.cached_members.get(cat) {
-                        if !members.is_empty() {
+                if let Some(ref cat) = current_category
+                    && let Some(members) = app.modals.categories_modal.cached_members.get(cat)
+                        && !members.is_empty() {
                             if app.modals.categories_modal.article_cursor_idx == 0 {
                                 app.modals.categories_modal.article_cursor_idx =
                                     members.len().saturating_sub(1);
@@ -82,8 +79,6 @@ pub fn handle_categories_mode(app: &mut App, key: KeyEvent) {
                                 app.modals.categories_modal.article_cursor_idx -= 1;
                             }
                         }
-                    }
-                }
             } else if categories_count > 0 {
                 if app.modals.categories_modal.cursor_idx == 0 {
                     app.modals.categories_modal.cursor_idx = categories_count.saturating_sub(1);
@@ -92,15 +87,14 @@ pub fn handle_categories_mode(app: &mut App, key: KeyEvent) {
                 }
                 app.modals.categories_modal.article_cursor_idx = 0;
                 let pane = app.active_pane();
-                if let PaneContent::ArticleText { parsed_doc, .. } = &pane.content {
-                    if let Some(cat) = parsed_doc
+                if let PaneContent::ArticleText { parsed_doc, .. } = &pane.content
+                    && let Some(cat) = parsed_doc
                         .categories
                         .get(app.modals.categories_modal.cursor_idx)
                     {
                         let cat = cat.clone();
                         app.fetch_category_members_if_needed(&cat);
                     }
-                }
             }
         }
         KeyCode::Enter | KeyCode::Char('o') if key.modifiers.is_empty() => {
@@ -114,22 +108,20 @@ pub fn handle_categories_mode(app: &mut App, key: KeyEvent) {
             }
         }
         KeyCode::Char('t') if key.modifiers.is_empty() => {
-            if app.modals.categories_modal.focus_right {
-                if let Some(article_title) = current_article {
+            if app.modals.categories_modal.focus_right
+                && let Some(article_title) = current_article {
                     app.input_mode = InputMode::Normal;
                     app.new_tab();
                     app.open_article(&article_title);
                 }
-            }
         }
         KeyCode::Enter if key.modifiers.contains(KeyModifiers::ALT) => {
-            if app.modals.categories_modal.focus_right {
-                if let Some(article_title) = current_article {
+            if app.modals.categories_modal.focus_right
+                && let Some(article_title) = current_article {
                     app.input_mode = InputMode::Normal;
                     app.new_tab();
                     app.open_article(&article_title);
                 }
-            }
         }
         KeyCode::Char('y') => {
             let copy_url = if app.modals.categories_modal.focus_right {

@@ -262,11 +262,10 @@ impl StatusMessageState {
     }
 
     pub fn get(&self) -> Option<&str> {
-        if let Some((msg, time)) = &self.message {
-            if time.elapsed().as_secs_f32() < 3.0 {
+        if let Some((msg, time)) = &self.message
+            && time.elapsed().as_secs_f32() < 3.0 {
                 return Some(msg.as_str());
             }
-        }
         None
     }
 }

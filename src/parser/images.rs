@@ -69,8 +69,8 @@ pub(crate) fn render_image_node(
         doc.lines.push(line);
     }
 
-    if let Some(cap) = caption {
-        if !cap.trim().is_empty() {
+    if let Some(cap) = caption
+        && !cap.trim().is_empty() {
             doc.lines.push(Line::from(""));
             let cap_line = cap.trim().to_string();
             let mut line = Line::from(vec![Span::styled(
@@ -82,7 +82,6 @@ pub(crate) fn render_image_node(
             line.alignment = Some(ratatui::layout::Alignment::Center);
             doc.lines.push(line);
         }
-    }
     doc.lines.push(Line::from(""));
 
     doc.images.push(image_block);
@@ -122,11 +121,10 @@ fn find_first_img<'a>(tag: &'a HTMLTag<'a>, parser: &'a Parser<'a>) -> Option<&'
         return Some(tag);
     }
     for child_handle in tag.children().top().iter() {
-        if let Some(tl::Node::Tag(child_tag)) = child_handle.get(parser) {
-            if let Some(found) = find_first_img(child_tag, parser) {
+        if let Some(tl::Node::Tag(child_tag)) = child_handle.get(parser)
+            && let Some(found) = find_first_img(child_tag, parser) {
                 return Some(found);
             }
-        }
     }
     None
 }
@@ -140,11 +138,9 @@ fn extract_image_attributes(
         .get("class")
         .flatten()
         .map(|b| b.as_utf8_str())
-    {
-        if cls.contains("mwe-math") || cls.contains("math-fallback") || cls.contains("noviewer") {
+        && (cls.contains("mwe-math") || cls.contains("math-fallback") || cls.contains("noviewer")) {
             return (String::new(), None, None, None);
         }
-    }
 
     if let Some(img_tag) = find_first_img(tag, parser) {
         return parse_img_tag(img_tag);
@@ -159,11 +155,9 @@ fn parse_img_tag(tag: &HTMLTag) -> (String, Option<String>, Option<usize>, Optio
         .get("class")
         .flatten()
         .map(|b| b.as_utf8_str())
-    {
-        if cls.contains("mwe-math") || cls.contains("math-fallback") || cls.contains("noviewer") {
+        && (cls.contains("mwe-math") || cls.contains("math-fallback") || cls.contains("noviewer")) {
             return (String::new(), None, None, None);
         }
-    }
 
     let raw_src = tag
         .attributes()
@@ -211,11 +205,10 @@ fn parse_img_tag(tag: &HTMLTag) -> (String, Option<String>, Option<usize>, Optio
         .flatten()
         .and_then(|b| b.as_utf8_str().parse::<usize>().ok());
 
-    if let (Some(w), Some(h)) = (width, height) {
-        if w < 40 || h < 40 {
+    if let (Some(w), Some(h)) = (width, height)
+        && (w < 40 || h < 40) {
             return (String::new(), None, None, None);
         }
-    }
 
     (src, alt, width, height)
 }
@@ -250,8 +243,8 @@ fn calculate_terminal_dimensions(
     max_cols: usize,
     max_rows: usize,
 ) -> (usize, usize) {
-    if let (Some(w), Some(h)) = (w_px, h_px) {
-        if w > 0 && h > 0 {
+    if let (Some(w), Some(h)) = (w_px, h_px)
+        && w > 0 && h > 0 {
             let term_aspect = (w as f64) / (h as f64) * 2.0;
             let mut cols = (max_rows as f64 * term_aspect).round() as usize;
             cols = cols.clamp(10, max_cols);
@@ -259,6 +252,5 @@ fn calculate_terminal_dimensions(
             let rows = rows.clamp(3, max_rows);
             return (cols, rows);
         }
-    }
     (max_cols.min(40), max_rows.min(15))
 }

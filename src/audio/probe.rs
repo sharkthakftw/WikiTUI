@@ -27,16 +27,13 @@ pub fn probe_exact_duration(url: &str) -> Option<u64> {
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
         .output()
-    {
-        if output.status.success() {
+        && output.status.success() {
             let out_str = String::from_utf8_lossy(&output.stdout);
-            if let Ok(f) = out_str.trim().parse::<f64>() {
-                if f > 0.0 {
+            if let Ok(f) = out_str.trim().parse::<f64>()
+                && f > 0.0 {
                     return Some(f.round() as u64);
                 }
-            }
         }
-    }
 
     if let Some(file_name) = crate::audio::cache::extract_wikimedia_file_title(url) {
         let api_url = format!(
@@ -49,22 +46,19 @@ pub fn probe_exact_duration(url: &str) -> Option<u64> {
             .stdout(Stdio::piped())
             .stderr(Stdio::null())
             .output()
-        {
-            if output.status.success() {
+            && output.status.success() {
                 let body = String::from_utf8_lossy(&output.stdout);
                 if let Some(dur_idx) = body.find("\"duration\":") {
                     let rest = &body[dur_idx + 11..];
                     let end = rest
                         .find(|c: char| !c.is_ascii_digit() && c != '.')
                         .unwrap_or(rest.len());
-                    if let Ok(f) = rest[..end].trim().parse::<f64>() {
-                        if f > 0.0 {
+                    if let Ok(f) = rest[..end].trim().parse::<f64>()
+                        && f > 0.0 {
                             return Some(f.round() as u64);
                         }
-                    }
                 }
             }
-        }
     }
 
     None

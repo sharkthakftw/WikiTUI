@@ -119,8 +119,8 @@ pub fn render_image_modal(f: &mut Frame, app: &mut App, size: Rect) {
                     crop_top_lines: 0,
                     crop_bot_lines: 0,
                 });
-        } else if let Ok(bytes) = std::fs::read(&path) {
-            if let Some(hb_lines) = crate::graphics::halfblocks::render_halfblock_image_from_bytes(
+        } else if let Ok(bytes) = std::fs::read(&path)
+            && let Some(hb_lines) = crate::graphics::halfblocks::render_halfblock_image_from_bytes(
                 &bytes,
                 display_cols as usize,
                 display_rows as usize,
@@ -137,7 +137,6 @@ pub fn render_image_modal(f: &mut Frame, app: &mut App, size: Rect) {
                 let canvas_rect = Rect::new(inner.x, inner.y, inner.width, canvas_h);
                 f.render_widget(p, canvas_rect);
             }
-        }
     } else {
         app.send_fetch_image(modal.url.clone());
         let loading_lines = vec![
@@ -153,8 +152,8 @@ pub fn render_image_modal(f: &mut Frame, app: &mut App, size: Rect) {
         f.render_widget(p, canvas_rect);
     }
 
-    if has_caption && footer_h > 0 {
-        if let Some(caption) = &modal.caption {
+    if has_caption && footer_h > 0
+        && let Some(caption) = &modal.caption {
             let max_c = (inner.width as usize).saturating_sub(4);
             let c_display = if caption.chars().count() > max_c {
                 let s: String = caption.chars().take(max_c).collect();
@@ -179,5 +178,4 @@ pub fn render_image_modal(f: &mut Frame, app: &mut App, size: Rect) {
             let footer_p = Paragraph::new(footer_lines).style(Style::default().bg(theme::BG));
             f.render_widget(footer_p, footer_rect);
         }
-    }
 }

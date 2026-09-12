@@ -85,19 +85,18 @@ pub fn compute_row_heights(
     for r in 0..num_rows {
         let mut max_h = 1;
         for c in 0..num_cols {
-            if let CellEntry::Origin { rowspan, .. } = &grid.cells[r][c] {
-                if *rowspan == 1 {
+            if let CellEntry::Origin { rowspan, .. } = &grid.cells[r][c]
+                && *rowspan == 1 {
                     max_h = max_h.max(origin_lines[r * num_cols + c].len());
                 }
-            }
         }
         row_heights[r] = max_h;
     }
 
     for r in 0..num_rows {
         for c in 0..num_cols {
-            if let CellEntry::Origin { rowspan, .. } = &grid.cells[r][c] {
-                if *rowspan > 1 {
+            if let CellEntry::Origin { rowspan, .. } = &grid.cells[r][c]
+                && *rowspan > 1 {
                     let needed = origin_lines[r * num_cols + c].len();
                     let current_total: usize =
                         (0..*rowspan).filter_map(|dr| row_heights.get(r + dr)).sum();
@@ -106,7 +105,6 @@ pub fn compute_row_heights(
                         row_heights[end_row] += needed - current_total;
                     }
                 }
-            }
         }
     }
 

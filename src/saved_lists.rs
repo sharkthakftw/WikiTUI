@@ -136,14 +136,13 @@ impl SavedListsStore {
             return false;
         }
 
-        if let Some(list) = self.lists.iter_mut().find(|l| l.id == list_id) {
-            if let Some(idx) = list.articles.iter().position(|a| a == title_trimmed) {
+        if let Some(list) = self.lists.iter_mut().find(|l| l.id == list_id)
+            && let Some(idx) = list.articles.iter().position(|a| a == title_trimmed) {
                 list.articles.remove(idx);
                 self.save();
                 self.rebuild_cache();
                 return true;
             }
-        }
         false
     }
 
@@ -193,11 +192,10 @@ impl SavedListsStore {
                     break;
                 }
             }
-            if fits {
-                if let Ok(s) = std::str::from_utf8(&buf[..cursor]) {
+            if fits
+                && let Ok(s) = std::str::from_utf8(&buf[..cursor]) {
                     return self.cached_saved_set.contains(s);
                 }
-            }
         }
         self.cached_saved_set
             .contains(&title_trimmed.to_lowercase())

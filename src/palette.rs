@@ -180,12 +180,11 @@ pub fn filter_commands(query: &str) -> Vec<(&'static CommandDef, Vec<usize>)> {
             let mut match_indices = Vec::new();
             let mut q_chars = q.chars().peekable();
             for (idx, ch) in label.char_indices() {
-                if let Some(&qc) = q_chars.peek() {
-                    if ch == qc {
+                if let Some(&qc) = q_chars.peek()
+                    && ch == qc {
                         match_indices.push(idx);
                         q_chars.next();
                     }
-                }
             }
             if q_chars.peek().is_none() {
                 matches.push((cmd, match_indices, 1));

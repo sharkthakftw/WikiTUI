@@ -36,21 +36,19 @@ impl App {
                     .unwrap_or(true)
             });
 
-            if candidate_idx > 0 {
-                if let Some(prev_link) = parsed_doc.links.get(candidate_idx - 1) {
-                    if prev_link
+            if candidate_idx > 0
+                && let Some(prev_link) = parsed_doc.links.get(candidate_idx - 1)
+                    && prev_link
                         .span_indices
                         .last()
                         .is_some_and(|&(l, _)| l >= view_start)
                     {
                         candidate_idx -= 1;
                     }
-                }
-            }
 
             #[cfg(debug_assertions)]
-            if candidate_idx < parsed_doc.links.len() {
-                if let Some(&(first_line, _)) = parsed_doc.links[candidate_idx].span_indices.first()
+            if candidate_idx < parsed_doc.links.len()
+                && let Some(&(first_line, _)) = parsed_doc.links[candidate_idx].span_indices.first()
                 {
                     debug_assert!(
                         first_line >= view_start
@@ -60,7 +58,6 @@ impl App {
                                 .is_some_and(|&(l, _)| l >= view_start)
                     );
                 }
-            }
 
             if candidate_idx < parsed_doc.links.len() {
                 pane.selected_link_idx = Some(candidate_idx);

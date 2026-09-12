@@ -31,17 +31,13 @@ pub fn evict_expired_cache(lifetime_hours: u64) {
     if let Ok(entries) = fs::read_dir(&daily_feed_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.is_dir() {
-                if let Ok(metadata) = entry.metadata() {
-                    if let Ok(modified) = metadata.modified() {
-                        if let Ok(elapsed) = modified.elapsed() {
-                            if elapsed > max_age {
+            if path.is_dir()
+                && let Ok(metadata) = entry.metadata()
+                    && let Ok(modified) = metadata.modified()
+                        && let Ok(elapsed) = modified.elapsed()
+                            && elapsed > max_age {
                                 let _ = fs::remove_dir_all(&path);
                             }
-                        }
-                    }
-                }
-            }
         }
     }
 
@@ -61,17 +57,13 @@ where
     if let Ok(entries) = fs::read_dir(dir) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.is_file() && filter(&path) {
-                if let Ok(metadata) = entry.metadata() {
-                    if let Ok(modified) = metadata.modified() {
-                        if let Ok(elapsed) = modified.elapsed() {
-                            if elapsed > max_age {
+            if path.is_file() && filter(&path)
+                && let Ok(metadata) = entry.metadata()
+                    && let Ok(modified) = metadata.modified()
+                        && let Ok(elapsed) = modified.elapsed()
+                            && elapsed > max_age {
                                 let _ = fs::remove_file(&path);
                             }
-                        }
-                    }
-                }
-            }
         }
     }
 }

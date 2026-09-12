@@ -145,8 +145,8 @@ impl App {
                 | crate::app::InputMode::RenameList
                 | crate::app::InputMode::CreateNewList
                 | crate::app::InputMode::SleepTimerPrompt
-        ) {
-            if let Some((byte_idx, _)) = self
+        )
+            && let Some((byte_idx, _)) = self
                 .modals
                 .search_modal
                 .input
@@ -155,7 +155,6 @@ impl App {
             {
                 self.modals.search_modal.input.remove(byte_idx);
             }
-        }
     }
 
     pub fn move_search_cursor_left(&mut self) {
@@ -334,15 +333,14 @@ impl App {
         let Some(m) = pane.search.matches.get(match_idx) else {
             return;
         };
-        if let PaneContent::ArticleText { parsed_doc, .. } = &pane.content {
-            if let Some(link_idx) = parsed_doc.links.iter().position(|link| {
+        if let PaneContent::ArticleText { parsed_doc, .. } = &pane.content
+            && let Some(link_idx) = parsed_doc.links.iter().position(|link| {
                 link.span_indices
                     .iter()
                     .any(|&(l, s)| l == m.line_idx && s == m.span_idx)
             }) {
                 pane.selected_link_idx = Some(link_idx);
             }
-        }
     }
 
     pub fn update_local_search(&mut self, term_height: u16) {

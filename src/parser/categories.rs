@@ -12,7 +12,9 @@ pub fn is_category_links_tag(tag: &tl::HTMLTag, _parser: &tl::Parser) -> bool {
         return true;
     }
 
-    let class_match = tag
+    
+
+    tag
         .attributes()
         .get("class")
         .flatten()
@@ -20,9 +22,7 @@ pub fn is_category_links_tag(tag: &tl::HTMLTag, _parser: &tl::Parser) -> bool {
         .is_some_and(|cls| {
             cls.split_whitespace()
                 .any(|c| c == "catlinks" || c == "mw-normal-catlinks")
-        });
-
-    class_match
+        })
 }
 
 pub fn extract_categories_from_tag(
@@ -39,20 +39,18 @@ fn collect_categories_recursive(
     categories: &mut Vec<String>,
 ) {
     // Avoid hidden categories (maintenance tags)
-    if let Some(id) = tag.attributes().get("id").flatten() {
-        if id.as_utf8_str().to_lowercase() == "mw-hidden-catlinks" {
+    if let Some(id) = tag.attributes().get("id").flatten()
+        && id.as_utf8_str().to_lowercase() == "mw-hidden-catlinks" {
             return;
         }
-    }
-    if let Some(cls) = tag.attributes().get("class").flatten() {
-        if cls.as_utf8_str().contains("mw-hidden-catlinks") {
+    if let Some(cls) = tag.attributes().get("class").flatten()
+        && cls.as_utf8_str().contains("mw-hidden-catlinks") {
             return;
         }
-    }
 
     let name = tag.name().as_utf8_str();
-    if name == "a" {
-        if let Some(href_attr) = tag.attributes().get("href").flatten() {
+    if name == "a"
+        && let Some(href_attr) = tag.attributes().get("href").flatten() {
             let href = href_attr.as_utf8_str();
             if href.contains("/wiki/Category:") || href.starts_with("Category:") {
                 let binding = tag.inner_text(parser);
@@ -67,7 +65,6 @@ fn collect_categories_recursive(
                 }
             }
         }
-    }
 
     for child_handle in tag.children().top().iter() {
         if let Some(tl::Node::Tag(child_tag)) = child_handle.get(parser) {

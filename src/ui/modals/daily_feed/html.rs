@@ -272,11 +272,10 @@ pub fn parse_onthisday_event(
                 " treaty",
                 " expedition",
             ] {
-                if let Some(stripped) = base_title.strip_suffix(suffix) {
-                    if stripped.len() >= 3 {
+                if let Some(stripped) = base_title.strip_suffix(suffix)
+                    && stripped.len() >= 3 {
                         match_targets.push((stripped.to_string(), canonical.clone(), link_idx));
                     }
-                }
             }
         }
         if base_title != norm_display && !norm_display.is_empty() {
@@ -329,8 +328,8 @@ pub fn parse_onthisday_event(
         });
     }
 
-    if chunks.iter().all(|c| matches!(c.style, SpanStyle::Normal)) {
-        if let Some(first_page) = pages.first() {
+    if chunks.iter().all(|c| matches!(c.style, SpanStyle::Normal))
+        && let Some(first_page) = pages.first() {
             chunks = vec![StyledChunk {
                 text: clean_text,
                 style: SpanStyle::Link {
@@ -339,7 +338,6 @@ pub fn parse_onthisday_event(
                 },
             }];
         }
-    }
 
     (chunks, links)
 }

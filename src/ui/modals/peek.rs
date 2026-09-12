@@ -129,8 +129,8 @@ pub fn render_link_peek(f: &mut Frame, app: &App, size: Rect) {
             .alignment(Alignment::Center),
         );
     } else {
-        if let Some(desc) = &peek.description {
-            if !desc.trim().is_empty() {
+        if let Some(desc) = &peek.description
+            && !desc.trim().is_empty() {
                 let max_desc = inner.width as usize;
                 let desc_text = if desc.chars().count() > max_desc {
                     let d: String = desc.chars().take(max_desc.saturating_sub(1)).collect();
@@ -143,7 +143,6 @@ pub fn render_link_peek(f: &mut Frame, app: &App, size: Rect) {
                     Style::default().fg(theme::BEIGE).italic(),
                 )));
             }
-        }
 
         let max_extract_rows = (inner.height as usize).saturating_sub(lines.len());
         if max_extract_rows > 0 {

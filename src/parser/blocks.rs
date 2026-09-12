@@ -74,15 +74,14 @@ pub(crate) fn wrap_and_append_block(
         }
     }
 
-    if let Some(target) = active_link_target {
-        if !active_link_spans.is_empty() {
+    if let Some(target) = active_link_target
+        && !active_link_spans.is_empty() {
             doc.links.push(Link {
                 title: target,
                 text: active_link_text.trim().to_string(),
                 span_indices: active_link_spans,
             });
         }
-    }
 
     if !current_line_spans.is_empty() {
         doc.lines.push(Line::from(current_line_spans));

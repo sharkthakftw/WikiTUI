@@ -233,8 +233,8 @@ pub fn run_worker(cmd_rx: Receiver<NetworkCommand>, ev_tx: Sender<NetworkEvent>)
                     rows,
                     filter,
                 } => {
-                    if let Ok(bytes) = std::fs::read(&path) {
-                        if let Some(lines) =
+                    if let Ok(bytes) = std::fs::read(&path)
+                        && let Some(lines) =
                             crate::graphics::halfblocks::render_halfblock_image_from_bytes(
                                 &bytes, cols, rows, filter,
                             )
@@ -246,7 +246,6 @@ pub fn run_worker(cmd_rx: Receiver<NetworkCommand>, ev_tx: Sender<NetworkEvent>)
                                 lines,
                             });
                         }
-                    }
                 }
                 ImageTask::PredecodeKitty { path } => {
                     crate::graphics::kitty::predecode_kitty_image(&path);

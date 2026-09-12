@@ -73,11 +73,10 @@ fn handle_section_and_skip_tag<'a>(
     doc: &mut ParsedDocument,
 ) -> bool {
     if spoken::is_spoken_wikipedia_tag(tag, ctx.parser) {
-        if let Some(spoken_audio) = spoken::extract_spoken_audio(tag, ctx.parser) {
-            if doc.spoken_audio.is_none() {
+        if let Some(spoken_audio) = spoken::extract_spoken_audio(tag, ctx.parser)
+            && doc.spoken_audio.is_none() {
                 doc.spoken_audio = Some(spoken_audio);
             }
-        }
         return true;
     }
 
@@ -121,31 +120,27 @@ fn handle_section_and_skip_tag<'a>(
         return true;
     }
 
-    if !ctx.show_external_links {
-        if let Some(id_str) = id_attr {
-            if id_str.eq_ignore_ascii_case("external_links")
+    if !ctx.show_external_links
+        && let Some(id_str) = id_attr
+            && (id_str.eq_ignore_ascii_case("external_links")
                 || id_str.eq_ignore_ascii_case("external-links")
-                || id_str.eq_ignore_ascii_case("externallinks")
+                || id_str.eq_ignore_ascii_case("externallinks"))
             {
                 ctx.skipping_external_section = true;
                 return true;
             }
-        }
-    }
 
-    if !ctx.show_footnotes {
-        if let Some(id_str) = id_attr {
-            if is_references_id(id_str) {
+    if !ctx.show_footnotes
+        && let Some(id_str) = id_attr
+            && is_references_id(id_str) {
                 if !id_str.starts_with("cite_note") && !id_str.starts_with("cite_ref") {
                     ctx.skipping_references_section = true;
                 }
                 return true;
             }
-        }
-    }
 
-    if let Some(class_str) = class_attr {
-        if class_str.split_whitespace().any(|cls| {
+    if let Some(class_str) = class_attr
+        && class_str.split_whitespace().any(|cls| {
             matches!(
                 cls,
                 "sidebar"
@@ -178,22 +173,19 @@ fn handle_section_and_skip_tag<'a>(
         }) {
             return true;
         }
-    }
 
     if !ctx.show_images && tag.name().as_utf8_str() == "figcaption" {
         return true;
     }
 
-    if !ctx.show_footnotes {
-        if let Some(id_str) = id_attr {
-            if id_str.starts_with("cite_note")
+    if !ctx.show_footnotes
+        && let Some(id_str) = id_attr
+            && (id_str.starts_with("cite_note")
                 || id_str.starts_with("cite_ref")
-                || id_str == "mw-references-wrap"
+                || id_str == "mw-references-wrap")
             {
                 return true;
             }
-        }
-    }
 
     false
 }
@@ -205,8 +197,8 @@ fn handle_banner_tag<'a>(
     doc: &mut ParsedDocument,
     ctx: &ParserContext<'a>,
 ) -> bool {
-    if let Some(class_str) = class_attr {
-        if let Some(banner_type) = banners::classify_ambox_class(class_str) {
+    if let Some(class_str) = class_attr
+        && let Some(banner_type) = banners::classify_ambox_class(class_str) {
             banners::render_ambox_banner(
                 tag,
                 ctx.parser,
@@ -217,7 +209,6 @@ fn handle_banner_tag<'a>(
             );
             return true;
         }
-    }
     false
 }
 
@@ -229,8 +220,8 @@ fn handle_media_tag<'a>(
     doc: &mut ParsedDocument,
     ctx: &mut ParserContext<'a>,
 ) -> bool {
-    if let Some(class_str) = class_attr {
-        if class_str.split_whitespace().any(|cls| cls == "infobox") {
+    if let Some(class_str) = class_attr
+        && class_str.split_whitespace().any(|cls| cls == "infobox") {
             if ctx.show_images {
                 if !current_tokens.is_empty() {
                     wrap_and_append_block(current_tokens, doc, ctx.max_width);
@@ -240,7 +231,6 @@ fn handle_media_tag<'a>(
             }
             return true;
         }
-    }
 
     if tag_name == "figure"
         || tag_name == "figure-inline"
@@ -322,16 +312,16 @@ fn handle_table_or_code_tag<'a>(
         return true;
     }
 
-    if let Some(class_str) = class_attr {
-        if class_str.contains("mw-highlight") {
+    if let Some(class_str) = class_attr
+        && class_str.contains("mw-highlight") {
             if !current_tokens.is_empty() {
                 wrap_and_append_block(current_tokens, doc, ctx.max_width);
                 current_tokens.clear();
             }
             let lang = codeblocks::extract_language(tag);
             for child_handle in tag.children().top().iter() {
-                if let Some(tl::Node::Tag(pre_tag)) = child_handle.get(ctx.parser) {
-                    if pre_tag.name().as_utf8_str() == "pre" {
+                if let Some(tl::Node::Tag(pre_tag)) = child_handle.get(ctx.parser)
+                    && pre_tag.name().as_utf8_str() == "pre" {
                         codeblocks::render_code_block(
                             pre_tag,
                             ctx.parser,
@@ -342,10 +332,8 @@ fn handle_table_or_code_tag<'a>(
                         );
                         return true;
                     }
-                }
             }
         }
-    }
 
     false
 }
@@ -510,13 +498,12 @@ fn process_tag_node<'a>(
         current_tokens.clear();
     }
 
-    if let Some(ref id_str) = id_attr {
-        if id_str.starts_with("cite_note") || id_str.starts_with("cite_ref") {
+    if let Some(ref id_str) = id_attr
+        && (id_str.starts_with("cite_note") || id_str.starts_with("cite_ref")) {
             doc.reference_targets
                 .entry(id_str.clone())
                 .or_insert_with(|| doc.lines.len());
         }
-    }
 
     let (current_style, current_link) = handle_text_and_style_tag(
         tag,
@@ -568,11 +555,10 @@ fn process_tag_node<'a>(
         }
     }
 
-    if tag_name == "a" {
-        if let Some(ref target) = current_link {
+    if tag_name == "a"
+        && let Some(ref target) = current_link {
             current_tokens.extend(elements::handle_external_link_pill(target, &current_link));
         }
-    }
 
     if is_block_element && !current_tokens.is_empty() {
         wrap_and_append_block(current_tokens, doc, ctx.max_width);

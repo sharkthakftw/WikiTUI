@@ -109,12 +109,11 @@ pub fn parse_args(args: &[String]) -> Option<CliCommand> {
                         json = true;
                     }
                     "--limit" | "-l" => {
-                        if i + 1 < args.len() {
-                            if let Ok(l) = args[i + 1].parse::<usize>() {
+                        if i + 1 < args.len()
+                            && let Ok(l) = args[i + 1].parse::<usize>() {
                                 limit = l;
                                 i += 1;
                             }
-                        }
                     }
                     other => {
                         query_words.push(other.to_string());

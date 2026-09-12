@@ -2,11 +2,10 @@ use crate::parser::types::{AudioTrack, SpokenAudio};
 use crate::parser::utils::decode_html_entities;
 
 pub fn is_spoken_wikipedia_tag(tag: &tl::HTMLTag, _parser: &tl::Parser) -> bool {
-    if let Some(id_attr) = tag.attributes().get("id").flatten() {
-        if id_attr.as_utf8_str() == "spoken-wikipedia" {
+    if let Some(id_attr) = tag.attributes().get("id").flatten()
+        && id_attr.as_utf8_str() == "spoken-wikipedia" {
             return true;
         }
-    }
 
     if let Some(cls_attr) = tag.attributes().get("class").flatten() {
         let cls = cls_attr.as_utf8_str();
@@ -67,8 +66,8 @@ fn collect_audio_sources<'a>(
 ) {
     let name = tag.name().as_utf8_str();
 
-    if name == "source" || name == "audio" {
-        if let Some(src_attr) = tag.attributes().get("src").flatten() {
+    if (name == "source" || name == "audio")
+        && let Some(src_attr) = tag.attributes().get("src").flatten() {
             let src_bytes = src_attr.as_utf8_str();
             let src_raw = decode_html_entities(&src_bytes);
             let src = if src_raw.starts_with("//") {
@@ -87,7 +86,6 @@ fn collect_audio_sources<'a>(
                 tracks.push(AudioTrack { title, url: src });
             }
         }
-    }
 
     for child_handle in tag.children().top().iter() {
         if let Some(tl::Node::Tag(child_tag)) = child_handle.get(parser) {

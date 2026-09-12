@@ -49,8 +49,8 @@ pub fn search_wikipedia(
     let search_resp: WikiGenSearchResponse = super::send_request_json(req, timeout_secs)?;
 
     let mut items = Vec::new();
-    if let Some(q) = search_resp.query {
-        if let Some(pages) = q.pages {
+    if let Some(q) = search_resp.query
+        && let Some(pages) = q.pages {
             let mut page_list: Vec<_> = pages.into_values().collect();
             page_list.sort_by_key(|p| p.index.unwrap_or(9999));
             for item in page_list {
@@ -69,7 +69,6 @@ pub fn search_wikipedia(
                 });
             }
         }
-    }
 
     Ok(items)
 }

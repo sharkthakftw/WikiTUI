@@ -186,11 +186,10 @@ impl Config {
 
     pub fn load() -> Self {
         let path = Self::config_path();
-        if let Ok(content) = fs::read_to_string(&path) {
-            if let Ok(config) = toml::from_str::<Config>(&content) {
+        if let Ok(content) = fs::read_to_string(&path)
+            && let Ok(config) = toml::from_str::<Config>(&content) {
                 return config;
             }
-        }
         let config = Self::default();
         config.save();
         config
@@ -201,12 +200,11 @@ impl Config {
         if current_mtime.is_some() && current_mtime != *last_mtime {
             *last_mtime = current_mtime;
             let path = Self::config_path();
-            if let Ok(content) = fs::read_to_string(&path) {
-                if let Ok(new_config) = toml::from_str::<Config>(&content) {
+            if let Ok(content) = fs::read_to_string(&path)
+                && let Ok(new_config) = toml::from_str::<Config>(&content) {
                     *self = new_config;
                     return true;
                 }
-            }
         }
         false
     }

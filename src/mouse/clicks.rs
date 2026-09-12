@@ -57,8 +57,8 @@ pub fn handle_middle_click(app: &mut App, col: u16, row: u16, term_width: u16, t
         let zen_rect = crate::ui::compute_zen_area(Rect::new(0, 0, term_width, term_height));
         if rect_contains(zen_rect, col, row) {
             let pane = app.active_pane_mut();
-            if let PaneContent::ArticleText { parsed_doc, .. } = &pane.content {
-                if let Some(link_idx) = crate::ui::pane_view::get_link_at_coord(
+            if let PaneContent::ArticleText { parsed_doc, .. } = &pane.content
+                && let Some(link_idx) = crate::ui::pane_view::get_link_at_coord(
                     parsed_doc,
                     pane.scroll_offset,
                     zen_rect,
@@ -68,7 +68,6 @@ pub fn handle_middle_click(app: &mut App, col: u16, row: u16, term_width: u16, t
                     pane.selected_link_idx = Some(link_idx);
                     app.activate_selected_in_background_tab();
                 }
-            }
         }
         return;
     }
@@ -186,8 +185,8 @@ fn handle_modal_left_click(
                 return true;
             }
 
-            if modal.kind == crate::ui::modals::DailyFeedKind::OnThisDay {
-                if let Some(tab) =
+            if modal.kind == crate::ui::modals::DailyFeedKind::OnThisDay
+                && let Some(tab) =
                     crate::ui::modals::get_otd_tab_at(area, col, row, app.daily_feed.as_ref())
                 {
                     if modal.otd_tab != tab {
@@ -198,10 +197,9 @@ fn handle_modal_left_click(
                     }
                     return true;
                 }
-            }
 
-            if let Some(target) = crate::ui::modals::get_daily_feed_link_at(app, col, row, size) {
-                if !target.is_empty() {
+            if let Some(target) = crate::ui::modals::get_daily_feed_link_at(app, col, row, size)
+                && !target.is_empty() {
                     app.close_daily_feed_modal();
                     if alt {
                         app.new_tab();
@@ -209,7 +207,6 @@ fn handle_modal_left_click(
                     app.open_article(&target);
                     return true;
                 }
-            }
         }
         return true;
     }
@@ -346,12 +343,11 @@ fn handle_modal_left_click(
                     app.modals.categories_modal.cursor_idx = clicked_cat_idx;
                     app.modals.categories_modal.article_cursor_idx = 0;
                     let pane = app.active_pane();
-                    if let PaneContent::ArticleText { parsed_doc, .. } = &pane.content {
-                        if let Some(cat) = parsed_doc.categories.get(clicked_cat_idx) {
+                    if let PaneContent::ArticleText { parsed_doc, .. } = &pane.content
+                        && let Some(cat) = parsed_doc.categories.get(clicked_cat_idx) {
                             let cat = cat.clone();
                             app.fetch_category_members_if_needed(&cat);
                         }
-                    }
                 }
                 return true;
             }
@@ -514,14 +510,12 @@ fn handle_modal_left_click(
                     crate::ui::modals::lists::get_saved_lists_viewer_item_at(
                         app, true, right_area, row,
                     )
-                {
-                    if let Some(list) = app
+                    && let Some(list) = app
                         .user_data
                         .saved_lists
                         .lists
                         .get(app.modals.lists_modal.viewer_list_idx)
-                    {
-                        if clicked_art_idx < list.articles.len() {
+                        && clicked_art_idx < list.articles.len() {
                             app.modals.lists_modal.viewer_article_idx = clicked_art_idx;
                             let title = list.articles[clicked_art_idx].clone();
                             app.input_mode = InputMode::Normal;
@@ -530,8 +524,6 @@ fn handle_modal_left_click(
                             }
                             app.open_article(&title);
                         }
-                    }
-                }
                 return true;
             }
         } else {
@@ -707,12 +699,10 @@ pub fn handle_mouse_move(
         let size = Rect::new(0, 0, term_width, term_height);
         if let Some((item_idx, l_idx, _)) =
             crate::ui::modals::get_daily_feed_item_at(app, col, row, size)
-        {
-            if let Some(modal) = &mut app.modals.daily_feed_modal {
+            && let Some(modal) = &mut app.modals.daily_feed_modal {
                 modal.cursor_idx = item_idx;
                 modal.link_idx = l_idx;
             }
-        }
         return;
     }
 
@@ -726,8 +716,8 @@ pub fn handle_mouse_move(
         let zen_rect = crate::ui::compute_zen_area(Rect::new(0, 0, term_width, term_height));
         if rect_contains(zen_rect, col, row) {
             let pane = app.active_pane_mut();
-            if let PaneContent::ArticleText { parsed_doc, .. } = &pane.content {
-                if let Some(link_idx) = crate::ui::pane_view::get_link_at_coord(
+            if let PaneContent::ArticleText { parsed_doc, .. } = &pane.content
+                && let Some(link_idx) = crate::ui::pane_view::get_link_at_coord(
                     parsed_doc,
                     pane.scroll_offset,
                     zen_rect,
@@ -735,13 +725,11 @@ pub fn handle_mouse_move(
                     row,
                 ) {
                     pane.selected_link_idx = Some(link_idx);
-                    if let Some(link) = parsed_doc.links.get(link_idx) {
-                        if !link.is_citation() {
+                    if let Some(link) = parsed_doc.links.get(link_idx)
+                        && !link.is_citation() {
                             hovered_link = Some((link.title.clone(), link.text.clone()));
                         }
-                    }
                 }
-            }
         }
     } else if row >= 1 && row < term_height.saturating_sub(1) {
         let main_rect = Rect::new(0, 1, term_width, term_height.saturating_sub(2));
@@ -751,8 +739,8 @@ pub fn handle_mouse_move(
         for (pane_idx, rect) in rects {
             if rect_contains(rect, col, row) {
                 let pane = &mut tab.panes[pane_idx];
-                if let PaneContent::ArticleText { parsed_doc, .. } = &pane.content {
-                    if let Some(link_idx) = crate::ui::pane_view::get_link_at_coord(
+                if let PaneContent::ArticleText { parsed_doc, .. } = &pane.content
+                    && let Some(link_idx) = crate::ui::pane_view::get_link_at_coord(
                         parsed_doc,
                         pane.scroll_offset,
                         rect,
@@ -760,13 +748,11 @@ pub fn handle_mouse_move(
                         row,
                     ) {
                         pane.selected_link_idx = Some(link_idx);
-                        if let Some(link) = parsed_doc.links.get(link_idx) {
-                            if !link.is_citation() {
+                        if let Some(link) = parsed_doc.links.get(link_idx)
+                            && !link.is_citation() {
                                 hovered_link = Some((link.title.clone(), link.text.clone()));
                             }
-                        }
                     }
-                }
                 break;
             }
         }

@@ -63,17 +63,15 @@ pub fn print_summary(
     }
 
     println!("{}", bold(title));
-    if let Some(desc) = description {
-        if !desc.trim().is_empty() {
+    if let Some(desc) = description
+        && !desc.trim().is_empty() {
             println!("{}", italic(&dim(desc.trim())));
         }
-    }
-    if let Some(ext) = extract {
-        if !ext.trim().is_empty() {
+    if let Some(ext) = extract
+        && !ext.trim().is_empty() {
             println!();
             println!("{}", ext.trim());
         }
-    }
 
     Ok(())
 }

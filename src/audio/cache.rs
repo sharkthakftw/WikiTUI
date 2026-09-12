@@ -119,8 +119,8 @@ pub fn spawn_background_audio_download(url: &str) {
             " (https://github.com/sharkthakftw/wikid)"
         );
 
-        if let Ok(resp) = ureq::get(&url_str).set("User-Agent", USER_AGENT).call() {
-            if let Ok(mut file) = std::fs::File::create(&part_path) {
+        if let Ok(resp) = ureq::get(&url_str).set("User-Agent", USER_AGENT).call()
+            && let Ok(mut file) = std::fs::File::create(&part_path) {
                 let mut reader = resp.into_reader();
                 if std::io::copy(&mut reader, &mut file).is_ok() {
                     let _ = std::fs::rename(&part_path, &final_path);
@@ -128,6 +128,5 @@ pub fn spawn_background_audio_download(url: &str) {
                     let _ = std::fs::remove_file(&part_path);
                 }
             }
-        }
     });
 }

@@ -27,11 +27,10 @@ pub fn parse_table_into_grid<'a>(
                 "tr" => raw_tr_elements.push(child_tag),
                 "thead" | "tbody" | "tfoot" => {
                     for sub_handle in child_tag.children().top().iter() {
-                        if let Some(tl::Node::Tag(sub_tag)) = sub_handle.get(parser) {
-                            if sub_tag.name().as_utf8_str() == "tr" {
+                        if let Some(tl::Node::Tag(sub_tag)) = sub_handle.get(parser)
+                            && sub_tag.name().as_utf8_str() == "tr" {
                                 raw_tr_elements.push(sub_tag);
                             }
-                        }
                     }
                 }
                 _ => {}
@@ -183,11 +182,9 @@ fn collect_cell_tokens<'a>(
         .get("class")
         .flatten()
         .map(|b| b.as_utf8_str())
-    {
-        if !show_footnotes && cls.contains("reference") {
+        && !show_footnotes && cls.contains("reference") {
             return;
         }
-    }
 
     let mut current_style = style;
     let mut current_link = link;

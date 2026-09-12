@@ -179,8 +179,8 @@ pub fn build_audio_progress_bar(app: &App, available_width: usize) -> Vec<Span<'
         ));
     }
 
-    if show_sleep {
-        if let Some(sb) = sleep_badge {
+    if show_sleep
+        && let Some(sb) = sleep_badge {
             spans.push(Span::styled(
                 sb,
                 Style::default()
@@ -188,7 +188,6 @@ pub fn build_audio_progress_bar(app: &App, available_width: usize) -> Vec<Span<'
                     .add_modifier(Modifier::BOLD),
             ));
         }
-    }
 
     if show_hint {
         spans.push(Span::raw("  "));

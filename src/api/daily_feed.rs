@@ -310,13 +310,11 @@ pub fn get_cached_daily_feed(year: u32, month: u32, day: u32) -> Option<DailyFee
     if mostread.as_ref().is_none_or(|m| m.articles.is_empty()) {
         let (py, pm, pd) = utc_yesterday();
         let prev_dir = daily_feed_cache_dir(py, pm, pd);
-        if let Ok(prev_content) = fs::read_to_string(prev_dir.join("most_read.json")) {
-            if let Ok(prev_mr) = serde_json::from_str::<MostReadPayload>(&prev_content) {
-                if !prev_mr.articles.is_empty() {
+        if let Ok(prev_content) = fs::read_to_string(prev_dir.join("most_read.json"))
+            && let Ok(prev_mr) = serde_json::from_str::<MostReadPayload>(&prev_content)
+                && !prev_mr.articles.is_empty() {
                     mostread = Some(prev_mr);
                 }
-            }
-        }
     }
 
     let (news, ongoing, recent_deaths) = if let Some(np) = news_payload {
@@ -350,11 +348,10 @@ pub fn save_cached_daily_feed(year: u32, month: u32, day: u32, feed: &DailyFeed)
     let dir = daily_feed_cache_dir(year, month, day);
     let _ = fs::create_dir_all(&dir);
 
-    if let Some(tfa) = &feed.tfa {
-        if let Ok(json) = serde_json::to_string(tfa) {
+    if let Some(tfa) = &feed.tfa
+        && let Ok(json) = serde_json::to_string(tfa) {
             let _ = fs::write(dir.join("tfa.json"), json);
         }
-    }
 
     let news_payload = NewsPayload {
         news: feed.news.clone(),
@@ -365,11 +362,10 @@ pub fn save_cached_daily_feed(year: u32, month: u32, day: u32, feed: &DailyFeed)
         let _ = fs::write(dir.join("news.json"), json);
     }
 
-    if let Some(mostread) = &feed.mostread {
-        if let Ok(json) = serde_json::to_string(mostread) {
+    if let Some(mostread) = &feed.mostread
+        && let Ok(json) = serde_json::to_string(mostread) {
             let _ = fs::write(dir.join("most_read.json"), json);
         }
-    }
 
     let otd_payload = OnThisDayPayload {
         onthisday: feed.onthisday.clone(),
@@ -387,17 +383,15 @@ pub fn fetch_daily_feed(
 ) -> Result<DailyFeed, String> {
     let (year, month, day) = utc_today();
 
-    if offline_cache {
-        if let Some(cached) = get_cached_daily_feed(year, month, day) {
-            if cached
+    if offline_cache
+        && let Some(cached) = get_cached_daily_feed(year, month, day)
+            && cached
                 .mostread
                 .as_ref()
                 .is_some_and(|m| !m.articles.is_empty())
             {
                 return Ok(cached);
             }
-        }
-    }
 
     let url = format!(
         "https://en.wikipedia.org/api/rest_v1/feed/featured/{:04}/{:02}/{:02}",
@@ -424,15 +418,11 @@ pub fn fetch_daily_feed(
             .get(&prev_url)
             .timeout(std::time::Duration::from_secs(timeout))
             .call()
-        {
-            if let Ok(prev_feed) = prev_resp.into_json::<DailyFeed>() {
-                if let Some(mr) = prev_feed.mostread {
-                    if !mr.articles.is_empty() {
+            && let Ok(prev_feed) = prev_resp.into_json::<DailyFeed>()
+                && let Some(mr) = prev_feed.mostread
+                    && !mr.articles.is_empty() {
                         feed.mostread = Some(mr);
                     }
-                }
-            }
-        }
     }
 
     let itn_url = "https://en.wikipedia.org/w/api.php?action=parse&page=Template:In_the_news&prop=wikitext&format=json";
@@ -440,9 +430,8 @@ pub fn fetch_daily_feed(
         .get(itn_url)
         .timeout(std::time::Duration::from_secs(timeout))
         .call()
-    {
-        if let Ok(itn_json) = itn_resp.into_json::<serde_json::Value>() {
-            if let Some(wikitext) = itn_json
+        && let Ok(itn_json) = itn_resp.into_json::<serde_json::Value>()
+            && let Some(wikitext) = itn_json
                 .get("parse")
                 .and_then(|p| p.get("wikitext"))
                 .and_then(|t| t.get("*"))
@@ -452,8 +441,6 @@ pub fn fetch_daily_feed(
                 feed.ongoing = ongoing;
                 feed.recent_deaths = recent_deaths;
             }
-        }
-    }
 
     let otd_url = format!(
         "https://en.wikipedia.org/api/rest_v1/feed/onthisday/all/{:02}/{:02}",
@@ -463,14 +450,12 @@ pub fn fetch_daily_feed(
         .get(&otd_url)
         .timeout(std::time::Duration::from_secs(timeout))
         .call()
-    {
-        if let Ok(archive) = otd_resp.into_json::<OnThisDayArchive>() {
+        && let Ok(archive) = otd_resp.into_json::<OnThisDayArchive>() {
             if !archive.events.is_empty() {
                 feed.onthisday = archive.events.clone();
             }
             feed.onthisday_all = Some(archive);
         }
-    }
 
     if offline_cache {
         save_cached_daily_feed(year, month, day, &feed);

@@ -56,8 +56,7 @@ pub fn heading_info<'a>(
         .get("class")
         .flatten()
         .map(|b| b.as_utf8_str())
-    {
-        if cls.contains("mw-heading") {
+        && cls.contains("mw-heading") {
             for child_handle in tag.children().top().iter() {
                 if let Some(tl::Node::Tag(child_tag)) = child_handle.get(parser) {
                     let child_name = child_tag.name().as_utf8_str();
@@ -81,7 +80,6 @@ pub fn heading_info<'a>(
                 }
             }
         }
-    }
 
     None
 }

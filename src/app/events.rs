@@ -12,8 +12,8 @@ impl App {
                 query,
                 results,
             } => {
-                if let Some(pane) = self.find_pane_mut(pane_id) {
-                    if request_id >= pane.current_request_id {
+                if let Some(pane) = self.find_pane_mut(pane_id)
+                    && request_id >= pane.current_request_id {
                         pane.is_loading = false;
                         pane.loading_title = None;
                         pane.selected_idx = 0;
@@ -24,7 +24,6 @@ impl App {
                             items: results,
                         };
                     }
-                }
             }
             NetworkEvent::ArticleResult {
                 request_id,
@@ -147,8 +146,8 @@ impl App {
                 for tab in &mut self.workspace.tabs {
                     for pane in &mut tab.panes {
                         pane.loaded_images.insert(url.clone(), path.clone());
-                        if resolved_proto.is_halfblocks() {
-                            if let PaneContent::ArticleText { parsed_doc, .. } = &pane.content {
+                        if resolved_proto.is_halfblocks()
+                            && let PaneContent::ArticleText { parsed_doc, .. } = &pane.content {
                                 for img in &parsed_doc.images {
                                     if img.url == url
                                         && !pane.contains_halfblock(
@@ -176,7 +175,6 @@ impl App {
                                     }
                                 }
                             }
-                        }
                     }
                 }
                 for (u, p, c, r) in to_decode {
@@ -205,13 +203,12 @@ impl App {
                 pane_id,
                 error,
             } => {
-                if let Some(pane) = self.find_pane_mut(pane_id) {
-                    if request_id >= pane.current_request_id {
+                if let Some(pane) = self.find_pane_mut(pane_id)
+                    && request_id >= pane.current_request_id {
                         pane.is_loading = false;
                         pane.loading_title = None;
                         pane.content = PaneContent::Error(error.to_string());
                     }
-                }
             }
             NetworkEvent::FeedBatchLoaded { items } => {
                 self.user_data.feed.is_fetching = false;
@@ -292,9 +289,9 @@ impl App {
                 original_url,
                 short_url,
             } => {
-                if let Some(qr_modal) = &mut self.modals.qr_modal {
-                    if qr_modal.full_url == original_url {
-                        if let Ok(qrcode) =
+                if let Some(qr_modal) = &mut self.modals.qr_modal
+                    && qr_modal.full_url == original_url
+                        && let Ok(qrcode) =
                             fast_qr::qr::QRBuilder::new(short_url.as_bytes()).build()
                         {
                             let size = qrcode.size;
@@ -307,8 +304,6 @@ impl App {
                             qr_modal.short_url = Some(short_url);
                             qr_modal.matrix = matrix;
                         }
-                    }
-                }
             }
             NetworkEvent::SummaryLoaded {
                 title,

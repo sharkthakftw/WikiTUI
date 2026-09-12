@@ -5,12 +5,11 @@ impl App {
         let current_title = self.active_pane().title();
         let pane_id = self.active_pane().id;
         let active_pane = self.active_pane_mut();
-        if let Some(old_title) = current_title {
-            if old_title != title {
+        if let Some(old_title) = current_title
+            && old_title != title {
                 active_pane.history_back.push(old_title);
                 active_pane.history_forward.clear();
             }
-        }
         active_pane.prepare_for_article_fetch(title);
         self.send_fetch_article(pane_id, title.to_string());
     }

@@ -178,9 +178,9 @@ impl AudioPlayer {
             new_offset
         };
 
-        if let Some(child) = &mut self.child {
-            if self.backend == Some(AudioBackend::Mpv) {
-                if let Some(stdin) = child.stdin.as_mut() {
+        if let Some(child) = &mut self.child
+            && self.backend == Some(AudioBackend::Mpv)
+                && let Some(stdin) = child.stdin.as_mut() {
                     use std::io::Write;
                     let cmd = format!("seek {}\n", delta_secs);
                     if stdin.write_all(cmd.as_bytes()).is_ok() && stdin.flush().is_ok() {
@@ -192,8 +192,6 @@ impl AudioPlayer {
                         return true;
                     }
                 }
-            }
-        }
 
         if let (Some(title), Some(url)) = (self.current_title.clone(), self.current_url.clone()) {
             let total = self.total_duration_secs;
@@ -215,8 +213,8 @@ impl AudioPlayer {
     }
 
     pub fn pause(&mut self) {
-        if self.state == PlaybackState::Playing {
-            if let Some(child) = &self.child {
+        if self.state == PlaybackState::Playing
+            && let Some(child) = &self.child {
                 let _ = Command::new("kill")
                     .args(["-STOP", &child.id().to_string()])
                     .stdout(Stdio::null())
@@ -228,12 +226,11 @@ impl AudioPlayer {
                     cache::save_position(url, self.elapsed_secs);
                 }
             }
-        }
     }
 
     pub fn resume(&mut self) {
-        if self.state == PlaybackState::Paused {
-            if let Some(child) = &self.child {
+        if self.state == PlaybackState::Paused
+            && let Some(child) = &self.child {
                 let _ = Command::new("kill")
                     .args(["-CONT", &child.id().to_string()])
                     .stdout(Stdio::null())
@@ -243,7 +240,6 @@ impl AudioPlayer {
                 self.last_tick = Some(Instant::now());
                 self.last_save_tick = Some(Instant::now());
             }
-        }
     }
 
     pub fn toggle_pause(&mut self) {
@@ -286,20 +282,18 @@ impl AudioPlayer {
     }
 
     pub fn poll_status(&mut self) {
-        if let Some(deadline) = self.sleep_timer_deadline {
-            if Instant::now() >= deadline {
+        if let Some(deadline) = self.sleep_timer_deadline
+            && Instant::now() >= deadline {
                 self.sleep_timer_deadline = None;
                 self.sleep_timer_expired = true;
                 self.pause();
             }
-        }
 
-        if let Some(rx) = &self.probe_rx {
-            if let Ok(exact_secs) = rx.try_recv() {
+        if let Some(rx) = &self.probe_rx
+            && let Ok(exact_secs) = rx.try_recv() {
                 self.total_duration_secs = Some(exact_secs);
                 self.probe_rx = None;
             }
-        }
 
         if let Some(rx) = &self.playhead_rx {
             while let Ok(update) = rx.try_recv() {
@@ -323,18 +317,17 @@ impl AudioPlayer {
                 self.last_tick = Some(Instant::now());
             }
 
-            if let Some(last_save) = self.last_save_tick {
-                if last_save.elapsed().as_secs() >= 5 {
+            if let Some(last_save) = self.last_save_tick
+                && last_save.elapsed().as_secs() >= 5 {
                     if let Some(url) = &self.current_url {
                         cache::save_position(url, self.elapsed_secs);
                     }
                     self.last_save_tick = Some(Instant::now());
                 }
-            }
         }
 
-        if let Some(child) = &mut self.child {
-            if let Ok(Some(_)) = child.try_wait() {
+        if let Some(child) = &mut self.child
+            && let Ok(Some(_)) = child.try_wait() {
                 self.child = None;
                 self.state = PlaybackState::Stopped;
                 self.current_title = None;
@@ -349,7 +342,6 @@ impl AudioPlayer {
                 self.sleep_timer_deadline = None;
                 self.sleep_timer_expired = false;
             }
-        }
     }
 }
 

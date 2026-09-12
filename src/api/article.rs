@@ -66,21 +66,18 @@ pub fn cache_file_path(title: &str) -> PathBuf {
 
 pub fn get_cached_article(title: &str, lifetime_hours: u64) -> Option<String> {
     let path = cache_file_path(title);
-    if let Ok(metadata) = std::fs::metadata(&path) {
-        if let Ok(modified) = metadata.modified() {
-            if let Ok(elapsed) = modified.elapsed() {
+    if let Ok(metadata) = std::fs::metadata(&path)
+        && let Ok(modified) = metadata.modified()
+            && let Ok(elapsed) = modified.elapsed() {
                 if elapsed.as_secs() <= lifetime_hours.saturating_mul(3600) {
-                    if let Ok(content) = std::fs::read_to_string(&path) {
-                        if content.contains("catlinks") {
+                    if let Ok(content) = std::fs::read_to_string(&path)
+                        && content.contains("catlinks") {
                             return Some(content);
                         }
-                    }
                 } else {
                     let _ = std::fs::remove_file(&path);
                 }
             }
-        }
-    }
     None
 }
 
@@ -99,11 +96,10 @@ pub fn fetch_article_wikipedia(
     cache_lifetime: u64,
 ) -> Result<String, super::ApiError> {
     let normalized_title = normalize_title(title);
-    if offline_cache {
-        if let Some(cached_html) = get_cached_article(&normalized_title, cache_lifetime) {
+    if offline_cache
+        && let Some(cached_html) = get_cached_article(&normalized_title, cache_lifetime) {
             return Ok(cached_html);
         }
-    }
 
     let url = "https://en.wikipedia.org/w/api.php";
     let res = agent
@@ -124,11 +120,10 @@ pub fn fetch_article_wikipedia(
                 .into_json()
                 .map_err(|e| super::ApiError::Parse(e.to_string()))?;
 
-            if let Some(err) = parse_resp.error {
-                if let Some(info) = err.info {
+            if let Some(err) = parse_resp.error
+                && let Some(info) = err.info {
                     return Err(super::ApiError::Wikipedia(info));
                 }
-            }
 
             let parse_obj = parse_resp.parse;
             let body_html = parse_obj

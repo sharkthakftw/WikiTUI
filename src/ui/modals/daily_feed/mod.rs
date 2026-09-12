@@ -369,8 +369,8 @@ pub fn get_daily_feed_item_at(
                 }
             }
 
-            if let Some(off) = ongoing_offset {
-                if clicked_line == off {
+            if let Some(off) = ongoing_offset
+                && clicked_line == off {
                     let mut cur_x = inner_x + 12;
                     let mut link_counter = 0;
                     for (idx, og) in feed.ongoing.iter().enumerate() {
@@ -402,10 +402,9 @@ pub fn get_daily_feed_item_at(
                         .first()
                         .map(|o| (ongoing_row, 0, o.target.clone()));
                 }
-            }
 
-            if let Some(off) = deaths_offset {
-                if clicked_line == off {
+            if let Some(off) = deaths_offset
+                && clicked_line == off {
                     let mut cur_x = inner_x + 18;
                     for (d_idx, death) in feed.recent_deaths.iter().enumerate() {
                         if idx_offset_matches(d_idx) {
@@ -423,7 +422,6 @@ pub fn get_daily_feed_item_at(
                         .first()
                         .map(|d| (deaths_row, 0, d.target.clone()));
                 }
-            }
 
             None
         }

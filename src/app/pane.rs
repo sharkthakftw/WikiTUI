@@ -226,15 +226,14 @@ impl Pane {
                 opts.max_image_height,
             );
             *last_render_options = opts;
-            if let Some(idx) = self.selected_link_idx {
-                if idx >= parsed_doc.links.len() {
+            if let Some(idx) = self.selected_link_idx
+                && idx >= parsed_doc.links.len() {
                     self.selected_link_idx = if parsed_doc.links.is_empty() {
                         None
                     } else {
                         Some(parsed_doc.links.len() - 1)
                     };
                 }
-            }
             self.recompute_local_matches();
         }
     }

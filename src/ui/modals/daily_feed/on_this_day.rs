@@ -188,8 +188,8 @@ pub fn render_on_this_day_modal(
     });
 
     let mut modal_block = modal_block;
-    if let Some(page) = focused_page {
-        if let Some(desc) = page.description.as_deref().filter(|d| !d.is_empty()) {
+    if let Some(page) = focused_page
+        && let Some(desc) = page.description.as_deref().filter(|d| !d.is_empty()) {
             let icon = if app.user_data.config.ui.icons {
                 "󰋼 "
             } else {
@@ -232,7 +232,6 @@ pub fn render_on_this_day_modal(
                 }
             }
         }
-    }
 
     let mut lines = Vec::new();
     let avail_w = (modal_area.width as usize).saturating_sub(4);

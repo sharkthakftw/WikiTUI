@@ -12,13 +12,12 @@ fn get_modal_row_links(app: &App, kind: DailyFeedKind, cursor_idx: usize) -> Vec
     };
     match kind {
         DailyFeedKind::News => {
-            if cursor_idx < feed.news.len() {
-                if let Some(item) = feed.news.get(cursor_idx) {
+            if cursor_idx < feed.news.len()
+                && let Some(item) = feed.news.get(cursor_idx) {
                     let raw = item.story.as_deref().unwrap_or("");
                     let (_, links) = parse_story_html(raw);
                     return links;
                 }
-            }
             let ongoing_row = feed.news.len();
             if !feed.ongoing.is_empty() && cursor_idx == ongoing_row {
                 return get_ongoing_links(&feed.ongoing)
@@ -88,12 +87,11 @@ pub fn handle_daily_feed_mode(app: &mut App, key: KeyEvent) {
         KeyCode::Char('j') | KeyCode::Down => {
             if total > 0 {
                 let kind = state.kind;
-                if let Some(modal) = &mut app.modals.daily_feed_modal {
-                    if modal.cursor_idx + 1 < total {
+                if let Some(modal) = &mut app.modals.daily_feed_modal
+                    && modal.cursor_idx + 1 < total {
                         modal.cursor_idx += 1;
                         modal.link_idx = 0;
                     }
-                }
                 let target_line = crate::ui::modals::get_modal_item_line_offset(
                     app,
                     kind,
@@ -103,22 +101,20 @@ pub fn handle_daily_feed_mode(app: &mut App, key: KeyEvent) {
                         .map(|m| m.cursor_idx)
                         .unwrap_or(0),
                 );
-                if let Some(modal) = &mut app.modals.daily_feed_modal {
-                    if target_line >= modal.scroll + 12 {
+                if let Some(modal) = &mut app.modals.daily_feed_modal
+                    && target_line >= modal.scroll + 12 {
                         modal.scroll = target_line.saturating_sub(8);
                     }
-                }
             }
         }
         KeyCode::Char('k') | KeyCode::Up => {
             if total > 0 {
                 let kind = state.kind;
-                if let Some(modal) = &mut app.modals.daily_feed_modal {
-                    if modal.cursor_idx > 0 {
+                if let Some(modal) = &mut app.modals.daily_feed_modal
+                    && modal.cursor_idx > 0 {
                         modal.cursor_idx -= 1;
                         modal.link_idx = 0;
                     }
-                }
                 let target_line = crate::ui::modals::get_modal_item_line_offset(
                     app,
                     kind,
@@ -128,11 +124,10 @@ pub fn handle_daily_feed_mode(app: &mut App, key: KeyEvent) {
                         .map(|m| m.cursor_idx)
                         .unwrap_or(0),
                 );
-                if let Some(modal) = &mut app.modals.daily_feed_modal {
-                    if target_line < modal.scroll {
+                if let Some(modal) = &mut app.modals.daily_feed_modal
+                    && target_line < modal.scroll {
                         modal.scroll = target_line;
                     }
-                }
             }
         }
         KeyCode::Char('g') | KeyCode::Home => {
@@ -167,26 +162,24 @@ pub fn handle_daily_feed_mode(app: &mut App, key: KeyEvent) {
             if state.kind == DailyFeedKind::News || state.kind == DailyFeedKind::OnThisDay {
                 let links = get_modal_row_links(app, state.kind, state.cursor_idx);
                 let total_links = links.len();
-                if total_links > 0 {
-                    if let Some(modal) = &mut app.modals.daily_feed_modal {
+                if total_links > 0
+                    && let Some(modal) = &mut app.modals.daily_feed_modal {
                         modal.link_idx = (modal.link_idx + 1) % total_links;
                     }
-                }
             }
         }
         KeyCode::BackTab | KeyCode::Char('h') | KeyCode::Left => {
             if state.kind == DailyFeedKind::News || state.kind == DailyFeedKind::OnThisDay {
                 let links = get_modal_row_links(app, state.kind, state.cursor_idx);
                 let total_links = links.len();
-                if total_links > 0 {
-                    if let Some(modal) = &mut app.modals.daily_feed_modal {
+                if total_links > 0
+                    && let Some(modal) = &mut app.modals.daily_feed_modal {
                         modal.link_idx = if modal.link_idx == 0 {
                             total_links - 1
                         } else {
                             modal.link_idx - 1
                         };
                     }
-                }
             }
         }
         KeyCode::Enter => {
@@ -207,12 +200,11 @@ pub fn handle_daily_feed_mode(app: &mut App, key: KeyEvent) {
                 entries
                     .get(state.cursor_idx)
                     .map(|e| e.target_article.clone())
-            }) {
-                if !target.is_empty() {
+            })
+                && !target.is_empty() {
                     app.close_daily_feed_modal();
                     app.open_article(&target);
                 }
-            }
         }
         KeyCode::Char('t') => {
             let target =
@@ -232,15 +224,14 @@ pub fn handle_daily_feed_mode(app: &mut App, key: KeyEvent) {
                 entries
                     .get(state.cursor_idx)
                     .map(|e| e.target_article.clone())
-            }) {
-                if !target.is_empty() {
+            })
+                && !target.is_empty() {
                     app.close_daily_feed_modal();
                     if !matches!(app.active_pane().content, crate::app::PaneContent::Empty) {
                         app.new_tab();
                     }
                     app.open_article(&target);
                 }
-            }
         }
         KeyCode::Char('1') if state.kind == DailyFeedKind::OnThisDay => {
             if let Some(modal) = &mut app.modals.daily_feed_modal {

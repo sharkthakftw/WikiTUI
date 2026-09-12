@@ -19,30 +19,28 @@ pub(crate) fn wrap_cell_tokens(
 
     for token in tokens {
         if token.text == "\n" {
-            if let Some(target) = active_link_target.take() {
-                if !active_link_spans.is_empty() {
+            if let Some(target) = active_link_target.take()
+                && !active_link_spans.is_empty() {
                     links.push((
                         target,
                         std::mem::take(&mut active_link_text).trim().to_string(),
                         std::mem::take(&mut active_link_spans),
                     ));
                 }
-            }
             lines.push(std::mem::take(&mut current_line));
             current_line_len = 0;
             continue;
         }
 
         if token.link_target != active_link_target {
-            if let Some(target) = active_link_target.take() {
-                if !active_link_spans.is_empty() {
+            if let Some(target) = active_link_target.take()
+                && !active_link_spans.is_empty() {
                     links.push((
                         target,
                         std::mem::take(&mut active_link_text).trim().to_string(),
                         std::mem::take(&mut active_link_spans),
                     ));
                 }
-            }
             active_link_target = token.link_target.clone();
         }
 
@@ -103,15 +101,14 @@ pub(crate) fn wrap_cell_tokens(
         }
     }
 
-    if let Some(target) = active_link_target {
-        if !active_link_spans.is_empty() {
+    if let Some(target) = active_link_target
+        && !active_link_spans.is_empty() {
             links.push((
                 target,
                 active_link_text.trim().to_string(),
                 active_link_spans,
             ));
         }
-    }
 
     if !current_line.is_empty() || lines.is_empty() {
         lines.push(current_line);

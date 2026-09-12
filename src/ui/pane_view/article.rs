@@ -133,11 +133,10 @@ pub fn render_article_pane(
                         let rel_row = line_idx - img.line_idx;
                         let cols = img.width_cols;
                         let rows = img.height_lines;
-                        if let Some(hb_lines) = pane.get_halfblock(&img.url, cols, rows) {
-                            if let Some(hb_line) = hb_lines.get(rel_row) {
+                        if let Some(hb_lines) = pane.get_halfblock(&img.url, cols, rows)
+                            && let Some(hb_line) = hb_lines.get(rel_row) {
                                 image_override = Some(hb_line.clone());
                             }
-                        }
                     } else if resolved_proto.is_kitty() && has_img {
                         image_override = Some(Line::from(""));
                     }
@@ -197,11 +196,10 @@ pub fn render_article_pane(
                 }
                 if !link.is_citation() {
                     for &(l_idx, span_idx) in &link.span_indices {
-                        if l_idx == line_idx {
-                            if let Some(span) = spans.get_mut(span_idx) {
+                        if l_idx == line_idx
+                            && let Some(span) = spans.get_mut(span_idx) {
                                 span.style = span.style.add_modifier(Modifier::UNDERLINED);
                             }
-                        }
                     }
                 }
                 if last_line == line_idx {
@@ -215,14 +213,13 @@ pub fn render_article_pane(
 
         if let Some(link) = selected_link {
             for &(l_idx, span_idx) in &link.span_indices {
-                if l_idx == line_idx {
-                    if let Some(span) = spans.get_mut(span_idx) {
+                if l_idx == line_idx
+                    && let Some(span) = spans.get_mut(span_idx) {
                         span.style = Style::default()
                             .fg(theme::VIOLET)
                             .bold()
                             .add_modifier(Modifier::UNDERLINED);
                     }
-                }
             }
         }
 
@@ -249,8 +246,8 @@ pub fn render_article_pane(
             }
         }
 
-        if let Some(selection) = &pane.selection.text_selection {
-            if selection.contains_line(line_idx) {
+        if let Some(selection) = &pane.selection.text_selection
+            && selection.contains_line(line_idx) {
                 let (start, end) = selection.normalized();
                 let line_len: usize = spans.iter().map(|s| s.content.chars().count()).sum();
                 let from = if line_idx == start.0 {
@@ -270,7 +267,6 @@ pub fn render_article_pane(
                     spans = apply_span_highlights(&spans, &[(byte_from, byte_to, sel_style)]);
                 }
             }
-        }
 
         let mut line = Line::from(spans);
         line.alignment = orig_line.alignment;
@@ -305,8 +301,8 @@ pub fn render_article_pane(
                     .or_else(|| crate::graphics::cache::get_cached_image_path(&img.url));
 
                 if let Some(path) = img_path {
-                    if resolved_proto.is_kitty() {
-                        if let Some(bounds) = calculate_visible_image_bounds(
+                    if resolved_proto.is_kitty()
+                        && let Some(bounds) = calculate_visible_image_bounds(
                             img.line_idx,
                             img.height_lines,
                             img.width_cols,
@@ -335,7 +331,6 @@ pub fn render_article_pane(
                                 );
                             }
                         }
-                    }
                 } else {
                     app.send_fetch_image(img.url.clone());
                 }

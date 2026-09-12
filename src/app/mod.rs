@@ -149,11 +149,10 @@ impl App {
         app.user_data
             .saved_lists
             .sync_liked_articles(&mut app.user_data.feed.profile.liked_articles);
-        if app.user_data.config.general.auto_restore_session {
-            if let Some(session) = crate::session::SessionState::load() {
+        if app.user_data.config.general.auto_restore_session
+            && let Some(session) = crate::session::SessionState::load() {
                 app.restore_session(session);
             }
-        }
         if app.workspace.tabs.is_empty() {
             app.workspace.tabs.push(Tab::new("home".to_string(), 0));
         }

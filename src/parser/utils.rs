@@ -148,8 +148,8 @@ pub fn decode_html_entities(s: &str) -> std::borrow::Cow<'_, str> {
     while let Some((i, c)) = chars.next() {
         if c == '&' {
             let remaining = &s[i..];
-            if let Some(semicolon_idx) = remaining.find(';') {
-                if semicolon_idx <= 10 {
+            if let Some(semicolon_idx) = remaining.find(';')
+                && semicolon_idx <= 10 {
                     let entity = &remaining[1..semicolon_idx];
                     let decoded_char = if let Some(num_str) = entity.strip_prefix('#') {
                         if let Some(hex_str) = num_str
@@ -221,7 +221,6 @@ pub fn decode_html_entities(s: &str) -> std::borrow::Cow<'_, str> {
                         continue;
                     }
                 }
-            }
         }
         result.push(c);
     }

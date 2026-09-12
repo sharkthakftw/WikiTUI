@@ -99,8 +99,8 @@ pub fn render_feed_view(f: &mut Frame, feed: &FeedState, area: Rect, rounded: bo
     let mut card_lines = Vec::new();
     card_lines.push(Line::from(""));
 
-    if let Some(short_desc) = &item.short_description {
-        if !short_desc.is_empty() {
+    if let Some(short_desc) = &item.short_description
+        && !short_desc.is_empty() {
             card_lines.push(
                 Line::from(Span::styled(
                     short_desc.clone(),
@@ -110,7 +110,6 @@ pub fn render_feed_view(f: &mut Frame, feed: &FeedState, area: Rect, rounded: bo
             );
             card_lines.push(Line::from(""));
         }
-    }
 
     if !item.snippet.is_empty() {
         card_lines.push(Line::from(vec![

@@ -86,8 +86,7 @@ pub fn handle_scrollbar_down(
         if col == right_area.x + right_area.width.saturating_sub(1)
             && row > right_area.y
             && row < right_area.y + right_area.height.saturating_sub(1)
-        {
-            if let Some(list) = app
+            && let Some(list) = app
                 .user_data
                 .saved_lists
                 .lists
@@ -108,7 +107,6 @@ pub fn handle_scrollbar_down(
                     return true;
                 }
             }
-        }
         return false;
     }
 

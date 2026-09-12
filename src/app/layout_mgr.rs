@@ -62,11 +62,10 @@ impl App {
     }
 
     pub fn toggle_alternate_tab(&mut self) {
-        if let Some(prev_idx) = self.workspace.prev_tab_idx {
-            if prev_idx < self.workspace.tabs.len() && prev_idx != self.workspace.active_tab_idx {
+        if let Some(prev_idx) = self.workspace.prev_tab_idx
+            && prev_idx < self.workspace.tabs.len() && prev_idx != self.workspace.active_tab_idx {
                 self.switch_to_tab(prev_idx);
             }
-        }
     }
 
     fn record_closed_panes(&mut self, panes: impl IntoIterator<Item = Pane>) {

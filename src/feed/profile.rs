@@ -275,7 +275,7 @@ impl FeedProfile {
         let mut organic: Vec<(&String, i32)> = self
             .category_scores
             .iter()
-            .filter(|(cat, &score)| {
+            .filter(|&(cat, &score)| {
                 score > 0
                     && !is_preset_category(cat)
                     && !is_maintenance_category(cat)

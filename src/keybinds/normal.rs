@@ -103,8 +103,7 @@ pub fn handle_normal_mode(app: &mut App, key: KeyEvent, term_width: u16, term_he
     } else {
         if matches!(app.active_pane().content, crate::app::PaneContent::Empty)
             && (key.modifiers.is_empty() || key.modifiers == KeyModifiers::SHIFT)
-        {
-            if let KeyCode::Char(c) = key.code {
+            && let KeyCode::Char(c) = key.code {
                 match app.user_data.config.general.hint_mode {
                     crate::config::HintMode::Semantic => {
                         if let Some(title) = app.find_semantic_hint_article(c) {
@@ -125,7 +124,6 @@ pub fn handle_normal_mode(app: &mut App, key: KeyEvent, term_width: u16, term_he
                     crate::config::HintMode::None => {}
                 }
             }
-        }
 
         match key.code {
             KeyCode::Esc => {
@@ -349,11 +347,10 @@ pub fn handle_normal_mode(app: &mut App, key: KeyEvent, term_width: u16, term_he
                 app.resize_active_split(-5);
             }
             KeyCode::Char('S') => {
-                if app.active_tab().name == "home" {
-                    if let Some(session) = crate::session::SessionState::load() {
+                if app.active_tab().name == "home"
+                    && let Some(session) = crate::session::SessionState::load() {
                         session.restore_to_app(app);
                     }
-                }
             }
             KeyCode::Char('H') if !key.modifiers.contains(KeyModifiers::CONTROL) => {
                 app.history_back();
